@@ -1,9 +1,6 @@
 import React, { useState, useRef } from 'react';
-import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight } from 'lucide-react';
-
-// ============================================================================
-// TEMPLATE OPTIONS
-// ============================================================================
+import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle } from 'lucide-react';
+import * as mammoth from 'mammoth';
 
 const templates = [
   { id: 'classic', name: 'Classic', desc: 'Traditional, serif fonts', icon: '📄' },
@@ -28,10 +25,6 @@ const colorSchemes = [
   { id: 'burgundy', name: 'Burgundy', primary: '#7f1d1d', accent: '#dc2626' },
   { id: 'purple', name: 'Royal Purple', primary: '#4c1d95', accent: '#7c3aed' }
 ];
-
-// ============================================================================
-// TEMPLATE COMPONENTS
-// ============================================================================
 
 const ClassicTemplate = ({ data, style }) => (
   <div style={{ fontFamily: style.fontFamily, fontSize: style.fontSize, lineHeight: style.lineHeight, color: '#000' }}>
@@ -387,207 +380,265 @@ const CreativeTemplate = ({ data, style }) => (
   </div>
 );
 
-// ============================================================================
-// MAIN INTEGRATED COMPONENT
-// ============================================================================
-
 export default function ResumeAutomation() {
-  const [step, setStep] = useState('input'); // input, optimize, format
-  const [resumeInput, setResumeInput] = useState('');
-  const [jobDescription, setJobDescription] = useState('');
-  const [optimizedData, setOptimizedData] = useState(null);
-  const [isOptimizing, setIsOptimizing] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [error, setError] = useState('');
-  const fileInputRef = useRef(null);
+  // Phase management
+  const [phase, setPhase] = useState('upload'); // upload, optimize, format
   
-  // Formatting state
+  // Upload phase
+  const [jobDescription, setJobDescription] = useState('');
+  const [resumeFile, setResumeFile] = useState(null);
+  const [resumeText, setResumeText] = useState('');
+  const [showResumePreview, setShowResumePreview] = useState(false);
+  
+  // Optimize phase
+  const [structuredResume, setStructuredResume] = useState({
+    contact: { name: '', email: '', phone: '', address: '', linkedin: '' },
+    professionalSummary: '',
+    experience: [],
+    education: [],
+    certifications: [],
+    skills: [],
+    references: ''
+  });
+  const [suggestions, setSuggestions] = useState([]);
+  const [gaps, setGaps] = useState([]);
+  const [loadingOptimize, setLoadingOptimize] = useState(false);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [loadingGaps, setLoadingGaps] = useState(false);
+  
+  // Gap filling
+  const [addingGap, setAddingGap] = useState(null);
+  const [selectedExperience, setSelectedExperience] = useState('');
+  const [generatingBullet, setGeneratingBullet] = useState(false);
+  const [previewBullet, setPreviewBullet] = useState('');
+  const [showPreview, setShowPreview] = useState(false);
+  
+  // Format phase
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
   const [selectedFont, setSelectedFont] = useState(fontOptions[0]);
   const [selectedColor, setSelectedColor] = useState(colorSchemes[1]);
   const [fontSize, setFontSize] = useState(12);
   const [lineHeight, setLineHeight] = useState(1.5);
-  const [copied, setCopied] = useState(false);
   const [activeTab, setActiveTab] = useState('templates');
+  const [copied, setCopied] = useState(false);
   
+  const [error, setError] = useState('');
   const previewRef = useRef(null);
+  const fileInputRef = useRef(null);
 
-  // Handle file upload (PDF or JSON)
-  const handleFileUpload = async (event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    setError('');
-
-    try {
-      const fileType = file.name.toLowerCase();
+  // File reading function
+  const readFile = async (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
       
-      if (fileType.endsWith('.json')) {
-        // Handle JSON file
-        const text = await file.text();
-        const jsonData = JSON.parse(text);
-        
-        // Check if it's already optimized data or just resume input
-        if (jsonData.contact && jsonData.experience) {
-          // It's a complete resume JSON - skip to formatting
-          setOptimizedData(jsonData);
-          setStep('format');
-        } else {
-          // It's raw data - use as resume input
-          setResumeInput(JSON.stringify(jsonData, null, 2));
-        }
-      } else if (fileType.endsWith('.pdf')) {
-        // Handle PDF file - convert to base64 and extract text via AI
-        const base64Data = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result.split(',')[1]);
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-        });
-
-        // Use Claude to extract text from PDF
-        const response = await fetch("https://api.anthropic.com/v1/messages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            model: "claude-sonnet-4-20250514",
-            max_tokens: 2000,
-            messages: [{
-              role: "user",
-              content: [
-                {
-                  type: "document",
-                  source: {
-                    type: "base64",
-                    media_type: "application/pdf",
-                    data: base64Data
-                  }
-                },
-                {
-                  type: "text",
-                  text: "Extract all text content from this resume PDF and return it as plain text. Include all sections: contact info, summary, experience, education, skills, certifications, etc."
-                }
-              ]
-            }]
-          })
-        });
-
-        const data = await response.json();
-        const extractedText = data.content?.find(c => c.type === 'text')?.text || '';
-        setResumeInput(extractedText);
+      if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document') {
+        reader.onload = async (e) => {
+          try {
+            const result = await mammoth.extractRawText({ arrayBuffer: e.target.result });
+            resolve(result.value);
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.readAsArrayBuffer(file);
+      } else if (file.type === 'application/pdf') {
+        // For PDF, we'll need backend extraction
+        reader.onload = async (e) => {
+          try {
+            const base64Data = e.target.result.split(',')[1];
+            const response = await fetch('/api/extract-pdf', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ pdfBase64: base64Data })
+            });
+            const data = await response.json();
+            resolve(data.text || '');
+          } catch (error) {
+            reject(error);
+          }
+        };
+        reader.readAsDataURL(file);
       } else {
-        setError('Please upload a PDF or JSON file.');
+        reader.onload = (e) => resolve(e.target.result);
+        reader.readAsText(file);
       }
-    } catch (err) {
-      console.error('Upload error:', err);
-      setError('Failed to process file. Please check the file format and try again.');
-    } finally {
-      setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      
+      reader.onerror = reject;
+    });
+  };
+
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setResumeFile(file);
+      try {
+        const text = await readFile(file);
+        setResumeText(text);
+        if (text.length < 50) {
+          setError('Warning: The extracted text seems too short. Please check the file.');
+        }
+      } catch (error) {
+        setError('Error reading file. Please try a different format.');
       }
     }
   };
 
-  // AI Optimization Function
-  const optimizeResume = async () => {
-    if (!resumeInput.trim() || !jobDescription.trim()) {
-      setError('Please provide both your resume information and the job description.');
+  const optimizeContent = async () => {
+    if (!jobDescription || !resumeText) {
+      setError('Please provide both job description and resume.');
       return;
     }
 
-    setIsOptimizing(true);
+    setLoadingOptimize(true);
     setError('');
 
     try {
-      const response = await fetch("https://api.anthropic.com/v1/messages", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "claude-sonnet-4-20250514",
-          max_tokens: 4000,
-          messages: [{
-            role: "user",
-            content: `You are an expert resume optimizer. Given a person's resume information and a job description, optimize the resume to better match the job requirements.
-
-CRITICAL RULES:
-1. DO NOT invent new experiences, skills, or accomplishments
-2. ONLY rework existing content to highlight relevant aspects
-3. Rewrite bullet points to emphasize relevant skills and match job keywords
-4. Reorder sections/items to prioritize most relevant content
-5. Ensure all dates, companies, and core facts remain accurate
-
-Resume Information:
-${resumeInput}
-
-Job Description:
-${jobDescription}
-
-Return ONLY a valid JSON object (no markdown, no explanation) with this exact structure:
-{
-  "contact": {
-    "name": "Full Name",
-    "email": "email@example.com",
-    "phone": "phone number",
-    "linkedin": "LinkedIn URL (optional)",
-    "address": "address (optional)"
-  },
-  "professionalSummary": "2-3 sentence summary optimized for this role",
-  "experience": [
-    {
-      "title": "Job Title",
-      "company": "Company Name",
-      "location": "City, State",
-      "startDate": "MMM YYYY",
-      "endDate": "MMM YYYY or Present",
-      "bullets": ["Optimized achievement 1", "Optimized achievement 2", "..."]
-    }
-  ],
-  "education": [
-    {
-      "degree": "Degree Name",
-      "institution": "Institution Name",
-      "location": "City, State (optional)",
-      "date": "Graduation Date"
-    }
-  ],
-  "certifications": [
-    {
-      "name": "Certification Name",
-      "issuer": "Issuing Organization",
-      "date": "Date"
-    }
-  ],
-  "skills": [
-    {
-      "category": "Category Name",
-      "items": ["Skill 1", "Skill 2", "..."]
-    }
-  ]
-}`
-          }],
+      const response = await fetch('/api/optimize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          resumeInput: resumeText, 
+          jobDescription 
         })
       });
 
-      const data = await response.json();
-      const content = data.content?.find(c => c.type === 'text')?.text || '';
+      if (!response.ok) {
+        throw new Error('Optimization failed');
+      }
       
-      // Clean and parse JSON
-      const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
-      const parsed = JSON.parse(cleaned);
-      
-      setOptimizedData(parsed);
-      setStep('format');
-    } catch (err) {
-      console.error('Optimization error:', err);
-      setError('Failed to optimize resume. Please check your input format and try again.');
+      const parsed = await response.json();
+      setStructuredResume(parsed);
+      setPhase('optimize');
+    } catch (error) {
+      console.error('Optimization error:', error);
+      setError('Failed to optimize resume. Please try again.');
     } finally {
-      setIsOptimizing(false);
+      setLoadingOptimize(false);
     }
   };
 
-  // Style object for templates
+  const getSuggestions = async () => {
+    setLoadingSuggestions(true);
+    try {
+      const resumeText = JSON.stringify(structuredResume);
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || '',
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 1500,
+          messages: [{ 
+            role: 'user', 
+            content: `Provide 4-6 improvement suggestions for this resume as a numbered list:\n${resumeText}` 
+          }]
+        })
+      });
+      
+      const data = await response.json();
+      const suggestionList = data.content[0].text
+        .split('\n')
+        .filter(line => /^\d+\./.test(line.trim()))
+        .map(line => line.replace(/^\d+\.\s*/, '').trim());
+      setSuggestions(suggestionList);
+    } catch (error) {
+      setError('Failed to get suggestions');
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const findGaps = async () => {
+    setLoadingGaps(true);
+    try {
+      const resumeText = JSON.stringify(structuredResume);
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || '',
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 2000,
+          messages: [{ 
+            role: 'user', 
+            content: `Find missing skills or requirements from the job description that aren't clearly demonstrated in the resume. Return JSON format: {"gaps": [{"requirement": "Missing skill/requirement", "prompt": "Brief explanation"}]}\n\nResume: ${resumeText}\n\nJob Description: ${jobDescription}` 
+          }]
+        })
+      });
+      
+      const data = await response.json();
+      const jsonMatch = data.content[0].text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const result = JSON.parse(jsonMatch[0]);
+        setGaps(result.gaps || []);
+      }
+    } catch (error) {
+      setError('Failed to analyze gaps');
+    } finally {
+      setLoadingGaps(false);
+    }
+  };
+
+  const handleAddGap = (gapIndex) => {
+    if (structuredResume.experience && structuredResume.experience.length > 0) {
+      setAddingGap(gapIndex);
+      setShowPreview(false);
+      setPreviewBullet('');
+      setSelectedExperience('');
+    }
+  };
+
+  const generatePreview = async () => {
+    if (selectedExperience === '' || addingGap === null) return;
+    setGeneratingBullet(true);
+    try {
+      const expIndex = parseInt(selectedExperience);
+      const exp = structuredResume.experience[expIndex];
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || '',
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 200,
+          messages: [{ 
+            role: 'user', 
+            content: `Generate ONE bullet point for the role "${exp.title}" at "${exp.company}" that incorporates this skill/requirement: "${gaps[addingGap].requirement}". Base it on the candidate's actual experience context: ${resumeText}. Return ONLY the bullet point text, no prefix.` 
+          }]
+        })
+      });
+      
+      const data = await response.json();
+      const bullet = data.content[0].text.trim().replace(/^[•\-\*]\s*/, '');
+      setPreviewBullet(bullet);
+      setShowPreview(true);
+    } catch (error) {
+      setError('Failed to generate preview');
+    } finally {
+      setGeneratingBullet(false);
+    }
+  };
+
+  const addBulletToResume = () => {
+    if (!previewBullet || selectedExperience === '') return;
+    const updated = {...structuredResume};
+    updated.experience[parseInt(selectedExperience)].bullets.push(previewBullet);
+    setStructuredResume(updated);
+    setAddingGap(null);
+    setSelectedExperience('');
+    setPreviewBullet('');
+    setShowPreview(false);
+  };
+
   const style = {
     fontFamily: selectedFont.family,
     fontSize: `${fontSize}px`,
@@ -596,10 +647,9 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
     accent: selectedColor.accent
   };
 
-  // Template renderer
   const renderTemplate = () => {
-    if (!optimizedData) return null;
-    const props = { data: optimizedData, style };
+    if (!structuredResume) return null;
+    const props = { data: structuredResume, style };
     switch (selectedTemplate) {
       case 'classic': return <ClassicTemplate {...props} />;
       case 'modern': return <ModernTemplate {...props} />;
@@ -610,7 +660,6 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
     }
   };
 
-  // Export functions
   const exportPDF = () => {
     const printWindow = window.open('', '_blank');
     const content = previewRef.current?.innerHTML || '';
@@ -618,7 +667,7 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
       <!DOCTYPE html>
       <html>
         <head>
-          <title>${optimizedData?.contact?.name || 'Resume'}</title>
+          <title>${structuredResume?.contact?.name || 'Resume'}</title>
           <style>
             @page { margin: 0.5in; size: letter; }
             body { margin: 0; padding: 20px; font-family: ${selectedFont.family}; }
@@ -638,7 +687,7 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>${optimizedData?.contact?.name || 'Resume'}</title>
+  <title>${structuredResume?.contact?.name || 'Resume'}</title>
   <style>body { font-family: ${selectedFont.family}; max-width: 800px; margin: 40px auto; padding: 20px; }</style>
 </head>
 <body>${content}</body>
@@ -647,20 +696,26 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `${optimizedData?.contact?.name || 'resume'}.html`;
+    a.download = `${structuredResume?.contact?.name || 'resume'}.html`;
     a.click();
     URL.revokeObjectURL(url);
   };
 
   const copyJSON = () => {
-    navigator.clipboard.writeText(JSON.stringify(optimizedData, null, 2));
+    navigator.clipboard.writeText(JSON.stringify(structuredResume, null, 2));
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // ============================================================================
-  // RENDER
-  // ============================================================================
+  const exportJSON = () => {
+    const element = document.createElement('a');
+    const file = new Blob([JSON.stringify(structuredResume, null, 2)], { type: 'application/json' });
+    element.href = URL.createObjectURL(file);
+    element.download = `${structuredResume?.contact?.name || 'resume'}_optimized.json`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -672,12 +727,25 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
               <Sparkles className="w-7 h-7" />
               <div>
                 <h1 className="text-2xl font-bold">AI Resume Optimizer</h1>
-                <p className="text-sm text-blue-100">Tailor your resume to any job in seconds</p>
+                <p className="text-sm text-blue-100">Optimize, analyze gaps, and format beautifully</p>
               </div>
             </div>
-            {step === 'format' && (
+            {phase !== 'upload' && (
               <button
-                onClick={() => { setStep('input'); setOptimizedData(null); }}
+                onClick={() => { 
+                  setPhase('upload'); 
+                  setStructuredResume({
+                    contact: { name: '', email: '', phone: '', address: '', linkedin: '' },
+                    professionalSummary: '',
+                    experience: [],
+                    education: [],
+                    certifications: [],
+                    skills: [],
+                    references: ''
+                  });
+                  setSuggestions([]);
+                  setGaps([]);
+                }}
                 className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors"
               >
                 ← Start Over
@@ -687,128 +755,91 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
         </div>
       </div>
 
-      {/* STEP 1: INPUT */}
-      {step === 'input' && (
-        <div className="max-w-5xl mx-auto p-6">
+      <div className="max-w-7xl mx-auto p-6">
+        {/* PHASE 1: UPLOAD */}
+        {phase === 'upload' && (
           <div className="bg-white rounded-xl shadow-lg p-6">
             <div className="flex items-center gap-3 mb-6">
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                 <Upload className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-gray-800">Step 1: Provide Your Information</h2>
-                <p className="text-sm text-gray-600">Paste your current resume or enter your details</p>
+                <h2 className="text-xl font-bold text-gray-800">Step 1: Upload Your Information</h2>
+                <p className="text-sm text-gray-600">Provide your resume and the job description</p>
               </div>
             </div>
 
-            <div className="space-y-4">
-              {/* File Upload Section */}
-              <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".pdf,.json"
-                  onChange={handleFileUpload}
-                  className="hidden"
-                  id="file-upload"
-                />
-                <label
-                  htmlFor="file-upload"
-                  className="cursor-pointer flex flex-col items-center gap-3"
-                >
-                  <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                    {isUploading ? (
-                      <div className="w-8 h-8 border-3 border-blue-600 border-t-transparent rounded-full animate-spin" />
-                    ) : (
-                      <Upload className="w-8 h-8 text-blue-600" />
-                    )}
-                  </div>
-                  <div>
-                    <p className="text-lg font-semibold text-gray-700">
-                      {isUploading ? 'Processing file...' : 'Upload Resume'}
-                    </p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Click to upload PDF or JSON file
-                    </p>
-                    <p className="text-xs text-gray-400 mt-2">
-                      Supported formats: .pdf, .json
-                    </p>
-                  </div>
-                </label>
-              </div>
-
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-300"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-4 bg-white text-gray-500">OR</span>
-                </div>
-              </div>
-
+            <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Your Resume Information
-                </label>
-                <textarea
-                  value={resumeInput}
-                  onChange={(e) => setResumeInput(e.target.value)}
-                  placeholder="Paste your resume text here, or type your information in any format:
-
-Name: John Doe
-Email: john@example.com
-Phone: 555-1234
-LinkedIn: linkedin.com/in/johndoe
-
-Summary: Experienced software engineer...
-
-Experience:
-- Software Engineer at ABC Corp (2020-Present)
-  * Built scalable web applications
-  * Led team of 3 developers
-  
-Education:
-- BS Computer Science, XYZ University, 2020
-
-Skills: Python, React, AWS, etc."
-                  className="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Job Description
-                </label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Job Description *</label>
                 <textarea
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
-                  placeholder="Paste the full job description here...
-
-Senior Software Engineer
-Company XYZ is seeking an experienced engineer...
-
-Requirements:
-- 5+ years of experience with Python and React
-- Strong AWS experience
-- Leadership experience..."
+                  placeholder="Paste the full job description here..."
                   className="w-full h-48 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 />
               </div>
 
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">Your Resume *</label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".pdf,.doc,.docx,.txt"
+                    onChange={handleResumeUpload}
+                    className="hidden"
+                    id="resume-upload"
+                  />
+                  <label htmlFor="resume-upload" className="cursor-pointer flex flex-col items-center gap-3">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                      <Upload className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <div>
+                      <p className="text-lg font-semibold text-gray-700">
+                        {resumeFile ? resumeFile.name : 'Upload Resume'}
+                      </p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        Click to upload PDF, Word, or Text file
+                      </p>
+                      <p className="text-xs text-gray-400 mt-2">
+                        Supported: .pdf, .doc, .docx, .txt
+                      </p>
+                    </div>
+                  </label>
+                </div>
+                
+                {resumeText && (
+                  <button 
+                    onClick={() => setShowResumePreview(!showResumePreview)} 
+                    className="mt-2 text-xs text-blue-600 underline"
+                  >
+                    {showResumePreview ? 'Hide' : 'Preview'} extracted text
+                  </button>
+                )}
+                
+                {showResumePreview && resumeText && (
+                  <div className="mt-2 p-3 bg-gray-50 border rounded-lg max-h-40 overflow-y-auto">
+                    <p className="text-xs text-gray-700 whitespace-pre-wrap">{resumeText.substring(0, 500)}...</p>
+                  </div>
+                )}
+              </div>
+
               {error && (
-                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm">
+                <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
+                  <AlertCircle className="w-5 h-5 flex-shrink-0" />
                   {error}
                 </div>
               )}
 
               <button
-                onClick={optimizeResume}
-                disabled={isOptimizing}
+                onClick={optimizeContent}
+                disabled={loadingOptimize || !jobDescription || !resumeText}
                 className="w-full bg-gradient-to-r from-blue-600 to-purple-600 text-white py-3 px-6 rounded-lg font-medium hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 transition-all"
               >
-                {isOptimizing ? (
+                {loadingOptimize ? (
                   <>
-                    <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <Loader2 className="animate-spin w-5 h-5" />
                     Optimizing Resume...
                   </>
                 ) : (
@@ -821,16 +852,175 @@ Requirements:
               </button>
             </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* STEP 2: FORMAT & EXPORT */}
-      {step === 'format' && optimizedData && (
-        <div className="max-w-7xl mx-auto p-4">
+{/* PHASE 2: OPTIMIZE (Gap Analysis & Suggestions) */}
+        {phase === 'optimize' && (
+          <div className="space-y-6">
+            {/* Action Buttons */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <div className="grid md:grid-cols-3 gap-3">
+                <button 
+                  onClick={getSuggestions} 
+                  disabled={loadingSuggestions} 
+                  className="bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 disabled:bg-gray-300 flex items-center justify-center gap-2"
+                >
+                  {loadingSuggestions ? (
+                    <Loader2 className="animate-spin w-5 h-5" />
+                  ) : (
+                    <>
+                      <Lightbulb className="w-5 h-5" />
+                      Get Suggestions
+                    </>
+                  )}
+                </button>
+                <button 
+                  onClick={findGaps} 
+                  disabled={loadingGaps} 
+                  className="bg-amber-500 text-white py-3 rounded-lg font-semibold hover:bg-amber-600 disabled:bg-gray-300 flex items-center justify-center gap-2"
+                >
+                  {loadingGaps ? (
+                    <Loader2 className="animate-spin w-5 h-5" />
+                  ) : (
+                    <>
+                      <Search className="w-5 h-5" />
+                      Find Missing Skills
+                    </>
+                  )}
+                </button>
+                <button 
+                  onClick={() => setPhase('format')} 
+                  className="bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 flex items-center justify-center gap-2"
+                >
+                  <Sparkles className="w-5 h-5" />
+                  Format & Export
+                </button>
+              </div>
+            </div>
+
+            {/* Suggestions & Gaps */}
+            {(suggestions.length > 0 || gaps.length > 0) && (
+              <div className="grid md:grid-cols-2 gap-6">
+                {/* Suggestions Panel */}
+                {suggestions.length > 0 && (
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      Improvement Suggestions
+                    </h3>
+                    <div className="space-y-3">
+                      {suggestions.map((suggestion, i) => (
+                        <div key={i} className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                          <p className="text-sm text-gray-700">{suggestion}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Gap Analysis Panel */}
+                {gaps.length > 0 && (
+                  <div className="bg-white rounded-xl shadow-lg p-6">
+                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                      <AlertCircle className="w-5 h-5 text-amber-600" />
+                      Missing Skills Analysis
+                    </h3>
+                    <div className="space-y-3">
+                      {gaps.map((gap, i) => (
+                        <div key={i} className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                          <p className="text-sm font-semibold text-gray-800 mb-1">{gap.requirement}</p>
+                          <p className="text-xs text-gray-600 mb-3">{gap.prompt}</p>
+                          {structuredResume.experience?.length > 0 && (
+                            <button 
+                              onClick={() => handleAddGap(i)} 
+                              className="text-xs bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                            >
+                              + Add to Resume
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Resume Preview */}
+            <div className="bg-white rounded-xl shadow-lg p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-4">Optimized Resume Content</h3>
+              <div className="prose max-w-none">
+                <div className="space-y-4">
+                  {/* Contact */}
+                  {structuredResume.contact?.name && (
+                    <div className="border-b pb-4">
+                      <h2 className="text-2xl font-bold">{structuredResume.contact.name}</h2>
+                      <p className="text-sm text-gray-600">
+                        {[structuredResume.contact.email, structuredResume.contact.phone, structuredResume.contact.linkedin].filter(Boolean).join(' | ')}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Summary */}
+                  {structuredResume.professionalSummary && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Professional Summary</h3>
+                      <p className="text-sm text-gray-700">{structuredResume.professionalSummary}</p>
+                    </div>
+                  )}
+
+                  {/* Experience */}
+                  {structuredResume.experience?.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-3">Experience</h3>
+                      {structuredResume.experience.map((exp, i) => (
+                        <div key={i} className="mb-4 pl-4 border-l-2 border-blue-500">
+                          <h4 className="font-semibold">{exp.title} | {exp.company}</h4>
+                          <p className="text-xs text-gray-600">{exp.location} | {exp.startDate} - {exp.endDate}</p>
+                          <ul className="mt-2 space-y-1">
+                            {exp.bullets?.map((bullet, j) => (
+                              <li key={j} className="text-sm text-gray-700">• {bullet}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Education */}
+                  {structuredResume.education?.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Education</h3>
+                      {structuredResume.education.map((edu, i) => (
+                        <div key={i} className="text-sm mb-2">
+                          <strong>{edu.degree}</strong> - {edu.institution} ({edu.date})
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Skills */}
+                  {structuredResume.skills?.length > 0 && (
+                    <div>
+                      <h3 className="text-lg font-semibold mb-2">Skills</h3>
+                      {structuredResume.skills.map((skill, i) => (
+                        <p key={i} className="text-sm mb-1">
+                          <strong>{skill.category}:</strong> {skill.items?.join(', ')}
+                        </p>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+{/* PHASE 3: FORMAT (Template Selection & Export) */}
+        {phase === 'format' && structuredResume.contact?.name && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Left Panel - Controls */}
             <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-              {/* Tabs */}
               <div className="bg-gray-50 border-b px-4 py-2 flex gap-2">
                 {['templates', 'customize', 'export'].map(tab => (
                   <button
@@ -966,15 +1156,22 @@ Requirements:
                       <span className="text-sm font-medium text-orange-700 block">HTML File</span>
                     </button>
                     <button 
+                      onClick={exportJSON} 
+                      className="p-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+                    >
+                      <FileText className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+                      <span className="text-sm font-medium text-purple-700 block">JSON File</span>
+                    </button>
+                    <button 
                       onClick={copyJSON} 
-                      className="p-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors col-span-2"
+                      className="p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
                     >
                       {copied ? (
                         <Check className="w-5 h-5 text-green-600 mx-auto mb-1" />
                       ) : (
-                        <Copy className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+                        <Copy className="w-5 h-5 text-blue-600 mx-auto mb-1" />
                       )}
-                      <span className="text-sm font-medium text-purple-700 block">
+                      <span className="text-sm font-medium text-blue-700 block">
                         {copied ? 'Copied!' : 'Copy JSON'}
                       </span>
                     </button>
@@ -988,7 +1185,7 @@ Requirements:
               )}
             </div>
 
-            {/* Right Panel - Preview */}
+            {/* Right Panel - Live Preview */}
             <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
               <div className="bg-gray-50 border-b px-4 py-2 flex items-center justify-between">
                 <span className="text-sm font-medium text-gray-600">Live Preview</span>
@@ -1006,6 +1203,100 @@ Requirements:
                 </div>
               </div>
             </div>
+          </div>
+        )}
+      </div>
+
+      {/* Gap Addition Modal */}
+      {addingGap !== null && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <h3 className="text-xl font-semibold mb-2">Add Missing Skill to Resume</h3>
+            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded">
+              <p className="text-sm font-medium">Missing Skill:</p>
+              <p className="text-base font-semibold mt-1">{gaps[addingGap]?.requirement}</p>
+            </div>
+
+            <div className="mb-4">
+              <label className="block text-sm font-medium mb-2">Select which experience to add this to:</label>
+              <select 
+                value={selectedExperience} 
+                onChange={(e) => {
+                  setSelectedExperience(e.target.value);
+                  setShowPreview(false);
+                  setPreviewBullet('');
+                }} 
+                className="w-full p-3 border rounded-lg"
+              >
+                <option value="">Choose an experience...</option>
+                {structuredResume.experience?.map((exp, i) => (
+                  <option key={i} value={i}>{exp.title} | {exp.company}</option>
+                ))}
+              </select>
+            </div>
+
+            {selectedExperience !== '' && !showPreview && (
+              <button 
+                onClick={generatePreview} 
+                disabled={generatingBullet} 
+                className="w-full mb-4 py-3 bg-blue-500 text-white rounded-lg font-medium disabled:bg-gray-300 flex items-center justify-center gap-2"
+              >
+                {generatingBullet ? (
+                  <>
+                    <Loader2 className="animate-spin w-5 h-5" />
+                    Generating Preview...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5" />
+                    Generate Preview Bullet
+                  </>
+                )}
+              </button>
+            )}
+
+            {showPreview && (
+              <div className="mb-4 space-y-3">
+                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                  <p className="text-sm font-medium text-green-800 mb-2">✓ Preview Bullet Point:</p>
+                  <textarea 
+                    value={previewBullet} 
+                    onChange={(e) => setPreviewBullet(e.target.value)} 
+                    className="w-full p-2 border rounded text-sm resize-none" 
+                    rows="3" 
+                  />
+                  <p className="text-xs text-gray-600 mt-2">You can edit this before adding</p>
+                </div>
+                <div className="flex gap-2">
+                  <button 
+                    onClick={generatePreview} 
+                    disabled={generatingBullet} 
+                    className="flex-1 py-2 border border-blue-500 text-blue-600 rounded-lg font-medium hover:bg-blue-50"
+                  >
+                    {generatingBullet ? <Loader2 className="animate-spin w-4 h-4 mx-auto" /> : '🔄 Regenerate'}
+                  </button>
+                  <button 
+                    onClick={addBulletToResume} 
+                    className="flex-1 py-2 bg-green-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
+                  >
+                    <CheckCircle className="w-4 h-4" />
+                    Add to Resume
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <button 
+              onClick={() => {
+                setAddingGap(null);
+                setSelectedExperience('');
+                setPreviewBullet('');
+                setShowPreview(false);
+              }} 
+              className="w-full px-4 py-2 border rounded-lg hover:bg-gray-50"
+            >
+              Cancel
+            </button>
           </div>
         </div>
       )}
