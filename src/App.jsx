@@ -2,6 +2,33 @@ import React, { useState, useRef } from 'react';
 import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle } from 'lucide-react';
 import * as mammoth from 'mammoth';
 
+const PhaseNavigation = ({ phase, setPhase }) => {
+  const phases = ['upload', 'optimized', 'format'];
+  const currentIndex = phases.indexOf(phase);
+  
+  return (
+    <div className="flex justify-between items-center mb-6">
+      {currentIndex > 0 ? (
+        <button 
+          onClick={() => setPhase(phases[currentIndex - 1])} 
+          className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium"
+        >
+          ← Back
+        </button>
+      ) : <div />}
+      
+      {currentIndex < phases.length - 1 && (
+        <button 
+          onClick={() => setPhase(phases[currentIndex + 1])} 
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium"
+        >
+          Next →
+        </button>
+      )}
+    </div>
+  );
+};
+
 const templates = [
   { id: 'classic', name: 'Classic', desc: 'Traditional, serif fonts', icon: '📄' },
   { id: 'modern', name: 'Modern', desc: 'Clean, minimal design', icon: '✨' },
@@ -877,6 +904,7 @@ export default function ResumeAutomation() {
         {/* PHASE 1: UPLOAD */}
         {phase === 'upload' && (
           <div className="bg-white rounded-xl shadow-lg p-6">
+            <PhaseNavigation phase={phase} setPhase={setPhase} />
             {/* Headers of the boxes */}
             <div className="flex items-center gap-3 mb-6">
               {/* Icon */}
@@ -979,6 +1007,7 @@ export default function ResumeAutomation() {
 {/* PHASE 2: OPTIMIZE (Gap Analysis & Suggestions) */}
         {phase === 'optimize' && (
           <div className="space-y-6">
+            <PhaseNavigation phase={phase} setPhase={setPhase} />
             {/* Action Buttons */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="grid md:grid-cols-3 gap-3">
@@ -1244,6 +1273,7 @@ export default function ResumeAutomation() {
 {/* PHASE 3: FORMAT (Template Selection & Export) */}
         {phase === 'format' && structuredResume.contact?.name && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <PhaseNavigation phase={phase} setPhase={setPhase} />
             {/* Left Panel - Controls */}
             <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
               <div className="bg-gray-50 border-b px-4 py-2 flex gap-2">
