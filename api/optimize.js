@@ -27,7 +27,7 @@ export default async function handler(req, res) {
       },
       body: JSON.stringify({
         model: "claude-sonnet-4-20250514",
-        max_tokens: 4000,
+        max_tokens: 8000,
         messages: [{
           role: "user",
           content: `You are an expert resume optimizer. Your task is to analyze the job description and strategically reword the candidate's EXISTING resume to make them appear as a better fit for this specific role.

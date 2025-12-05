@@ -817,9 +817,10 @@ export default function ResumeAutomation() {
     document.body.removeChild(element);
   };
 
-
+  console.log('App rendering, phase:', phase, 'structuredResume:', structuredResume);
 
   return (
+
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
