@@ -537,41 +537,41 @@ export default function ResumeAutomation() {
     return text;
   };//FALTABA
 
-const optimizeContent = async () => {
-    if (!jobDescription || !resumeText) {
-      setError('Please provide both job description and resume.');
-      return;
-    }
-
-    setLoadingOptimize(true);
-    setError('');
-
-    try {
-      const response = await fetch('/api/optimize', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resumeInput: resumeText,
-          jobDescription: jobDescription
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || data.details || 'Failed to optimize resume');
+  const optimizeContent = async () => {
+      if (!jobDescription || !resumeText) {
+        setError('Please provide both job description and resume.');
+        return;
       }
 
-      setStructuredResume(data);
-      setOptimizedContent(JSON.stringify(data, null, 2));
-      setPhase('optimized');
-    } catch (error) {
-      console.error('Optimization error:', error);
-      setError(`Error: ${error.message}`);
-    } finally {
-      setLoadingOptimize(false);
-    }
-  };
+      setLoadingOptimize(true);
+      setError('');
+
+      try {
+        const response = await fetch('/api/optimize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            resumeInput: resumeText,
+            jobDescription: jobDescription
+          })
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || data.details || 'Failed to optimize resume');
+        }
+
+        setStructuredResume(data);
+        setOptimizedContent(JSON.stringify(data, null, 2));
+        setPhase('optimized');
+      } catch (error) {
+        console.error('Optimization error:', error);
+        setError(`Error: ${error.message}`);
+      } finally {
+        setLoadingOptimize(false);
+      }
+    };
 
   const getSuggestions = async () => {
     setLoadingSuggestions(true);
