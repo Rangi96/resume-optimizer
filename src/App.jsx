@@ -3,7 +3,7 @@ import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, 
 import * as mammoth from 'mammoth';
 
 // Add the new props here inside the curly braces
-const PhaseNavigation = ({ phase, setPhase, loadingOptimize, jobDescription, resumeText }) => {
+const PhaseNavigation = ({ phase, setPhase, loadingOptimize, jobDescription, resumeText, optimizedContent }) => {
   const phases = ['upload', 'optimize', 'format'];
   const currentIndex = phases.indexOf(phase);
   
@@ -22,7 +22,7 @@ const PhaseNavigation = ({ phase, setPhase, loadingOptimize, jobDescription, res
         <button 
           onClick={() => setPhase(phases[currentIndex + 1])} 
           // Now this line works because the props exist
-          disabled={loadingOptimize || !jobDescription || !resumeText}
+          disabled={loadingOptimize || !jobDescription || !resumeText || !optimizedContent}
           className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Next →
@@ -577,7 +577,6 @@ export default function ResumeAutomation() {
       setError('');
 
       try {
-        console.log('1. Starting optimization...');
         
         const response = await fetch('/api/optimize', {
           method: 'POST',
@@ -588,29 +587,18 @@ export default function ResumeAutomation() {
           })
         });
 
-        console.log('2. Got response, status:', response.status);
-
         const data = await response.json();
-        
-        console.log('3. Parsed JSON data:', data);
-        console.log('4. Data type:', typeof data);
-        console.log('5. Has contact?', !!data.contact);
-        console.log('6. Has experience?', !!data.experience);
 
         if (!response.ok) {
           throw new Error(data.error || data.details || 'Failed to optimize resume');
         }
 
-        console.log('7. About to setStructuredResume...');
         setStructuredResume(data);
         
-        console.log('8. About to setOptimizedContent...');
         setOptimizedContent(JSON.stringify(data, null, 2));
         
-        console.log('9. About to setPhase to optimized...');
         setPhase('optimize');
         
-        console.log('10. All done!');
       } catch (error) {
         console.error('ERROR caught:', error);
         setError(`Error: ${error.message}`);
@@ -920,7 +908,7 @@ export default function ResumeAutomation() {
                 </div>
                 
                 {/* Navigation */}
-                <div>
+                <div className="ml-auto">
                   <PhaseNavigation 
                     phase={phase} 
                     setPhase={setPhase}
@@ -928,6 +916,7 @@ export default function ResumeAutomation() {
                     loadingOptimize={loadingOptimize} 
                     jobDescription={jobDescription}
                     resumeText={resumeText}
+                    optimizedContent={optimizedContent}
                   />
                 </div>
             </div>
