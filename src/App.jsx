@@ -3,7 +3,7 @@ import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, 
 import * as mammoth from 'mammoth';
 
 const PhaseNavigation = ({ phase, setPhase }) => {
-  const phases = ['upload', 'optimized', 'format'];
+  const phases = ['upload', 'optimize', 'format'];
   const currentIndex = phases.indexOf(phase);
   
   return (
