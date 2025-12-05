@@ -22,10 +22,7 @@ const PhaseNavigation = ({ phase, setPhase, isUploadComplete }) => {
         <button 
           onClick={() => setPhase(phases[currentIndex + 1])} 
           // Now this line works because the props exist
-          disabled={
-            (currentIndex === 0 && !isUploadComplete) || // Phase 1 Lock
-            (currentIndex === 1 && !isOptimizeComplete)  // Phase 2 Lock
-          }
+          disabled={!isUploadComplete}
           className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Next →
@@ -423,8 +420,7 @@ export default function ResumeAutomation() {
   const [resumeText, setResumeText] = useState('');
   const [optimizedContent, setOptimizedContent] = useState('');//FALTABA
   const [showResumePreview, setShowResumePreview] = useState(false);
-  const [isUploadComplete, setIsUploadComplete] = useState(false);
-  const [isFormatTriggered, setIsFormatTriggered] = useState(false);
+  const [isUploadComplete, setIsUploadComplete] = useState(false)
   
   // Optimize phase
   const [structuredResume, setStructuredResume] = useState({
