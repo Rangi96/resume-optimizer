@@ -35,14 +35,6 @@ const PhaseNavigation = ({ phase, setPhase, isUploadComplete }) => {
   );
 };
 
-const handleFormatClick = () => {
-  // Do your formatting logic here (API calls, etc.)
-  
-  // Set the flag to TRUE (Unlocks the Next button)
-  setIsFormatTriggered(true);
-   
-};
-
 const templates = [
   { id: 'classic', name: 'Classic', desc: 'Traditional, serif fonts', icon: '📄' },
   { id: 'modern', name: 'Modern', desc: 'Clean, minimal design', icon: '✨' },
@@ -1026,13 +1018,7 @@ export default function ResumeAutomation() {
 {/* PHASE 2: OPTIMIZE (Gap Analysis & Suggestions) */}
         {phase === 'optimize' && (
           <div className="space-y-6">
-            <div>
-              <PhaseNavigation 
-                phase={phase} 
-                setPhase={setPhase} 
-                isFormatTriggered={isFormatTriggered}
-              />
-            </div>
+            <PhaseNavigation phase={phase} setPhase={setPhase} />
             {/* Action Buttons */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="grid md:grid-cols-3 gap-3">
@@ -1065,10 +1051,7 @@ export default function ResumeAutomation() {
                   )}
                 </button>
                 <button 
-                  onClick={() => {
-                    setPhase('format');
-                    setIsFormatTriggered(true);
-                  }} 
+                  onClick={() => setPhase('format')} 
                   className="bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
