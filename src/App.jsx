@@ -22,7 +22,10 @@ const PhaseNavigation = ({ phase, setPhase, isUploadComplete }) => {
         <button 
           onClick={() => setPhase(phases[currentIndex + 1])} 
           // Now this line works because the props exist
-          disabled={!isUploadComplete}
+          disabled={
+            (currentIndex === 0 && !isUploadComplete) || // Phase 1 Lock
+            (currentIndex === 1 && !isOptimizeComplete)  // Phase 2 Lock
+          }
           className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Next →
@@ -420,7 +423,8 @@ export default function ResumeAutomation() {
   const [resumeText, setResumeText] = useState('');
   const [optimizedContent, setOptimizedContent] = useState('');//FALTABA
   const [showResumePreview, setShowResumePreview] = useState(false);
-  const [isUploadComplete, setIsUploadComplete] = useState(false)
+  const [isUploadComplete, setIsUploadComplete] = useState(false);
+  const [isFormatTriggered, setIsFormatTriggered] = useState(false);
   
   // Optimize phase
   const [structuredResume, setStructuredResume] = useState({
@@ -1014,7 +1018,11 @@ export default function ResumeAutomation() {
 {/* PHASE 2: OPTIMIZE (Gap Analysis & Suggestions) */}
         {phase === 'optimize' && (
           <div className="space-y-6">
-            <PhaseNavigation phase={phase} setPhase={setPhase} />
+            <PhaseNavigation 
+              phase={phase} 
+              setPhase={setPhase} 
+              isFormatTriggered={isFormatTriggered}
+            />
             {/* Action Buttons */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="grid md:grid-cols-3 gap-3">
@@ -1047,7 +1055,10 @@ export default function ResumeAutomation() {
                   )}
                 </button>
                 <button 
-                  onClick={() => setPhase('format')} 
+                  onClick={() => {
+                    setPhase('format');
+                    setIsFormatTriggered(true);
+                  }} 
                   className="bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
