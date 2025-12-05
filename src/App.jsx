@@ -578,7 +578,7 @@ export default function ResumeAutomation() {
         setOptimizedContent(JSON.stringify(data, null, 2));
         
         console.log('9. About to setPhase to optimized...');
-        setPhase('optimized');
+        setPhase('optimize');
         
         console.log('10. All done!');
       } catch (error) {
