@@ -633,6 +633,7 @@ export default function ResumeAutomation() {
     const updated = {...structuredResume};
     updated.experience[parseInt(selectedExperience)].bullets.push(previewBullet);
     setStructuredResume(updated);
+    // MISSING setOptimizedContent(convertStructuredToText(updated));
     setAddingGap(null);
     setSelectedExperience('');
     setPreviewBullet('');
@@ -717,6 +718,8 @@ export default function ResumeAutomation() {
     document.body.removeChild(element);
   };
 
+
+
   return (
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
@@ -759,17 +762,21 @@ export default function ResumeAutomation() {
         {/* PHASE 1: UPLOAD */}
         {phase === 'upload' && (
           <div className="bg-white rounded-xl shadow-lg p-6">
+            {/* Headers of the boxes */}
             <div className="flex items-center gap-3 mb-6">
+              {/* Icon */}
               <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
                 <Upload className="w-5 h-5 text-blue-600" />
               </div>
+              {/* Text next to the Icon */}
               <div>
                 <h2 className="text-xl font-bold text-gray-800">Step 1: Upload Your Information</h2>
                 <p className="text-sm text-gray-600">Provide your resume and the job description</p>
               </div>
             </div>
-
+            {/* Box for the inputs upload and job description Not the white rectangle*/}
             <div className="space-y-6">
+              {/* Job Description */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Job Description *</label>
                 <textarea
@@ -779,7 +786,7 @@ export default function ResumeAutomation() {
                   className="w-full h-48 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 />
               </div>
-
+              {/* Resume Upload */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Your Resume *</label>
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
@@ -824,14 +831,14 @@ export default function ResumeAutomation() {
                   </div>
                 )}
               </div>
-
+              {/* Error Message */}
               {error && (
                 <div className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-sm flex items-center gap-2">
                   <AlertCircle className="w-5 h-5 flex-shrink-0" />
                   {error}
                 </div>
               )}
-
+              {/* Button to optimize resume */}
               <button
                 onClick={optimizeContent}
                 disabled={loadingOptimize || !jobDescription || !resumeText}
@@ -952,14 +959,29 @@ export default function ResumeAutomation() {
               <div className="prose max-w-none">
                 <div className="space-y-4">
                   {/* Contact */}
-                  {structuredResume.contact?.name && (
-                    <div className="border-b pb-4">
-                      <h2 className="text-2xl font-bold">{structuredResume.contact.name}</h2>
-                      <p className="text-sm text-gray-600">
-                        {[structuredResume.contact.email, structuredResume.contact.phone, structuredResume.contact.linkedin].filter(Boolean).join(' | ')}
-                      </p>
-                    </div>
-                  )}
+                  <div className="bg-white rounded-lg shadow-sm p-6">
+                    {editingSection === 'contact' ? (
+                      <div className="space-y-3">
+                        <input type="text" value={editData.name} onChange={(e)=>setEditData({...editData,name:e.target.value})} className="w-full p-2 border rounded text-xl font-bold" />
+                        <div className="grid grid-cols-2 gap-3">
+                          <input type="email" value={editData.email} onChange={(e)=>setEditData({...editData,email:e.target.value})} className="p-2 border rounded text-sm" />
+                          <input type="text" value={editData.phone} onChange={(e)=>setEditData({...editData,phone:e.target.value})} className="p-2 border rounded text-sm" />
+                        </div>
+                        <div className="flex gap-2">
+                          <button onClick={()=>saveEdit('contact')} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">Save</button>
+                          <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">Cancel</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="flex justify-between">
+                        <div>
+                          <h2 className="text-2xl font-bold">{structuredResume.contact.name}</h2>
+                          <p className="text-sm text-gray-600">{structuredResume.contact.email} | {structuredResume.contact.phone}</p>
+                        </div>
+                        <button onClick={()=>startEdit('contact',structuredResume.contact)} className="px-3 py-1 border rounded text-sm">Edit</button>
+                      </div>
+                    )}
+                  </div>
 
                   {/* Summary */}
                   {structuredResume.professionalSummary && (
