@@ -412,6 +412,9 @@ export default function ResumeAutomation() {
   const [generatingBullet, setGeneratingBullet] = useState(false);
   const [previewBullet, setPreviewBullet] = useState('');
   const [showPreview, setShowPreview] = useState(false);
+  const [editingSection, setEditingSection] = useState(null);//FALTABA
+  const [editData, setEditData] = useState(null);//FALTABA
+  const [showExportMenu, setShowExportMenu] = useState(false);//FALTABA
   
   // Format phase
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
@@ -584,6 +587,49 @@ export default function ResumeAutomation() {
       setLoadingGaps(false);
     }
   };
+
+  const startEdit = (section, data) => {
+    setEditingSection(section);
+    setEditData(JSON.parse(JSON.stringify(data)));
+  };//FALTABA
+
+  const cancelEdit = () => {
+    setEditingSection(null);
+    setEditData(null);
+  };//FALTABA
+
+  const saveEdit = (section) => {
+    const updated = {...structuredResume};
+    
+    if (section === 'contact') updated.contact = editData;
+    else if (section === 'summary') updated.professionalSummary = editData;
+    else if (section.startsWith('experience-')) updated.experience[parseInt(section.split('-')[1])] = editData;
+    else if (section.startsWith('education-')) updated.education[parseInt(section.split('-')[1])] = editData;
+    else if (section === 'skills') updated.skills = editData;
+    else if (section.startsWith('certification-')) updated.certifications[parseInt(section.split('-')[1])] = editData;
+    
+    setStructuredResume(updated);
+    setOptimizedContent(convertStructuredToText(updated));
+    setEditingSection(null);
+    setEditData(null);
+  };//FALTABA
+
+  const deleteItem = (section, index) => {
+    const updated = {...structuredResume};
+    if (section === 'experience') updated.experience.splice(index, 1);
+    else if (section === 'education') updated.education.splice(index, 1);
+    else if (section === 'certifications') updated.certifications.splice(index, 1);
+    setStructuredResume(updated);
+    setOptimizedContent(convertStructuredToText(updated));
+  };//FALTABA
+
+  const addNewItem = (section) => {
+    const updated = {...structuredResume};
+    if (section === 'experience') updated.experience.push({title:'',company:'',location:'',startDate:'',endDate:'',bullets:['']});
+    else if (section === 'education') updated.education.push({degree:'',institution:'',location:'',date:'',details:[]});
+    else if (section === 'certifications') updated.certifications.push({name:'',issuer:'',date:''});
+    setStructuredResume(updated);
+  };//FALTABA
 
   const handleAddGap = (gapIndex) => {
     if (structuredResume.experience && structuredResume.experience.length > 0) {
