@@ -979,6 +979,21 @@ export default function ResumeAutomation() {
 {/* PHASE 2: OPTIMIZE (Gap Analysis & Suggestions) */}
         {phase === 'optimize' && (
           <div className="space-y-6">
+            {/* Navigation */}
+            <div className="flex justify-between items-center">
+              <button 
+                onClick={() => setPhase('upload')} 
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium flex items-center gap-2"
+              >
+                ← Back to Upload
+              </button>
+              <button 
+                onClick={() => setPhase('format')} 
+                className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium flex items-center gap-2"
+              >
+                Continue to Format →
+              </button>
+            </div>
             {/* Action Buttons */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="grid md:grid-cols-3 gap-3">
@@ -1022,6 +1037,7 @@ export default function ResumeAutomation() {
 
             {/* Suggestions & Gaps */}
             {(suggestions.length > 0 || gaps.length > 0) && (
+              
               <div className="grid md:grid-cols-2 gap-6">
                 {/* Suggestions Panel */}
                 {suggestions.length > 0 && (
@@ -1243,6 +1259,16 @@ export default function ResumeAutomation() {
 
 {/* PHASE 3: FORMAT (Template Selection & Export) */}
         {phase === 'format' && structuredResume.contact?.name && (
+          <div className="space-y-6">
+            {/* Navigation */}
+            <div className="flex justify-start">
+              <button 
+                onClick={() => setPhase('optimized')} 
+                className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium flex items-center gap-2"
+              >
+                ← Back to Edit
+              </button>
+            </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Left Panel - Controls */}
             <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
