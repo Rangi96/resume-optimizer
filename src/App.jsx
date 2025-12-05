@@ -547,6 +547,8 @@ export default function ResumeAutomation() {
       setError('');
 
       try {
+        console.log('1. Starting optimization...');
+        
         const response = await fetch('/api/optimize', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -556,23 +558,37 @@ export default function ResumeAutomation() {
           })
         });
 
+        console.log('2. Got response, status:', response.status);
+
         const data = await response.json();
+        
+        console.log('3. Parsed JSON data:', data);
+        console.log('4. Data type:', typeof data);
+        console.log('5. Has contact?', !!data.contact);
+        console.log('6. Has experience?', !!data.experience);
 
         if (!response.ok) {
           throw new Error(data.error || data.details || 'Failed to optimize resume');
         }
 
+        console.log('7. About to setStructuredResume...');
         setStructuredResume(data);
+        
+        console.log('8. About to setOptimizedContent...');
         setOptimizedContent(JSON.stringify(data, null, 2));
+        
+        console.log('9. About to setPhase to optimized...');
         setPhase('optimized');
+        
+        console.log('10. All done!');
       } catch (error) {
-        console.error('Optimization error:', error);
+        console.error('ERROR caught:', error);
         setError(`Error: ${error.message}`);
       } finally {
         setLoadingOptimize(false);
       }
     };
-
+    
   const getSuggestions = async () => {
     setLoadingSuggestions(true);
     try {
@@ -817,10 +833,9 @@ export default function ResumeAutomation() {
     document.body.removeChild(element);
   };
 
-  console.log('App rendering, phase:', phase, 'structuredResume:', structuredResume);
+
 
   return (
-
     <div className="min-h-screen bg-gray-100">
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
