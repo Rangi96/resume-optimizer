@@ -388,6 +388,7 @@ export default function ResumeAutomation() {
   const [jobDescription, setJobDescription] = useState('');
   const [resumeFile, setResumeFile] = useState(null);
   const [resumeText, setResumeText] = useState('');
+  const [optimizedContent, setOptimizedContent] = useState('');//FALTABA
   const [showResumePreview, setShowResumePreview] = useState(false);
   
   // Optimize phase
@@ -496,25 +497,67 @@ export default function ResumeAutomation() {
     setError('');
 
     try {
+      const prompt = `You are an expert resume optimizer. Your task is to analyze the job description and strategically reword the candidate's EXISTING resume to make them appear as a better fit for this specific role.
+
+      CRITICAL RULES - NEVER VIOLATE:
+      1. DO NOT invent, fabricate, or add ANY job titles, companies, experiences, or accomplishments that aren't in the original resume
+      2. DO NOT add skills or technologies the candidate hasn't mentioned
+      3. ONLY reword and rephrase EXISTING bullet points to:
+        - Emphasize skills and keywords from the job description
+        - Highlight relevant accomplishments that match job requirements
+        - Use terminology and language from the job posting
+        - Reorder bullet points to put most relevant experience first
+      4. Keep ALL job titles, company names, dates, and education EXACTLY as written in the original
+      5. Maintain the candidate's authentic voice and real experience
+
+      YOUR OPTIMIZATION STRATEGY:
+      - Analyze the job description to identify key requirements, skills, and keywords
+      - For each bullet point in the resume, reword it to emphasize aspects that align with the job requirements
+      - Use action verbs and terminology from the job description where appropriate
+      - Quantify achievements when possible (but only with numbers already in the resume)
+      - Reorder bullets within each job to showcase most relevant experience first
+      - Keep the same overall structure and all sections
+
+      Job Description (analyze for keywords and requirements):
+      ${jobDescription}
+
+      Current Resume (THIS IS THE ONLY SOURCE OF TRUTH - preserve all actual experiences):
+      ${resumeText}
+
+      Return a JSON object with this EXACT structure:
+      {
+        "contact": {"name": "Full name from resume", "email": "email from resume", "phone": "phone from resume", "address": "address from resume", "linkedin": "LinkedIn URL if present"},
+        "professionalSummary": "Generate a 2-3 sentence professional summary based on their actual experience and how it aligns with this job",
+        "experience": [{"title": "Exact job title from resume", "company": "Exact company name from resume", "location": "Location from resume", "startDate": "Exact start date from resume", "endDate": "Exact end date from resume", "bullets": ["Reworded bullet emphasizing relevant skills"]}],
+        "education": [{"degree": "Exact degree from resume", "institution": "Exact institution from resume", "location": "Location from resume", "date": "Graduation date from resume", "details": ["Any honors, GPA, coursework from resume"]}],
+        "certifications": [{"name": "Exact certification name from resume", "issuer": "Exact issuer from resume", "date": "Exact date from resume"}],
+        "skills": [{"category": "Category from resume", "items": ["Skill 1 from resume", "Skill 2 from resume"]}],
+        "references": "References text from resume or Available upon request"
+      }
+
+      CRITICAL: Return ONLY valid JSON. Ensure all information comes from the original resume. Focus on strategic rewording, not fabrication.`;
+
       const response = await fetch('/api/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           resumeInput: resumeText, 
-          jobDescription 
+          max_tokens: 8000,
+          messages: [{ role: 'user', content: prompt }]
+
         })
       });
 
-      if (!response.ok) {
-        throw new Error('Optimization failed');
+      const data = await response.json();
+      const jsonMatch = data.content[0].text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const structured = JSON.parse(jsonMatch[0]);
+        setStructuredResume(structured);
+        setOptimizedContent(convertStructuredToText(structured));
+        setPhase('optimized');
       }
-      
-      const parsed = await response.json();
-      setStructuredResume(parsed);
-      setPhase('optimize');
     } catch (error) {
-      console.error('Optimization error:', error);
-      setError('Failed to optimize resume. Please try again.');
+      alert(`Error: ${error.message}`);
     } finally {
       setLoadingOptimize(false);
     }
@@ -536,7 +579,7 @@ export default function ResumeAutomation() {
           max_tokens: 1500,
           messages: [{ 
             role: 'user', 
-            content: `Provide 4-6 improvement suggestions for this resume as a numbered list:\n${resumeText}` 
+            content: `Provide 4-6 improvement suggestions for this resume as a numbered list:\n${optimizedContent}` 
           }]
         })
       });
@@ -570,7 +613,7 @@ export default function ResumeAutomation() {
           max_tokens: 2000,
           messages: [{ 
             role: 'user', 
-            content: `Find missing skills or requirements from the job description that aren't clearly demonstrated in the resume. Return JSON format: {"gaps": [{"requirement": "Missing skill/requirement", "prompt": "Brief explanation"}]}\n\nResume: ${resumeText}\n\nJob Description: ${jobDescription}` 
+            content: `Find missing skills or requirements from the job description that aren't clearly demonstrated in the resume. Return JSON format: {"gaps": [{"requirement": "Missing skill/requirement", "prompt": "Brief sentence"}]}\n\nResume: ${optimizedContent}\n\nJob Description: ${jobDescription}` 
           }]
         })
       });
@@ -1031,51 +1074,139 @@ export default function ResumeAutomation() {
 
                   {/* Summary */}
                   {structuredResume.professionalSummary && (
-                    <div>
-                      <h3 className="text-lg font-semibold mb-2">Professional Summary</h3>
-                      <p className="text-sm text-gray-700">{structuredResume.professionalSummary}</p>
+                    <div className="bg-white rounded-lg shadow-sm p-6">
+                      <div className="flex justify-between items-start mb-2">
+                        <h3 className="text-lg font-semibold">Professional Summary</h3>
+                        {editingSection !== 'summary' && (
+                          <button onClick={()=>startEdit('summary',structuredResume.professionalSummary)} className="px-3 py-1 border rounded text-sm">Edit</button>
+                        )}
+                      </div>
+                      {editingSection === 'summary' ? (
+                        <div className="space-y-3">
+                          <textarea value={editData} onChange={(e)=>setEditData(e.target.value)} className="w-full p-3 border rounded text-sm" rows="4" />
+                          <div className="flex gap-2">
+                            <button onClick={()=>saveEdit('summary')} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">Save</button>
+                            <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">Cancel</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <p className="text-sm text-gray-700">{structuredResume.professionalSummary}</p>
+                      )}
                     </div>
                   )}
 
                   {/* Experience */}
-                  {structuredResume.experience?.length > 0 && (
+                  {structuredResume.experience && structuredResume.experience.length > 0 && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-3">Experience</h3>
-                      {structuredResume.experience.map((exp, i) => (
-                        <div key={i} className="mb-4 pl-4 border-l-2 border-blue-500">
-                          <h4 className="font-semibold">{exp.title} | {exp.company}</h4>
-                          <p className="text-xs text-gray-600">{exp.location} | {exp.startDate} - {exp.endDate}</p>
-                          <ul className="mt-2 space-y-1">
-                            {exp.bullets?.map((bullet, j) => (
-                              <li key={j} className="text-sm text-gray-700">• {bullet}</li>
-                            ))}
-                          </ul>
+                      <h3 className="text-xl font-bold mb-4">Experience</h3>
+                      {structuredResume.experience.map((exp,idx)=>(
+                        <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
+                          <div className="flex gap-4">
+                            <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center font-semibold text-blue-600">{idx+1}</div>
+                            <div className="flex-1">
+                              {editingSection === `experience-${idx}` ? (
+                                <div className="space-y-3">
+                                  <div className="grid grid-cols-2 gap-3">
+                                    <input type="text" value={editData.title} onChange={(e)=>setEditData({...editData,title:e.target.value})} placeholder="Job Title" className="p-2 border rounded font-semibold" />
+                                    <input type="text" value={editData.company} onChange={(e)=>setEditData({...editData,company:e.target.value})} placeholder="Company" className="p-2 border rounded" />
+                                    <input type="text" value={editData.location} onChange={(e)=>setEditData({...editData,location:e.target.value})} placeholder="Location" className="p-2 border rounded text-sm" />
+                                    <div className="flex gap-2">
+                                      <input type="text" value={editData.startDate} onChange={(e)=>setEditData({...editData,startDate:e.target.value})} placeholder="Start" className="p-2 border rounded text-sm flex-1" />
+                                      <input type="text" value={editData.endDate} onChange={(e)=>setEditData({...editData,endDate:e.target.value})} placeholder="End" className="p-2 border rounded text-sm flex-1" />
+                                    </div>
+                                  </div>
+                                  <div className="space-y-2">
+                                    <label className="text-sm font-medium">Bullets:</label>
+                                    {editData.bullets.map((bullet,bIdx)=>(
+                                      <div key={bIdx} className="flex gap-2">
+                                        <input type="text" value={bullet} onChange={(e)=>{const nb=[...editData.bullets];nb[bIdx]=e.target.value;setEditData({...editData,bullets:nb});}} className="flex-1 p-2 border rounded text-sm" />
+                                        <button onClick={()=>{const nb=editData.bullets.filter((_,i)=>i!==bIdx);setEditData({...editData,bullets:nb});}} className="px-3 py-2 bg-red-100 text-red-600 rounded text-sm">✕</button>
+                                      </div>
+                                    ))}
+                                    <button onClick={()=>setEditData({...editData,bullets:[...editData.bullets,'']})} className="px-3 py-1 bg-gray-100 rounded text-sm">+ Add Bullet</button>
+                                  </div>
+                                  <div className="flex gap-2">
+                                    <button onClick={()=>saveEdit(`experience-${idx}`)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">Save</button>
+                                    <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">Cancel</button>
+                                  </div>
+                                </div>
+                              ) : (
+                                <>
+                                  <div className="flex justify-between">
+                                    <div>
+                                      <h4 className="text-lg font-semibold">{exp.title} | {exp.company}</h4>
+                                      <p className="text-sm text-gray-600">{exp.location} | {exp.startDate} - {exp.endDate}</p>
+                                    </div>
+                                    <div className="flex gap-2">
+                                      <button onClick={()=>startEdit(`experience-${idx}`,exp)} className="px-3 py-1 border rounded text-sm">Edit</button>
+                                      <button onClick={()=>deleteItem('experience',idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">Delete</button>
+                                    </div>
+                                  </div>
+                                  <div className="mt-3">
+                                    <p className="text-sm font-medium mb-2">Job description</p>
+                                    {exp.bullets.map((bullet,bIdx)=>(
+                                      <p key={bIdx} className="text-sm text-gray-700">• {bullet}</p>
+                                    ))}
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       ))}
+                      <button onClick={()=>addNewItem('experience')} className="px-4 py-2 bg-blue-500 text-white rounded">+ Add Experience</button>
                     </div>
                   )}
 
                   {/* Education */}
-                  {structuredResume.education?.length > 0 && (
+                  {structuredResume.education && structuredResume.education.length>0 && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-2">Education</h3>
-                      {structuredResume.education.map((edu, i) => (
-                        <div key={i} className="text-sm mb-2">
-                          <strong>{edu.degree}</strong> - {edu.institution} ({edu.date})
+                      <h3 className="text-xl font-bold mb-4">Education</h3>
+                      {structuredResume.education.map((edu,idx)=>(
+                        <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
+                          <div className="flex justify-between">
+                            <div>
+                              <h4 className="text-lg font-semibold">{edu.degree} | {edu.institution}</h4>
+                              <p className="text-sm text-gray-600">{edu.location} | {edu.date}</p>
+                            </div>
+                            <button onClick={()=>deleteItem('education',idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">Delete</button>
+                          </div>
                         </div>
                       ))}
+                      <button onClick={()=>addNewItem('education')} className="px-4 py-2 bg-blue-500 text-white rounded">+ Add Education</button>
+                    </div>
+                  )}
+
+                  {/* Certifications */}
+                  {structuredResume.certifications && structuredResume.certifications.length>0 && (
+                    <div>
+                      <h3 className="text-xl font-bold mb-4">Certifications</h3>
+                      <div className="bg-white rounded-lg shadow-sm p-6">
+                        {structuredResume.certifications.map((cert,idx)=>(
+                          <div key={idx} className="pb-3 mb-3 border-b last:border-0 flex justify-between">
+                            <div>
+                              <p className="font-semibold">{cert.name}</p>
+                              <p className="text-sm text-gray-600">{cert.issuer} | {cert.date}</p>
+                            </div>
+                            <button onClick={()=>deleteItem('certifications',idx)} className="px-2 py-1 border border-red-300 text-red-600 rounded text-xs">Delete</button>
+                          </div>
+                        ))}
+                      </div>
+                      <button onClick={()=>addNewItem('certifications')} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">+ Add Certification</button>
                     </div>
                   )}
 
                   {/* Skills */}
-                  {structuredResume.skills?.length > 0 && (
+                  {structuredResume.skills && structuredResume.skills.length>0 && (
                     <div>
-                      <h3 className="text-lg font-semibold mb-2">Skills</h3>
-                      {structuredResume.skills.map((skill, i) => (
-                        <p key={i} className="text-sm mb-1">
-                          <strong>{skill.category}:</strong> {skill.items?.join(', ')}
-                        </p>
-                      ))}
+                      <h3 className="text-xl font-bold mb-4">Skills</h3>
+                      <div className="bg-white rounded-lg shadow-sm p-6">
+                        {structuredResume.skills.map((sg,idx)=>(
+                          <p key={idx} className="text-sm mb-2">
+                            <span className="font-semibold">{sg.category}:</span> {sg.items.join(', ')}
+                          </p>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
