@@ -487,7 +487,57 @@ export default function ResumeAutomation() {
     }
   };
 
-  const optimizeContent = async () => {
+    const convertStructuredToText = (structured) => {
+    let text = '';
+    
+    if (structured.contact) {
+      text += `${structured.contact.name}\n`;
+      const contactDetails = [structured.contact.email, structured.contact.phone, structured.contact.address].filter(Boolean).join(' | ');
+      text += `${contactDetails}\n\n`;
+    }
+    
+    if (structured.professionalSummary) {
+      text += `PROFESSIONAL SUMMARY\n${structured.professionalSummary}\n\n`;
+    }
+    
+    if (structured.experience && structured.experience.length > 0) {
+      text += `EXPERIENCE\n\n`;
+      structured.experience.forEach(exp => {
+        text += `${exp.title} | ${exp.company}\n${exp.location} | ${exp.startDate} - ${exp.endDate}\n`;
+        exp.bullets.forEach(bullet => text += `• ${bullet}\n`);
+        text += '\n';
+      });
+    }
+    
+    if (structured.education && structured.education.length > 0) {
+      text += `EDUCATION\n\n`;
+      structured.education.forEach(edu => {
+        text += `${edu.degree} | ${edu.institution}\n${edu.location} | ${edu.date}\n`;
+        if (edu.details) edu.details.forEach(d => text += `• ${d}\n`);
+        text += '\n';
+      });
+    }
+    
+    if (structured.certifications && structured.certifications.length > 0) {
+      text += `CERTIFICATIONS\n\n`;
+      structured.certifications.forEach(cert => text += `${cert.name} | ${cert.issuer} | ${cert.date}\n`);
+      text += '\n';
+    }
+    
+    if (structured.skills && structured.skills.length > 0) {
+      text += `SKILLS\n\n`;
+      structured.skills.forEach(sg => text += `${sg.category}: ${sg.items.join(', ')}\n`);
+      text += '\n';
+    }
+    
+    if (structured.references) {
+      text += `REFERENCES\n${structured.references}\n`;
+    }
+    
+    return text;
+  };//FALTABA
+
+const optimizeContent = async () => {
     if (!jobDescription || !resumeText) {
       setError('Please provide both job description and resume.');
       return;
@@ -497,67 +547,27 @@ export default function ResumeAutomation() {
     setError('');
 
     try {
-      const prompt = `You are an expert resume optimizer. Your task is to analyze the job description and strategically reword the candidate's EXISTING resume to make them appear as a better fit for this specific role.
-
-      CRITICAL RULES - NEVER VIOLATE:
-      1. DO NOT invent, fabricate, or add ANY job titles, companies, experiences, or accomplishments that aren't in the original resume
-      2. DO NOT add skills or technologies the candidate hasn't mentioned
-      3. ONLY reword and rephrase EXISTING bullet points to:
-        - Emphasize skills and keywords from the job description
-        - Highlight relevant accomplishments that match job requirements
-        - Use terminology and language from the job posting
-        - Reorder bullet points to put most relevant experience first
-      4. Keep ALL job titles, company names, dates, and education EXACTLY as written in the original
-      5. Maintain the candidate's authentic voice and real experience
-
-      YOUR OPTIMIZATION STRATEGY:
-      - Analyze the job description to identify key requirements, skills, and keywords
-      - For each bullet point in the resume, reword it to emphasize aspects that align with the job requirements
-      - Use action verbs and terminology from the job description where appropriate
-      - Quantify achievements when possible (but only with numbers already in the resume)
-      - Reorder bullets within each job to showcase most relevant experience first
-      - Keep the same overall structure and all sections
-
-      Job Description (analyze for keywords and requirements):
-      ${jobDescription}
-
-      Current Resume (THIS IS THE ONLY SOURCE OF TRUTH - preserve all actual experiences):
-      ${resumeText}
-
-      Return a JSON object with this EXACT structure:
-      {
-        "contact": {"name": "Full name from resume", "email": "email from resume", "phone": "phone from resume", "address": "address from resume", "linkedin": "LinkedIn URL if present"},
-        "professionalSummary": "Generate a 2-3 sentence professional summary based on their actual experience and how it aligns with this job",
-        "experience": [{"title": "Exact job title from resume", "company": "Exact company name from resume", "location": "Location from resume", "startDate": "Exact start date from resume", "endDate": "Exact end date from resume", "bullets": ["Reworded bullet emphasizing relevant skills"]}],
-        "education": [{"degree": "Exact degree from resume", "institution": "Exact institution from resume", "location": "Location from resume", "date": "Graduation date from resume", "details": ["Any honors, GPA, coursework from resume"]}],
-        "certifications": [{"name": "Exact certification name from resume", "issuer": "Exact issuer from resume", "date": "Exact date from resume"}],
-        "skills": [{"category": "Category from resume", "items": ["Skill 1 from resume", "Skill 2 from resume"]}],
-        "references": "References text from resume or Available upon request"
-      }
-
-      CRITICAL: Return ONLY valid JSON. Ensure all information comes from the original resume. Focus on strategic rewording, not fabrication.`;
-      const resumeText = JSON.stringify(structuredResume);
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          resumeInput: resumeText, 
-          max_tokens: 8000,
-          messages: [{ role: 'user', content: prompt }]
-
+        body: JSON.stringify({
+          resumeInput: resumeText,
+          jobDescription: jobDescription
         })
       });
 
       const data = await response.json();
-      const jsonMatch = data.content[0].text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const structured = JSON.parse(jsonMatch[0]);
-        setStructuredResume(structured);
-        setOptimizedContent(convertStructuredToText(structured));
-        setPhase('optimized');
+
+      if (!response.ok) {
+        throw new Error(data.error || data.details || 'Failed to optimize resume');
       }
+
+      setStructuredResume(data);
+      setOptimizedContent(JSON.stringify(data, null, 2));
+      setPhase('optimized');
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      console.error('Optimization error:', error);
+      setError(`Error: ${error.message}`);
     } finally {
       setLoadingOptimize(false);
     }

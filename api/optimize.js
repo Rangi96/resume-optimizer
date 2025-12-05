@@ -30,19 +30,31 @@ export default async function handler(req, res) {
         max_tokens: 4000,
         messages: [{
           role: "user",
-          content: `You are an expert resume optimizer. Given a person's resume information and a job description, optimize the resume to better match the job requirements.
+          content: `You are an expert resume optimizer. Your task is to analyze the job description and strategically reword the candidate's EXISTING resume to make them appear as a better fit for this specific role.
 
-CRITICAL RULES:
-1. DO NOT invent new experiences, skills, or accomplishments
-2. ONLY rework existing content to highlight relevant aspects
-3. Rewrite bullet points to emphasize relevant skills and match job keywords
-4. Reorder sections/items to prioritize most relevant content
-5. Ensure all dates, companies, and core facts remain accurate
+CRITICAL RULES - NEVER VIOLATE:
+1. DO NOT invent, fabricate, or add ANY job titles, companies, experiences, or accomplishments that aren't in the original resume
+2. DO NOT add skills or technologies the candidate hasn't mentioned
+3. ONLY reword and rephrase EXISTING bullet points to:
+   - Emphasize skills and keywords from the job description
+   - Highlight relevant accomplishments that match job requirements
+   - Use terminology and language from the job posting
+   - Reorder bullet points to put most relevant experience first
+4. Keep ALL job titles, company names, dates, and education EXACTLY as written in the original
+5. Maintain the candidate's authentic voice and real experience
 
-Resume Information:
+YOUR OPTIMIZATION STRATEGY:
+- Analyze the job description to identify key requirements, skills, and keywords
+- For each bullet point in the resume, reword it to emphasize aspects that align with the job requirements
+- Use action verbs and terminology from the job description where appropriate
+- Quantify achievements when possible (but only with numbers already in the resume)
+- Reorder bullets within each job to showcase most relevant experience first
+- Keep the same overall structure and all sections
+
+Resume Information:(THIS IS THE ONLY SOURCE OF TRUTH - preserve all actual experiences):
 ${resumeInput}
 
-Job Description:
+Job Description: (analyze for keywords and requirements)
 ${jobDescription}
 
 Return ONLY a valid JSON object (no markdown, no explanation) with this exact structure:
