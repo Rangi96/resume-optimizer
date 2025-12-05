@@ -50,7 +50,7 @@ const ClassicTemplate = ({ data, style }) => (
               <span style={{ fontSize: '0.85em', color: '#555' }}>{exp.startDate} - {exp.endDate}</span>
             </div>
             <div style={{ fontSize: '0.9em', color: '#444', fontStyle: 'italic' }}>{exp.company}, {exp.location}</div>
-            <ul style={{ margin: '6px 0', paddingLeft: '18px', fontSize: '0.88em' }}>
+            <ul style={{ margin: '6px 0', paddingLeft: '18px', fontSize: '0.88em', listStyleType: 'disc'  }}>
               {exp.bullets?.map((b, j) => <li key={j} style={{ marginBottom: '3px' }}>{b}</li>)}
             </ul>
           </div>
@@ -118,7 +118,7 @@ const ModernTemplate = ({ data, style }) => (
               <span style={{ fontSize: '0.8em', color: style.accent, fontWeight: '500' }}>{exp.startDate} - {exp.endDate}</span>
             </div>
             <div style={{ fontSize: '0.9em', color: '#666' }}>{exp.company} • {exp.location}</div>
-            <ul style={{ margin: '8px 0', paddingLeft: '16px', fontSize: '0.85em', color: '#444' }}>
+            <ul style={{ margin: '8px 0', paddingLeft: '16px', fontSize: '0.85em', color: '#444', listStyleType: 'disc'  }}>
               {exp.bullets?.map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
             </ul>
           </div>
@@ -189,7 +189,7 @@ const ATSTemplate = ({ data, style }) => (
           <div key={i} style={{ marginBottom: '12px' }}>
             <p style={{ margin: 0, fontWeight: 'bold' }}>{exp.title}</p>
             <p style={{ margin: '2px 0', fontSize: '0.9em' }}>{exp.company}, {exp.location} | {exp.startDate} - {exp.endDate}</p>
-            <ul style={{ margin: '6px 0', paddingLeft: '20px', fontSize: '0.88em' }}>
+            <ul style={{ margin: '6px 0', paddingLeft: '20px', fontSize: '0.88em', listStyleType: 'disc'  }}>
               {exp.bullets?.map((b, j) => <li key={j} style={{ marginBottom: '3px' }}>{b}</li>)}
             </ul>
           </div>
@@ -252,7 +252,7 @@ const ExecutiveTemplate = ({ data, style }) => (
                   <span style={{ fontSize: '0.8em', color: '#666', fontWeight: '600' }}>{exp.startDate} - {exp.endDate}</span>
                 </div>
                 <p style={{ margin: '2px 0 8px 0', fontSize: '0.9em', color: '#555', fontWeight: '500' }}>{exp.company} | {exp.location}</p>
-                <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444' }}>
+                <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc'  }}>
                   {exp.bullets?.map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
                 </ul>
               </div>
@@ -342,7 +342,7 @@ const CreativeTemplate = ({ data, style }) => (
               <span style={{ fontSize: '0.8em', color: 'white', background: style.accent, padding: '2px 10px', borderRadius: '12px' }}>{exp.startDate} - {exp.endDate}</span>
             </div>
             <p style={{ margin: '0 0 8px 0', fontSize: '0.9em', color: '#666' }}>{exp.company} • {exp.location}</p>
-            <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', background: 'black' }}>
+            <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc' }}>
               {exp.bullets?.map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
             </ul>
           </div>
