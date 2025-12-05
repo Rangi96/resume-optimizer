@@ -536,8 +536,8 @@ export default function ResumeAutomation() {
       }
 
       CRITICAL: Return ONLY valid JSON. Ensure all information comes from the original resume. Focus on strategic rewording, not fabrication.`;
-
-      const response = await fetch('/api/optimize', {
+      const resumeText = JSON.stringify(structuredResume);
+      const response = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
