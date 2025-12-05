@@ -3,7 +3,7 @@ import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, 
 import * as mammoth from 'mammoth';
 
 // Add the new props here inside the curly braces
-const PhaseNavigation = ({ phase, setPhase, loadingOptimize, jobDescription, resumeText, optimizedContent }) => {
+const PhaseNavigation = ({ phase, setPhase, loadingOptimize, jobDescription, resumeText, structuredResume }) => {
   const phases = ['upload', 'optimize', 'format'];
   const currentIndex = phases.indexOf(phase);
   
@@ -22,7 +22,7 @@ const PhaseNavigation = ({ phase, setPhase, loadingOptimize, jobDescription, res
         <button 
           onClick={() => setPhase(phases[currentIndex + 1])} 
           // Now this line works because the props exist
-          disabled={loadingOptimize || !jobDescription || !resumeText || !optimizedContent}
+          disabled={loadingOptimize || !jobDescription || !resumeText || !structuredResume}
           className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Next →
@@ -916,7 +916,7 @@ export default function ResumeAutomation() {
                     loadingOptimize={loadingOptimize} 
                     jobDescription={jobDescription}
                     resumeText={resumeText}
-                    optimizedContent={optimizedContent}
+                    structuredResume={structuredResume}
                   />
                 </div>
             </div>
