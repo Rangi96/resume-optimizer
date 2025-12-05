@@ -916,7 +916,9 @@ export default function ResumeAutomation() {
                 <h2 className="text-xl font-bold text-gray-800">Step 1: Upload Your Information</h2>
                 <p className="text-sm text-gray-600">Provide your resume and the job description</p>
               </div>
-              <PhaseNavigation phase={phase} setPhase={setPhase} />
+              <div>
+                <PhaseNavigation phase={phase} setPhase={setPhase} />
+              </div>
             </div>
             {/* Box for the inputs upload and job description Not the white rectangle*/}
             <div className="space-y-6">
