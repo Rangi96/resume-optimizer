@@ -420,6 +420,7 @@ export default function ResumeAutomation() {
   const [resumeText, setResumeText] = useState('');
   const [optimizedContent, setOptimizedContent] = useState('');//FALTABA
   const [showResumePreview, setShowResumePreview] = useState(false);
+  const [isUploadComplete, setIsUploadComplete] = useState(false)
   
   // Optimize phase
   const [structuredResume, setStructuredResume] = useState({
@@ -598,10 +599,13 @@ export default function ResumeAutomation() {
         setOptimizedContent(JSON.stringify(data, null, 2));
         
         setPhase('optimize');
+
+        setIsUploadComplete(true)
         
       } catch (error) {
         console.error('ERROR caught:', error);
         setError(`Error: ${error.message}`);
+        setIsUploadComplete(false)
       } finally {
         setLoadingOptimize(false);
       }
