@@ -35,6 +35,14 @@ const PhaseNavigation = ({ phase, setPhase, isUploadComplete }) => {
   );
 };
 
+const handleFormatClick = () => {
+  // Do your formatting logic here (API calls, etc.)
+  
+  // Set the flag to TRUE (Unlocks the Next button)
+  setIsFormatTriggered(true);
+   
+};
+
 const templates = [
   { id: 'classic', name: 'Classic', desc: 'Traditional, serif fonts', icon: '📄' },
   { id: 'modern', name: 'Modern', desc: 'Clean, minimal design', icon: '✨' },
@@ -1018,11 +1026,13 @@ export default function ResumeAutomation() {
 {/* PHASE 2: OPTIMIZE (Gap Analysis & Suggestions) */}
         {phase === 'optimize' && (
           <div className="space-y-6">
-            <PhaseNavigation 
-              phase={phase} 
-              setPhase={setPhase} 
-              isFormatTriggered={isFormatTriggered}
-            />
+            <div>
+              <PhaseNavigation 
+                phase={phase} 
+                setPhase={setPhase} 
+                isFormatTriggered={isFormatTriggered}
+              />
+            </div>
             {/* Action Buttons */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="grid md:grid-cols-3 gap-3">
