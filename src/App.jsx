@@ -3,10 +3,17 @@ import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, 
 import * as mammoth from 'mammoth';
 
 // Add the new props here inside the curly braces
-const PhaseNavigation = ({ phase, setPhase, isUploadComplete }) => {
+const PhaseNavigation = ({ phase, setPhase, isUploadComplete, isFormatTriggered }) => {
   const phases = ['upload', 'optimize', 'format'];
   const currentIndex = phases.indexOf(phase);
   
+  // Logic: 
+  // 1. If in Upload phase (0), disable if upload is NOT complete.
+  // 2. If in Optimize phase (1), disable if Format button was NOT triggered.
+  const isNextDisabled = 
+    (currentIndex === 0 && !isUploadComplete) || 
+    (currentIndex === 1 && !isFormatTriggered);
+
   return (
     <div className="flex justify-between items-center mb-6">
       {currentIndex > 0 ? (
@@ -21,8 +28,7 @@ const PhaseNavigation = ({ phase, setPhase, isUploadComplete }) => {
       {currentIndex < phases.length - 1 && (
         <button 
           onClick={() => setPhase(phases[currentIndex + 1])} 
-          // Now this line works because the props exist
-          disabled={!isUploadComplete}
+          disabled={isNextDisabled}
           className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
         >
           Next →
@@ -420,7 +426,9 @@ export default function ResumeAutomation() {
   const [resumeText, setResumeText] = useState('');
   const [optimizedContent, setOptimizedContent] = useState('');//FALTABA
   const [showResumePreview, setShowResumePreview] = useState(false);
-  const [isUploadComplete, setIsUploadComplete] = useState(false)
+  const [isUploadComplete, setIsUploadComplete] = useState(false);
+  const [isFormatTriggered, setIsFormatTriggered] = useState(false);
+
   
   // Optimize phase
   const [structuredResume, setStructuredResume] = useState({
@@ -611,69 +619,51 @@ export default function ResumeAutomation() {
       }
     };
     
+  // FIXED: Calls your backend instead of Anthropic directly
   const getSuggestions = async () => {
     setLoadingSuggestions(true);
     try {
-      const resumeText = JSON.stringify(structuredResume);
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      // We send the data to YOUR backend, similar to /api/optimize
+      const response = await fetch('/api/suggestions', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || '',
-          'anthropic-version': '2023-06-01'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 1500,
-          messages: [{ 
-            role: 'user', 
-            content: `Provide 4-6 improvement suggestions for this resume as a numbered list:\n${optimizedContent}` 
-          }]
+          resumeJson: structuredResume // Send the structured data
         })
       });
       
+      if (!response.ok) throw new Error('Backend failed');
+      
       const data = await response.json();
-      const suggestionList = data.content[0].text
-        .split('\n')
-        .filter(line => /^\d+\./.test(line.trim()))
-        .map(line => line.replace(/^\d+\.\s*/, '').trim());
-      setSuggestions(suggestionList);
+      setSuggestions(data.suggestions || []); // Assuming backend returns { suggestions: [] }
     } catch (error) {
-      setError('Failed to get suggestions');
+      console.error(error);
+      setError('Failed to get suggestions. Ensure /api/suggestions is implemented.');
     } finally {
       setLoadingSuggestions(false);
     }
   };
 
+  // FIXED: Calls your backend
   const findGaps = async () => {
     setLoadingGaps(true);
     try {
-      const resumeText = JSON.stringify(structuredResume);
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      const response = await fetch('/api/gaps', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || '',
-          'anthropic-version': '2023-06-01'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 2000,
-          messages: [{ 
-            role: 'user', 
-            content: `Find missing skills or requirements from the job description that aren't clearly demonstrated in the resume. Return JSON format: {"gaps": [{"requirement": "Missing skill/requirement", "prompt": "Brief sentence"}]}\n\nResume: ${optimizedContent}\n\nJob Description: ${jobDescription}` 
-          }]
+          resumeJson: structuredResume,
+          jobDescription: jobDescription
         })
       });
       
+      if (!response.ok) throw new Error('Backend failed');
+
       const data = await response.json();
-      const jsonMatch = data.content[0].text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        const result = JSON.parse(jsonMatch[0]);
-        setGaps(result.gaps || []);
-      }
+      setGaps(data.gaps || []);
     } catch (error) {
-      setError('Failed to analyze gaps');
+      console.error(error);
+      setError('Failed to analyze gaps. Ensure /api/gaps is implemented.');
     } finally {
       setLoadingGaps(false);
     }
@@ -737,22 +727,28 @@ export default function ResumeAutomation() {
     try {
       const expIndex = parseInt(selectedExperience);
       const exp = structuredResume.experience[expIndex];
-      const response = await fetch('https://api.anthropic.com/v1/messages', {
+      
+      const response = await fetch('/api/generate-bullet', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-api-key': import.meta.env.VITE_ANTHROPIC_API_KEY || '',
-          'anthropic-version': '2023-06-01'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-20250514',
-          max_tokens: 200,
-          messages: [{ 
-            role: 'user', 
-            content: `Generate ONE bullet point for the role "${exp.title}" at "${exp.company}" that incorporates this skill/requirement: "${gaps[addingGap].requirement}". Base it on the candidate's actual experience context: ${resumeText}. Return ONLY the bullet point text, no prefix.` 
-          }]
+          role: exp.title,
+          company: exp.company,
+          requirement: gaps[addingGap].requirement,
+          context: resumeText
         })
       });
+
+      if (!response.ok) throw new Error('Backend failed');
+
+      const data = await response.json();
+      setPreviewBullet(data.bullet || '');
+    } catch (error) {
+      setError('Failed to generate preview');
+    } finally {
+      setGeneratingBullet(false);
+    }
+  };
       
       const data = await response.json();
       const bullet = data.content[0].text.trim().replace(/^[•\-\*]\s*/, '');
@@ -916,11 +912,11 @@ export default function ResumeAutomation() {
                   <PhaseNavigation 
                     phase={phase} 
                     setPhase={setPhase}
-                    // PASS THE MISSING DATA HERE
                     loadingOptimize={loadingOptimize} 
                     jobDescription={jobDescription}
                     resumeText={resumeText}
                     isUploadComplete={isUploadComplete}
+                    isFormatTriggered={isFormatTriggered} // <--- Pass it here
                   />
                 </div>
             </div>
@@ -1014,7 +1010,13 @@ export default function ResumeAutomation() {
 {/* PHASE 2: OPTIMIZE (Gap Analysis & Suggestions) */}
         {phase === 'optimize' && (
           <div className="space-y-6">
-            <PhaseNavigation phase={phase} setPhase={setPhase} />
+            {/* Pass the props here! */}
+            <PhaseNavigation 
+              phase={phase} 
+              setPhase={setPhase} 
+              isUploadComplete={true} // It's obviously true if we are here
+              isFormatTriggered={isFormatTriggered} // <--- Important
+            />
             {/* Action Buttons */}
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="grid md:grid-cols-3 gap-3">
@@ -1047,7 +1049,10 @@ export default function ResumeAutomation() {
                   )}
                 </button>
                 <button 
-                  onClick={() => setPhase('format')} 
+                  onClick={() => {
+                    setIsFormatTriggered(true); 
+                    setPhase('format'); 
+                  }} 
                   className="bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
