@@ -778,17 +778,6 @@ export default function ResumeAutomation() {
       setGeneratingBullet(false);
     }
   };
-      
-      const data = await response.json();
-      const bullet = data.content[0].text.trim().replace(/^[•\-\*]\s*/, '');
-      setPreviewBullet(bullet);
-      setShowPreview(true);
-    } catch (error) {
-      setError('Failed to generate preview');
-    } finally {
-      setGeneratingBullet(false);
-    }
-  };
 
   const addBulletToResume = () => {
     if (!previewBullet || selectedExperience === '') return;
