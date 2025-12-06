@@ -715,7 +715,7 @@ export default function ResumeAutomation() {
     else if (section === 'summary') updated.professionalSummary = editData;
     else if (section.startsWith('experience-')) updated.experience[parseInt(section.split('-')[1])] = editData;
     else if (section.startsWith('education-')) updated.education[parseInt(section.split('-')[1])] = editData;
-    else if (section === 'skills') updated.skills = editData;
+    else if (section.startsWith('skills-')) updated.skills[parseInt(section.split('-')[1])] = editData;
     else if (section.startsWith('certification-')) updated.certifications[parseInt(section.split('-')[1])] = editData;
     
     setStructuredResume(updated);
@@ -729,6 +729,7 @@ export default function ResumeAutomation() {
     if (section === 'experience') updated.experience.splice(index, 1);
     else if (section === 'education') updated.education.splice(index, 1);
     else if (section === 'certifications') updated.certifications.splice(index, 1);
+    else if (section === 'skills') updated.skills.splice(index, 1);
     setStructuredResume(updated);
     setOptimizedContent(convertStructuredToText(updated));
   };//FALTABA
@@ -738,6 +739,7 @@ export default function ResumeAutomation() {
     if (section === 'experience') updated.experience.push({title:'',company:'',location:'',startDate:'',endDate:'',bullets:['']});
     else if (section === 'education') updated.education.push({degree:'',institution:'',location:'',date:'',details:[]});
     else if (section === 'certifications') updated.certifications.push({name:'',issuer:'',date:''});
+    else if (section === 'skills') updated.skills.push({category:'',items:[]});
     setStructuredResume(updated);
   };//FALTABA
 
@@ -1282,16 +1284,73 @@ export default function ResumeAutomation() {
                   )}
 
                   {/* Skills */}
-                  {structuredResume.skills && structuredResume.skills.length>0 && (
+                  {structuredResume.skills && structuredResume.skills.length > 0 && (
                     <div>
                       <h3 className="text-xl font-bold mb-4">Skills</h3>
-                      <div className="bg-white rounded-lg shadow-sm p-6">
-                        {structuredResume.skills.map((sg,idx)=>(
-                          <p key={idx} className="text-sm mb-2">
-                            <span className="font-semibold">{sg.category}:</span> {sg.items.join(', ')}
-                          </p>
-                        ))}
-                      </div>
+                      {structuredResume.skills.map((sg, idx) => (
+                        <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
+                          {editingSection === `skills-${idx}` ? (
+                            <div className="space-y-3">
+                              <input 
+                                type="text" 
+                                value={editData.category} 
+                                onChange={(e) => setEditData({...editData, category: e.target.value})} 
+                                placeholder="Category (e.g., Programming Languages)" 
+                                className="w-full p-2 border rounded font-semibold" 
+                              />
+                              <div className="space-y-2">
+                                <label className="text-sm font-medium">Skills:</label>
+                                {editData.items.map((item, iIdx) => (
+                                  <div key={iIdx} className="flex gap-2">
+                                    <input 
+                                      type="text" 
+                                      value={item} 
+                                      onChange={(e) => {
+                                        const newItems = [...editData.items];
+                                        newItems[iIdx] = e.target.value;
+                                        setEditData({...editData, items: newItems});
+                                      }} 
+                                      className="flex-1 p-2 border rounded text-sm" 
+                                    />
+                                    <button 
+                                      onClick={() => {
+                                        const newItems = editData.items.filter((_, i) => i !== iIdx);
+                                        setEditData({...editData, items: newItems});
+                                      }} 
+                                      className="px-3 py-2 bg-red-100 text-red-600 rounded text-sm"
+                                    >
+                                      ✕
+                                    </button>
+                                  </div>
+                                ))}
+                                <button 
+                                  onClick={() => setEditData({...editData, items: [...editData.items, '']})} 
+                                  className="px-3 py-1 bg-gray-100 rounded text-sm"
+                                >
+                                  + Add Skill
+                                </button>
+                              </div>
+                              <div className="flex gap-2">
+                                <button onClick={() => saveEdit(`skills-${idx}`)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">Save</button>
+                                <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">Cancel</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="text-sm">
+                                  <span className="font-semibold">{sg.category}:</span> {sg.items.join(', ')}
+                                </p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button onClick={() => startEdit(`skills-${idx}`, sg)} className="px-3 py-1 border rounded text-sm">Edit</button>
+                                <button onClick={() => deleteItem('skills', idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">Delete</button>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                      <button onClick={() => addNewItem('skills')} className="px-4 py-2 bg-blue-500 text-white rounded">+ Add Skill Category</button>
                     </div>
                   )}
                 </div>
