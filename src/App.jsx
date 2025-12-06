@@ -626,26 +626,35 @@ export default function ResumeAutomation() {
     
   // FIXED: Calls your backend instead of Anthropic directly
   const getSuggestions = async () => {
+      console.log('getSuggestions called!');
       setLoadingSuggestions(true);
+      setError('');
+      
       try {
-        // CHANGED: Call your local backend, not Anthropic directly
+        const resumeData = JSON.stringify(structuredResume);
+        console.log('Sending resumeText:', resumeData.substring(0, 100) + '...');
+        
         const response = await fetch('/api/suggestions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            // Send the data your backend needs
-            resumeText: optimizedContent 
+            resumeText: resumeData
           })
         });
         
-        if (!response.ok) throw new Error('Failed to fetch suggestions');
+        console.log('Response status:', response.status);
         
         const data = await response.json();
-        // Ensure your backend returns { suggestions: ["text", "text"] }
+        console.log('Response data:', data);
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to fetch suggestions');
+        }
+        
         setSuggestions(data.suggestions || []);
       } catch (error) {
-        console.error(error);
-        setError('Failed to get suggestions');
+        console.error('getSuggestions error:', error);
+        setError('Failed to get suggestions: ' + error.message);
       } finally {
         setLoadingSuggestions(false);
       }
@@ -653,26 +662,37 @@ export default function ResumeAutomation() {
 
   // FIXED: Calls your backend
   const findGaps = async () => {
+      console.log('findGaps called!');
       setLoadingGaps(true);
+      setError('');
+      
       try {
-        // CHANGED: Call your local backend
+        const resumeData = JSON.stringify(structuredResume);
+        console.log('Sending resumeText:', resumeData.substring(0, 100) + '...');
+        console.log('Sending jobDescription:', jobDescription.substring(0, 100) + '...');
+        
         const response = await fetch('/api/gaps', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            resumeText: optimizedContent,
+            resumeText: resumeData,
             jobDescription: jobDescription
           })
         });
         
-        if (!response.ok) throw new Error('Failed to analyze gaps');
-
+        console.log('Response status:', response.status);
+        
         const data = await response.json();
-        // Ensure backend returns { gaps: [{ requirement: "", prompt: "" }] }
+        console.log('Response data:', data);
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Failed to analyze gaps');
+        }
+        
         setGaps(data.gaps || []);
       } catch (error) {
-        console.error(error);
-        setError('Failed to analyze gaps');
+        console.error('findGaps error:', error);
+        setError('Failed to analyze gaps: ' + error.message);
       } finally {
         setLoadingGaps(false);
       }
@@ -1058,7 +1078,10 @@ export default function ResumeAutomation() {
                   )}
                 </button>
                 <button 
-                  onClick={() => setIsFormatTriggered(true)} 
+                  onClick={() => {
+                    setIsFormatTriggered(true);
+                    setPhase('format');
+                  }} 
                   className="bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
