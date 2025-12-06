@@ -3,16 +3,15 @@ import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, 
 import * as mammoth from 'mammoth';
 
 // Add the new props here inside the curly braces
-const PhaseNavigation = ({ phase, setPhase, isUploadComplete, isFormatTriggered }) => {
+const PhaseNavigation = ({ phase, setPhase, isUploadComplete = false, isFormatTriggered = false }) => {
   const phases = ['upload', 'optimize', 'format'];
   const currentIndex = phases.indexOf(phase);
   
   // Logic: 
-  // 1. If in Upload phase (0), disable if upload is NOT complete.
-  // 2. If in Optimize phase (1), disable if Format button was NOT triggered.
-  const isNextDisabled = 
-    (currentIndex === 0 && !isUploadComplete) || 
-    (currentIndex === 1 && !isFormatTriggered);
+  // Phase 0 (Upload): Next disabled until isUploadComplete is true
+  // Phase 1 (Optimize): Next always enabled (user can go to format anytime)
+  // Phase 2 (Format): No next button
+  const isNextDisabled = (currentIndex === 0 && !isUploadComplete);
 
   return (
     <div className="flex justify-between items-center mb-6">
@@ -27,9 +26,15 @@ const PhaseNavigation = ({ phase, setPhase, isUploadComplete, isFormatTriggered 
       
       {currentIndex < phases.length - 1 && (
         <button 
-          onClick={() => setPhase(phases[currentIndex + 1])} 
+          onClick={() => {
+            setPhase(phases[currentIndex + 1]);
+          }}
           disabled={isNextDisabled}
-          className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+          className={`px-4 py-2 rounded-lg text-sm font-medium ${
+            isNextDisabled 
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+              : 'bg-blue-500 hover:bg-blue-600 text-white'
+          }`}
         >
           Next →
         </button>
@@ -621,53 +626,57 @@ export default function ResumeAutomation() {
     
   // FIXED: Calls your backend instead of Anthropic directly
   const getSuggestions = async () => {
-    setLoadingSuggestions(true);
-    try {
-      // We send the data to YOUR backend, similar to /api/optimize
-      const response = await fetch('/api/suggestions', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resumeJson: structuredResume // Send the structured data
-        })
-      });
-      
-      if (!response.ok) throw new Error('Backend failed');
-      
-      const data = await response.json();
-      setSuggestions(data.suggestions || []); // Assuming backend returns { suggestions: [] }
-    } catch (error) {
-      console.error(error);
-      setError('Failed to get suggestions. Ensure /api/suggestions is implemented.');
-    } finally {
-      setLoadingSuggestions(false);
-    }
-  };
+      setLoadingSuggestions(true);
+      try {
+        // CHANGED: Call your local backend, not Anthropic directly
+        const response = await fetch('/api/suggestions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            // Send the data your backend needs
+            resumeText: optimizedContent 
+          })
+        });
+        
+        if (!response.ok) throw new Error('Failed to fetch suggestions');
+        
+        const data = await response.json();
+        // Ensure your backend returns { suggestions: ["text", "text"] }
+        setSuggestions(data.suggestions || []);
+      } catch (error) {
+        console.error(error);
+        setError('Failed to get suggestions');
+      } finally {
+        setLoadingSuggestions(false);
+      }
+    };
 
   // FIXED: Calls your backend
   const findGaps = async () => {
-    setLoadingGaps(true);
-    try {
-      const response = await fetch('/api/gaps', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          resumeJson: structuredResume,
-          jobDescription: jobDescription
-        })
-      });
-      
-      if (!response.ok) throw new Error('Backend failed');
+      setLoadingGaps(true);
+      try {
+        // CHANGED: Call your local backend
+        const response = await fetch('/api/gaps', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            resumeText: optimizedContent,
+            jobDescription: jobDescription
+          })
+        });
+        
+        if (!response.ok) throw new Error('Failed to analyze gaps');
 
-      const data = await response.json();
-      setGaps(data.gaps || []);
-    } catch (error) {
-      console.error(error);
-      setError('Failed to analyze gaps. Ensure /api/gaps is implemented.');
-    } finally {
-      setLoadingGaps(false);
-    }
-  };
+        const data = await response.json();
+        // Ensure backend returns { gaps: [{ requirement: "", prompt: "" }] }
+        setGaps(data.gaps || []);
+      } catch (error) {
+        console.error(error);
+        setError('Failed to analyze gaps');
+      } finally {
+        setLoadingGaps(false);
+      }
+    };
 
   const startEdit = (section, data) => {
     setEditingSection(section);
@@ -1010,12 +1019,12 @@ export default function ResumeAutomation() {
 {/* PHASE 2: OPTIMIZE (Gap Analysis & Suggestions) */}
         {phase === 'optimize' && (
           <div className="space-y-6">
-            {/* Pass the props here! */}
+            {/* UPDATE THIS LINE */}
             <PhaseNavigation 
               phase={phase} 
               setPhase={setPhase} 
-              isUploadComplete={true} // It's obviously true if we are here
-              isFormatTriggered={isFormatTriggered} // <--- Important
+              isUploadComplete={true} 
+              isFormatTriggered={isFormatTriggered} 
             />
             {/* Action Buttons */}
             <div className="bg-white rounded-xl shadow-lg p-6">
@@ -1049,10 +1058,7 @@ export default function ResumeAutomation() {
                   )}
                 </button>
                 <button 
-                  onClick={() => {
-                    setIsFormatTriggered(true); 
-                    setPhase('format'); 
-                  }} 
+                  onClick={() => setIsFormatTriggered(true)} 
                   className="bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
@@ -1285,7 +1291,12 @@ export default function ResumeAutomation() {
 {/* PHASE 3: FORMAT (Template Selection & Export) */}
         {phase === 'format' && structuredResume.contact?.name && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <PhaseNavigation phase={phase} setPhase={setPhase} />
+            <PhaseNavigation 
+              phase={phase} 
+              setPhase={setPhase} 
+              isUploadComplete={isUploadComplete}
+              isFormatTriggered={isFormatTriggered}
+            />
             {/* Left Panel - Controls */}
             <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
               <div className="bg-gray-50 border-b px-4 py-2 flex gap-2">
