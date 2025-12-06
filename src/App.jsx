@@ -1361,15 +1361,19 @@ export default function ResumeAutomation() {
 
 {/* PHASE 3: FORMAT (Template Selection & Export) */}
         {phase === 'format' && structuredResume.contact?.name && (
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <div className="space-y-6">
+            {/* Navigation - OUTSIDE the grid */}
             <PhaseNavigation 
               phase={phase} 
               setPhase={setPhase} 
               isUploadComplete={isUploadComplete}
               isFormatTriggered={isFormatTriggered}
             />
-            {/* Left Panel - Controls */}
-            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+            
+            {/* Grid for the two panels */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Left Panel - Controls */}
+              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
               <div className="bg-gray-50 border-b px-4 py-2 flex gap-2">
                 {['templates', 'customize', 'export'].map(tab => (
                   <button
