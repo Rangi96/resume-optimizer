@@ -2,10 +2,27 @@
 export default {
   content: [
     "./index.html",
-    "./src/**/*.{js,ts,jsx,tsx}",
+    "./src/**/*.{js,jsx}",
   ],
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        primary: '#0066ff',
+        secondary: '#6c5ce7',
+      },
+      fontFamily: {
+        sans: ['Inter', 'system-ui', 'sans-serif'],
+      }
+    },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
+  safelist: [
+    'max-w-7xl',
+    'max-w-2xl',
+    'mx-auto',
+    'px-4',
+    'py-6',
+  ]
 }
