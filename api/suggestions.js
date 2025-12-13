@@ -1,3 +1,43 @@
+const rateLimit = new Map();
+const MAX_RESUME_SIZE = 50 * 1024;
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW = 60 * 1000;
+
+function checkRateLimit(ip) {
+  const now = Date.now();
+  const key = ip;
+  
+  if (!rateLimit.has(key)) {
+    rateLimit.set(key, []);
+  }
+  
+  const timestamps = rateLimit.get(key).filter(t => now - t < RATE_LIMIT_WINDOW);
+  
+  if (timestamps.length >= RATE_LIMIT_MAX) {
+    return false;
+  }
+  
+  timestamps.push(now);
+  rateLimit.set(key, timestamps);
+  
+  if (rateLimit.size > 1000) {
+    for (const [k, v] of rateLimit.entries()) {
+      const filtered = v.filter(t => now - t < RATE_LIMIT_WINDOW);
+      if (filtered.length === 0) {
+        rateLimit.delete(k);
+      } else {
+        rateLimit.set(k, filtered);
+      }
+    }
+  }
+  
+  return true;
+}
+
+function sanitizeString(str) {
+  return str.trim().substring(0, 1000000);
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -11,13 +51,34 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const { resumeText } = req.body;
-
-  if (!resumeText) {
-    return res.status(400).json({ error: 'Missing resumeText' });
-  }
-
   try {
+    // Rate limiting
+    const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress || 'unknown';
+    if (!checkRateLimit(ip)) {
+      return res.status(429).json({ error: 'Too many requests. Please try again later.' });
+    }
+
+    const { resumeText } = req.body;
+
+    // Input validation
+    if (!resumeText || typeof resumeText !== 'string') {
+      return res.status(400).json({ error: 'Resume text is required' });
+    }
+
+    if (resumeText.length > MAX_RESUME_SIZE) {
+      return res.status(400).json({ error: 'Resume exceeds maximum size' });
+    }
+
+    if (resumeText.length < 50) {
+      return res.status(400).json({ error: 'Resume text is too short' });
+    }
+
+    const cleanResume = sanitizeString(resumeText);
+
+    // Timeout for API call
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -33,17 +94,18 @@ export default async function handler(req, res) {
           content: `Provide 4-6 specific, actionable improvement suggestions for this resume. Focus on content, wording, and impact. Return as a numbered list.
 
 Resume:
-${resumeText}`
+${cleanResume}`
         }]
-      })
+      }),
+      signal: controller.signal
     });
+
+    clearTimeout(timeout);
 
     if (!response.ok) {
       const errorData = await response.json();
       console.error('Anthropic API error:', errorData);
-      return res.status(response.status).json({ 
-        error: errorData.error?.message || 'Failed to call Anthropic API' 
-      });
+      return res.status(500).json({ error: 'Failed to get suggestions' });
     }
 
     const data = await response.json();
@@ -58,9 +120,11 @@ ${resumeText}`
     return res.status(200).json({ suggestions: suggestionList });
   } catch (error) {
     console.error('Suggestions error:', error);
-    return res.status(500).json({ 
-      error: 'Failed to get suggestions', 
-      details: error.message 
-    });
+    
+    if (error.name === 'AbortError') {
+      return res.status(504).json({ error: 'Request timeout. Please try again.' });
+    }
+    
+    return res.status(500).json({ error: 'Failed to get suggestions' });
   }
 }
