@@ -1,6 +1,10 @@
+import { useContext } from 'react';
+import { AuthContext } from './AuthContext';
+import LoginModal from './LoginModal';
 import React, { useState, useRef } from 'react';
 import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle } from 'lucide-react';
 import * as mammoth from 'mammoth';
+import StripeCheckout from './StripeCheckout';
 
 // Add the new props here inside the curly braces
 const PhaseNavigation = ({ phase, setPhase, isUploadComplete = false, isFormatTriggered = false }) => {
@@ -450,7 +454,9 @@ export default function ResumeAutomation() {
   const [loadingOptimize, setLoadingOptimize] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [loadingGaps, setLoadingGaps] = useState(false);
-  
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const { user } = useContext(AuthContext);
+
   // Gap filling
   const [addingGap, setAddingGap] = useState(null);
   const [selectedExperience, setSelectedExperience] = useState('');
@@ -582,47 +588,52 @@ export default function ResumeAutomation() {
   };//FALTABA
 
   const optimizeContent = async () => {
-      if (!jobDescription || !resumeText) {
-        setError('Please provide both job description and resume.');
-        return;
+    // Check if user is logged in
+    if (!user) {
+      setShowLoginModal(true);
+      return;
+    }
+
+    if (!jobDescription || !resumeText) {
+      setError('Please provide both job description and resume.');
+      return;
+    }
+
+    setLoadingOptimize(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/optimize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeInput: resumeText,
+          jobDescription: jobDescription
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || data.details || 'Failed to optimize resume');
       }
 
-      setLoadingOptimize(true);
-      setError('');
+      setStructuredResume(data);
+      
+      setOptimizedContent(JSON.stringify(data, null, 2));
+      
+      setPhase('optimize');
 
-      try {
-        
-        const response = await fetch('/api/optimize', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            resumeInput: resumeText,
-            jobDescription: jobDescription
-          })
-        });
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || data.details || 'Failed to optimize resume');
-        }
-
-        setStructuredResume(data);
-        
-        setOptimizedContent(JSON.stringify(data, null, 2));
-        
-        setPhase('optimize');
-
-        setIsUploadComplete(true)
-        
-      } catch (error) {
-        console.error('ERROR caught:', error);
-        setError(`Error: ${error.message}`);
-        setIsUploadComplete(false)
-      } finally {
-        setLoadingOptimize(false);
-      }
-    };
+      setIsUploadComplete(true)
+      
+    } catch (error) {
+      console.error('ERROR caught:', error);
+      setError(`Error: ${error.message}`);
+      setIsUploadComplete(false)
+    } finally {
+      setLoadingOptimize(false);
+    }
+  };
     
   // FIXED: Calls your backend instead of Anthropic directly
   const getSuggestions = async () => {
@@ -932,11 +943,8 @@ export default function ResumeAutomation() {
                   <PhaseNavigation 
                     phase={phase} 
                     setPhase={setPhase}
-                    loadingOptimize={loadingOptimize} 
-                    jobDescription={jobDescription}
-                    resumeText={resumeText}
                     isUploadComplete={isUploadComplete}
-                    isFormatTriggered={isFormatTriggered} // <--- Pass it here
+                    isFormatTriggered={isFormatTriggered}
                   />
                 </div>
             </div>
@@ -1027,7 +1035,7 @@ export default function ResumeAutomation() {
           </div>
         )}
 
-{/* PHASE 2: OPTIMIZE (Gap Analysis & Suggestions) */}
+        {/* PHASE 2: OPTIMIZE (Gap Analysis & Suggestions) */}
         {phase === 'optimize' && (
           <div className="space-y-6">
             {/* UPDATE THIS LINE */}
@@ -1359,7 +1367,7 @@ export default function ResumeAutomation() {
           </div>
         )}
 
-{/* PHASE 3: FORMAT (Template Selection & Export) */}
+        {/* PHASE 3: FORMAT (Template Selection & Export) */}
         {phase === 'format' && structuredResume.contact?.name && (
           <div className="space-y-6">
             {/* Navigation - OUTSIDE the grid */}
@@ -1536,7 +1544,6 @@ export default function ResumeAutomation() {
                   </div>
                 </div>
               )}
-            </div>
 
             {/* Right Panel - Live Preview */}
             <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
@@ -1653,6 +1660,12 @@ export default function ResumeAutomation() {
           </div>
         </div>
       )}
+      {/* Login Modal */}
+      {/* Login Modal */}
+      <LoginModal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+      />
     </div>
   );
 }
