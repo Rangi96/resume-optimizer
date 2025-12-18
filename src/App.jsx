@@ -1564,10 +1564,9 @@ export default function ResumeAutomation() {
                     {renderTemplate()}
                   </div>
                 </div>
-              </div> {/* Close Right Panel */}
-
-            </div> {/* Close Grid */}
-          </div> // Close Space-y-6
+              </div>
+            </div> 
+          </div>
         )}
 
         {/* Gap Addition Modal */}
