@@ -4,6 +4,7 @@ import * as mammoth from 'mammoth';
 import { AuthContext } from './AuthContext';
 import LoginModal from './LoginModal';
 import StripeCheckout from './StripeCheckout';
+import UserMenu from './UserMenu';
 
 // Add the new props here inside the curly braces
 const PhaseNavigation = ({ phase, setPhase, isUploadComplete = false, isFormatTriggered = false }) => {
@@ -466,6 +467,7 @@ export default function ResumeAutomation() {
   const [editingSection, setEditingSection] = useState(null);//FALTABA
   const [editData, setEditData] = useState(null);//FALTABA
   const [showExportMenu, setShowExportMenu] = useState(false);//FALTABA
+  const [isExtractingFile, setIsExtractingFile] = useState(false);
   
   // Format phase
   const [selectedTemplate, setSelectedTemplate] = useState('modern');
@@ -522,20 +524,27 @@ export default function ResumeAutomation() {
   };
 
   const handleResumeUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setResumeFile(file);
-      try {
-        const text = await readFile(file);
-        setResumeText(text);
-        if (text.length < 50) {
-          setError('Warning: The extracted text seems too short. Please check the file.');
+      const file = e.target.files[0];
+      if (file) {
+        setResumeFile(file);
+        setIsExtractingFile(true);  // Show loading state
+        try {
+          const text = await readFile(file);
+          setResumeText(text);
+          if (text.length < 50) {
+            setError('Warning: The extracted text seems too short. Please check the file.');
+          } else {
+            setError(''); // Clear errors on success
+          }
+        } catch (error) {
+          setError('Error reading file. Please try a different format.');
+          setResumeFile(null);
+          setResumeText('');
+        } finally {
+          setIsExtractingFile(false);  // Hide loading state
         }
-      } catch (error) {
-        setError('Error reading file. Please try a different format.');
       }
-    }
-  };
+    };
 
     const convertStructuredToText = (structured) => {
     let text = '';
@@ -897,27 +906,30 @@ export default function ResumeAutomation() {
                 <p className="text-sm text-blue-100">Optimize, analyze gaps, and format beautifully</p>
               </div>
             </div>
-            {phase !== 'upload' && (
-              <button
-                onClick={() => { 
-                  setPhase('upload'); 
-                  setStructuredResume({
-                    contact: { name: '', email: '', phone: '', address: '', linkedin: '' },
-                    professionalSummary: '',
-                    experience: [],
-                    education: [],
-                    certifications: [],
-                    skills: [],
-                    references: ''
-                  });
-                  setSuggestions([]);
-                  setGaps([]);
-                }}
-                className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors"
-              >
-                ← Start Over
-              </button>
-            )}
+            <div className="flex items-center gap-3">
+              {phase !== 'upload' && (
+                <button
+                  onClick={() => { 
+                    setPhase('upload'); 
+                    setStructuredResume({
+                      contact: { name: '', email: '', phone: '', address: '', linkedin: '' },
+                      professionalSummary: '',
+                      experience: [],
+                      education: [],
+                      certifications: [],
+                      skills: [],
+                      references: ''
+                    });
+                    setSuggestions([]);
+                    setGaps([]);
+                  }}
+                  className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors"
+                >
+                  ← Start Over
+                </button>
+              )}
+             <UserMenu />
+            </div>
           </div>
         </div>
       </div>
@@ -963,25 +975,48 @@ export default function ResumeAutomation() {
               {/* Resume Upload */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Your Resume *</label>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center hover:border-blue-400 transition-colors">
+                <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  isExtractingFile 
+                    ? 'border-blue-400 bg-blue-50' 
+                    : 'border-gray-300 hover:border-blue-400'
+                }`}>
                   <input
                     ref={fileInputRef}
                     type="file"
                     accept=".pdf,.doc,.docx,.txt"
                     onChange={handleResumeUpload}
+                    disabled={isExtractingFile}
                     className="hidden"
                     id="resume-upload"
                   />
-                  <label htmlFor="resume-upload" className="cursor-pointer flex flex-col items-center gap-3">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-                      <Upload className="w-8 h-8 text-blue-600" />
+                  <label htmlFor="resume-upload" className={`cursor-pointer flex flex-col items-center gap-3 ${
+                    isExtractingFile ? 'opacity-50' : ''
+                  }`}>
+                    <div className={`w-16 h-16 rounded-full flex items-center justify-center ${
+                      isExtractingFile 
+                        ? 'bg-blue-200' 
+                        : 'bg-blue-100'
+                    }`}>
+                      {isExtractingFile ? (
+                        <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+                      ) : (
+                        <Upload className="w-8 h-8 text-blue-600" />
+                      )}
                     </div>
                     <div>
                       <p className="text-lg font-semibold text-gray-700">
-                        {resumeFile ? resumeFile.name : 'Upload Resume'}
+                        {isExtractingFile 
+                          ? 'Extracting text...' 
+                          : resumeFile 
+                            ? resumeFile.name 
+                            : 'Upload Resume'
+                        }
                       </p>
                       <p className="text-sm text-gray-500 mt-1">
-                        Click to upload PDF, Word, or Text file
+                        {isExtractingFile 
+                          ? 'Please wait while we extract your resume...' 
+                          : 'Click to upload PDF, Word, or Text file'
+                        }
                       </p>
                       <p className="text-xs text-gray-400 mt-2">
                         Supported: .pdf, .doc, .docx, .txt
@@ -989,6 +1024,16 @@ export default function ResumeAutomation() {
                     </div>
                   </label>
                 </div>
+                
+                {isExtractingFile && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-sm text-blue-700">
+                      <Loader2 className="w-4 h-4 inline animate-spin mr-2" />
+                      <span className="font-medium">Extracting text from your resume...</span>
+                    </p>
+                    <p className="text-xs text-blue-600 mt-1">This usually takes 5-10 seconds for PDFs</p>
+                  </div>
+                )}
                 
                 {resumeText && (
                   <button 
