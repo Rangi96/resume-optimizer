@@ -1,9 +1,8 @@
-import { useContext } from 'react';
-import { AuthContext } from './AuthContext';
-import LoginModal from './LoginModal';
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useContext } from 'react';
 import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle } from 'lucide-react';
 import * as mammoth from 'mammoth';
+import { AuthContext } from './AuthContext';
+import LoginModal from './LoginModal';
 import StripeCheckout from './StripeCheckout';
 
 // Add the new props here inside the curly braces
@@ -455,6 +454,7 @@ export default function ResumeAutomation() {
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [loadingGaps, setLoadingGaps] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const { user } = useContext(AuthContext);
 
   // Gap filling
@@ -797,7 +797,7 @@ export default function ResumeAutomation() {
     const updated = {...structuredResume};
     updated.experience[parseInt(selectedExperience)].bullets.push(previewBullet);
     setStructuredResume(updated);
-    // MISSING setOptimizedContent(convertStructuredToText(updated));
+    setOptimizedContent(convertStructuredToText(updated));
     setAddingGap(null);
     setSelectedExperience('');
     setPreviewBullet('');
@@ -1370,7 +1370,7 @@ export default function ResumeAutomation() {
         {/* PHASE 3: FORMAT (Template Selection & Export) */}
         {phase === 'format' && structuredResume.contact?.name && (
           <div className="space-y-6">
-            {/* Navigation - OUTSIDE the grid */}
+            {/* Navigation */}
             <PhaseNavigation 
               phase={phase} 
               setPhase={setPhase} 
@@ -1380,292 +1380,301 @@ export default function ResumeAutomation() {
             
             {/* Grid for the two panels */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              
               {/* Left Panel - Controls */}
               <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-              <div className="bg-gray-50 border-b px-4 py-2 flex gap-2">
-                {['templates', 'customize', 'export'].map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActiveTab(tab)}
-                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                      activeTab === tab 
-                        ? 'bg-blue-600 text-white' 
-                        : 'bg-white text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                  </button>
-                ))}
-              </div>
-
-              {/* Templates Tab */}
-              {activeTab === 'templates' && (
-                <div className="p-4">
-                  <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
-                    <Layout className="w-4 h-4" /> Choose Template
-                  </h2>
-                  <div className="grid grid-cols-2 gap-3">
-                    {templates.map(t => (
-                      <button
-                        key={t.id}
-                        onClick={() => setSelectedTemplate(t.id)}
-                        className={`p-4 rounded-xl border-2 text-left transition-all ${
-                          selectedTemplate === t.id 
-                            ? 'border-blue-500 bg-blue-50' 
-                            : 'border-gray-200 hover:border-gray-300'
-                        }`}
-                      >
-                        <span className="text-2xl mb-2 block">{t.icon}</span>
-                        <span className="font-semibold text-gray-800 block">{t.name}</span>
-                        <span className="text-xs text-gray-500">{t.desc}</span>
-                      </button>
-                    ))}
-                  </div>
+                <div className="bg-gray-50 border-b px-4 py-2 flex gap-2">
+                  {['templates', 'customize', 'export'].map(tab => (
+                    <button
+                      key={tab}
+                      onClick={() => setActiveTab(tab)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                        activeTab === tab 
+                          ? 'bg-blue-600 text-white' 
+                          : 'bg-white text-gray-600 hover:bg-gray-100'
+                      }`}
+                    >
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  ))}
                 </div>
-              )}
 
-              {/* Customize Tab */}
-              {activeTab === 'customize' && (
-                <div className="p-4 space-y-5">
-                  <div>
-                    <h3 className="font-medium text-gray-700 flex items-center gap-2 mb-3">
-                      <Type className="w-4 h-4" /> Font Family
-                    </h3>
-                    <div className="grid grid-cols-3 gap-2">
-                      {fontOptions.map(f => (
+                {/* Templates Tab */}
+                {activeTab === 'templates' && (
+                  <div className="p-4">
+                    <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
+                      <Layout className="w-4 h-4" /> Choose Template
+                    </h2>
+                    <div className="grid grid-cols-2 gap-3">
+                      {templates.map(t => (
                         <button
-                          key={f.id}
-                          onClick={() => setSelectedFont(f)}
-                          className={`px-3 py-2 rounded-lg text-sm border transition-all ${
-                            selectedFont.id === f.id 
-                              ? 'border-blue-500 bg-blue-50 text-blue-700' 
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                          style={{ fontFamily: f.family }}
-                        >
-                          {f.name}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div>
-                    <h3 className="font-medium text-gray-700 flex items-center gap-2 mb-3">
-                      <Palette className="w-4 h-4" /> Color Scheme
-                    </h3>
-                    <div className="grid grid-cols-2 gap-2">
-                      {colorSchemes.map(c => (
-                        <button
-                          key={c.id}
-                          onClick={() => setSelectedColor(c)}
-                          className={`px-3 py-2 rounded-lg text-sm border flex items-center gap-2 transition-all ${
-                            selectedColor.id === c.id 
+                          key={t.id}
+                          onClick={() => setSelectedTemplate(t.id)}
+                          className={`p-4 rounded-xl border-2 text-left transition-all ${
+                            selectedTemplate === t.id 
                               ? 'border-blue-500 bg-blue-50' 
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <span className="w-4 h-4 rounded-full" style={{ background: c.primary }}></span>
-                          <span className="text-xs">{c.name}</span>
+                          <span className="text-2xl mb-2 block">{t.icon}</span>
+                          <span className="font-semibold text-gray-800 block">{t.name}</span>
+                          <span className="text-xs text-gray-500">{t.desc}</span>
                         </button>
                       ))}
                     </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-gray-700 mb-3">Font Size: {fontSize}px</h3>
-                    <input 
-                      type="range" 
-                      min="10" 
-                      max="16" 
-                      value={fontSize} 
-                      onChange={(e) => setFontSize(Number(e.target.value))} 
-                      className="w-full accent-blue-600" 
-                    />
+                )}
+
+                {/* Customize Tab */}
+                {activeTab === 'customize' && (
+                  <div className="p-4 space-y-5">
+                    <div>
+                      <h3 className="font-medium text-gray-700 flex items-center gap-2 mb-3">
+                        <Type className="w-4 h-4" /> Font Family
+                      </h3>
+                      <div className="grid grid-cols-3 gap-2">
+                        {fontOptions.map(f => (
+                          <button
+                            key={f.id}
+                            onClick={() => setSelectedFont(f)}
+                            className={`px-3 py-2 rounded-lg text-sm border transition-all ${
+                              selectedFont.id === f.id 
+                                ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                            style={{ fontFamily: f.family }}
+                          >
+                            {f.name}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-700 flex items-center gap-2 mb-3">
+                        <Palette className="w-4 h-4" /> Color Scheme
+                      </h3>
+                      <div className="grid grid-cols-2 gap-2">
+                        {colorSchemes.map(c => (
+                          <button
+                            key={c.id}
+                            onClick={() => setSelectedColor(c)}
+                            className={`px-3 py-2 rounded-lg text-sm border flex items-center gap-2 transition-all ${
+                              selectedColor.id === c.id 
+                                ? 'border-blue-500 bg-blue-50' 
+                                : 'border-gray-200 hover:border-gray-300'
+                            }`}
+                          >
+                            <span className="w-4 h-4 rounded-full" style={{ background: c.primary }}></span>
+                            <span className="text-xs">{c.name}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-700 mb-3">Font Size: {fontSize}px</h3>
+                      <input 
+                        type="range" 
+                        min="10" 
+                        max="16" 
+                        value={fontSize} 
+                        onChange={(e) => setFontSize(Number(e.target.value))} 
+                        className="w-full accent-blue-600" 
+                      />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-gray-700 mb-3">Line Height: {lineHeight}</h3>
+                      <input 
+                        type="range" 
+                        min="1.2" 
+                        max="2" 
+                        step="0.1" 
+                        value={lineHeight} 
+                        onChange={(e) => setLineHeight(Number(e.target.value))} 
+                        className="w-full accent-blue-600" 
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-medium text-gray-700 mb-3">Line Height: {lineHeight}</h3>
-                    <input 
-                      type="range" 
-                      min="1.2" 
-                      max="2" 
-                      step="0.1" 
-                      value={lineHeight} 
-                      onChange={(e) => setLineHeight(Number(e.target.value))} 
-                      className="w-full accent-blue-600" 
-                    />
+                )}
+
+                {/* Export Tab */}
+                {activeTab === 'export' && (
+                  <div className="p-4">
+                    <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-3">
+                      <Download className="w-4 h-4" /> Export Options
+                    </h2>
+                    <div className="grid grid-cols-2 gap-3">
+                      <button 
+                        onClick={exportPDF} 
+                        className="p-3 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
+                      >
+                        <Printer className="w-5 h-5 text-red-600 mx-auto mb-1" />
+                        <span className="text-sm font-medium text-red-700 block">Print / PDF</span>
+                      </button>
+                      <button 
+                        onClick={exportHTML} 
+                        className="p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
+                      >
+                        <Code className="w-5 h-5 text-orange-600 mx-auto mb-1" />
+                        <span className="text-sm font-medium text-orange-700 block">HTML File</span>
+                      </button>
+                      <button 
+                        onClick={exportJSON} 
+                        className="p-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
+                      >
+                        <FileText className="w-5 h-5 text-purple-600 mx-auto mb-1" />
+                        <span className="text-sm font-medium text-purple-700 block">JSON File</span>
+                      </button>
+                      <button 
+                        onClick={copyJSON} 
+                        className="p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
+                      >
+                        {copied ? (
+                          <Check className="w-5 h-5 text-green-600 mx-auto mb-1" />
+                        ) : (
+                          <Copy className="w-5 h-5 text-blue-600 mx-auto mb-1" />
+                        )}
+                        <span className="text-sm font-medium text-blue-700 block">
+                          {copied ? 'Copied!' : 'Copy JSON'}
+                        </span>
+                      </button>
+                    </div>
+                    <div className="mt-4 p-3 bg-blue-50 rounded-lg">
+                      <p className="text-sm text-blue-700">
+                        💡 <strong>Tip:</strong> Use "Print / PDF" and choose "Save as PDF" in the print dialog.
+                      </p>
+                    </div>
+                  </div>
+                )}
+              </div> {/* Close Left Panel */}
+
+              {/* Right Panel - Live Preview */}
+              <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
+                <div className="bg-gray-50 border-b px-4 py-2 flex items-center justify-between">
+                  <span className="text-sm font-medium text-gray-600">Live Preview</span>
+                  <span className="text-xs text-gray-400">
+                    {templates.find(t => t.id === selectedTemplate)?.name} Template
+                  </span>
+                </div>
+                <div className="p-4 bg-gray-100 h-[600px] overflow-auto">
+                  <div 
+                    ref={previewRef} 
+                    className="bg-white shadow-lg mx-auto p-5" 
+                    style={{ width: '100%', maxWidth: '612px', minHeight: '792px' }}
+                  >
+                    {renderTemplate()}
                   </div>
                 </div>
-              )}
+              </div> {/* Close Right Panel */}
 
-              {/* Export Tab */}
-              {activeTab === 'export' && (
-                <div className="p-4">
-                  <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-3">
-                    <Download className="w-4 h-4" /> Export Options
-                  </h2>
-                  <div className="grid grid-cols-2 gap-3">
-                    <button 
-                      onClick={exportPDF} 
-                      className="p-3 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
-                    >
-                      <Printer className="w-5 h-5 text-red-600 mx-auto mb-1" />
-                      <span className="text-sm font-medium text-red-700 block">Print / PDF</span>
-                    </button>
-                    <button 
-                      onClick={exportHTML} 
-                      className="p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
-                    >
-                      <Code className="w-5 h-5 text-orange-600 mx-auto mb-1" />
-                      <span className="text-sm font-medium text-orange-700 block">HTML File</span>
-                    </button>
-                    <button 
-                      onClick={exportJSON} 
-                      className="p-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
-                    >
-                      <FileText className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-                      <span className="text-sm font-medium text-purple-700 block">JSON File</span>
-                    </button>
-                    <button 
-                      onClick={copyJSON} 
-                      className="p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
-                    >
-                      {copied ? (
-                        <Check className="w-5 h-5 text-green-600 mx-auto mb-1" />
-                      ) : (
-                        <Copy className="w-5 h-5 text-blue-600 mx-auto mb-1" />
-                      )}
-                      <span className="text-sm font-medium text-blue-700 block">
-                        {copied ? 'Copied!' : 'Copy JSON'}
-                      </span>
-                    </button>
-                  </div>
-                  <div className="mt-4 p-3 bg-blue-50 rounded-lg">
-                    <p className="text-sm text-blue-700">
-                      💡 <strong>Tip:</strong> Use "Print / PDF" and choose "Save as PDF" in the print dialog.
-                    </p>
-                  </div>
-                </div>
-              )}
+            </div> {/* Close Grid */}
+          </div> // Close Space-y-6
+        )}
 
-            {/* Right Panel - Live Preview */}
-            <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-              <div className="bg-gray-50 border-b px-4 py-2 flex items-center justify-between">
-                <span className="text-sm font-medium text-gray-600">Live Preview</span>
-                <span className="text-xs text-gray-400">
-                  {templates.find(t => t.id === selectedTemplate)?.name} Template
-                </span>
+        {/* Gap Addition Modal */}
+        {addingGap !== null && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+              <h3 className="text-xl font-semibold mb-2">Add Missing Skill to Resume</h3>
+              <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded">
+                <p className="text-sm font-medium">Missing Skill:</p>
+                <p className="text-base font-semibold mt-1">{gaps[addingGap]?.requirement}</p>
               </div>
-              <div className="p-4 bg-gray-100 h-[600px] overflow-auto">
-                <div 
-                  ref={previewRef} 
-                  className="bg-white shadow-lg mx-auto p-5" 
-                  style={{ width: '100%', maxWidth: '612px', minHeight: '792px' }}
+
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Select which experience to add this to:</label>
+                <select 
+                  value={selectedExperience} 
+                  onChange={(e) => {
+                    setSelectedExperience(e.target.value);
+                    setShowPreview(false);
+                    setPreviewBullet('');
+                  }} 
+                  className="w-full p-3 border rounded-lg"
                 >
-                  {renderTemplate()}
-                </div>
+                  <option value="">Choose an experience...</option>
+                  {structuredResume.experience?.map((exp, i) => (
+                    <option key={i} value={i}>{exp.title} | {exp.company}</option>
+                  ))}
+                </select>
               </div>
+
+              {selectedExperience !== '' && !showPreview && (
+                <button 
+                  onClick={generatePreview} 
+                  disabled={generatingBullet} 
+                  className="w-full mb-4 py-3 bg-blue-500 text-white rounded-lg font-medium disabled:bg-gray-300 flex items-center justify-center gap-2"
+                >
+                  {generatingBullet ? (
+                    <>
+                      <Loader2 className="animate-spin w-5 h-5" />
+                      Generating Preview...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-5 h-5" />
+                      Generate Preview Bullet
+                    </>
+                  )}
+                </button>
+              )}
+
+              {showPreview && (
+                <div className="mb-4 space-y-3">
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+                    <p className="text-sm font-medium text-green-800 mb-2">✓ Preview Bullet Point:</p>
+                    <textarea 
+                      value={previewBullet} 
+                      onChange={(e) => setPreviewBullet(e.target.value)} 
+                      className="w-full p-2 border rounded text-sm resize-none" 
+                      rows="3" 
+                    />
+                    <p className="text-xs text-gray-600 mt-2">You can edit this before adding</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button 
+                      onClick={generatePreview} 
+                      disabled={generatingBullet} 
+                      className="flex-1 py-2 border border-blue-500 text-blue-600 rounded-lg font-medium hover:bg-blue-50"
+                    >
+                      {generatingBullet ? <Loader2 className="animate-spin w-4 h-4 mx-auto" /> : '🔄 Regenerate'}
+                    </button>
+                    <button 
+                      onClick={addBulletToResume} 
+                      className="flex-1 py-2 bg-green-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
+                    >
+                      <CheckCircle className="w-4 h-4" />
+                      Add to Resume
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              <button 
+                onClick={() => {
+                  setAddingGap(null);
+                  setSelectedExperience('');
+                  setPreviewBullet('');
+                  setShowPreview(false);
+                }} 
+                className="w-full px-4 py-2 border rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
             </div>
           </div>
         )}
+        {/* Login Modal */}
+        <LoginModal 
+          isOpen={showLoginModal} 
+          onClose={() => setShowLoginModal(false)} 
+        />
+        
+        {/* Stripe Checkout Modal */}
+        <StripeCheckout 
+          isOpen={showStripeCheckout} 
+          onClose={() => setShowStripeCheckout(false)} 
+        />
       </div>
-
-      {/* Gap Addition Modal */}
-      {addingGap !== null && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-xl font-semibold mb-2">Add Missing Skill to Resume</h3>
-            <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded">
-              <p className="text-sm font-medium">Missing Skill:</p>
-              <p className="text-base font-semibold mt-1">{gaps[addingGap]?.requirement}</p>
-            </div>
-
-            <div className="mb-4">
-              <label className="block text-sm font-medium mb-2">Select which experience to add this to:</label>
-              <select 
-                value={selectedExperience} 
-                onChange={(e) => {
-                  setSelectedExperience(e.target.value);
-                  setShowPreview(false);
-                  setPreviewBullet('');
-                }} 
-                className="w-full p-3 border rounded-lg"
-              >
-                <option value="">Choose an experience...</option>
-                {structuredResume.experience?.map((exp, i) => (
-                  <option key={i} value={i}>{exp.title} | {exp.company}</option>
-                ))}
-              </select>
-            </div>
-
-            {selectedExperience !== '' && !showPreview && (
-              <button 
-                onClick={generatePreview} 
-                disabled={generatingBullet} 
-                className="w-full mb-4 py-3 bg-blue-500 text-white rounded-lg font-medium disabled:bg-gray-300 flex items-center justify-center gap-2"
-              >
-                {generatingBullet ? (
-                  <>
-                    <Loader2 className="animate-spin w-5 h-5" />
-                    Generating Preview...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    Generate Preview Bullet
-                  </>
-                )}
-              </button>
-            )}
-
-            {showPreview && (
-              <div className="mb-4 space-y-3">
-                <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <p className="text-sm font-medium text-green-800 mb-2">✓ Preview Bullet Point:</p>
-                  <textarea 
-                    value={previewBullet} 
-                    onChange={(e) => setPreviewBullet(e.target.value)} 
-                    className="w-full p-2 border rounded text-sm resize-none" 
-                    rows="3" 
-                  />
-                  <p className="text-xs text-gray-600 mt-2">You can edit this before adding</p>
-                </div>
-                <div className="flex gap-2">
-                  <button 
-                    onClick={generatePreview} 
-                    disabled={generatingBullet} 
-                    className="flex-1 py-2 border border-blue-500 text-blue-600 rounded-lg font-medium hover:bg-blue-50"
-                  >
-                    {generatingBullet ? <Loader2 className="animate-spin w-4 h-4 mx-auto" /> : '🔄 Regenerate'}
-                  </button>
-                  <button 
-                    onClick={addBulletToResume} 
-                    className="flex-1 py-2 bg-green-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
-                  >
-                    <CheckCircle className="w-4 h-4" />
-                    Add to Resume
-                  </button>
-                </div>
-              </div>
-            )}
-
-            <button 
-              onClick={() => {
-                setAddingGap(null);
-                setSelectedExperience('');
-                setPreviewBullet('');
-                setShowPreview(false);
-              }} 
-              className="w-full px-4 py-2 border rounded-lg hover:bg-gray-50"
-            >
-              Cancel
-            </button>
-          </div>
-        </div>
-      )}
-      {/* Login Modal */}
-      {/* Login Modal */}
-      <LoginModal 
-        isOpen={showLoginModal} 
-        onClose={() => setShowLoginModal(false)} 
-      />
     </div>
   );
 }

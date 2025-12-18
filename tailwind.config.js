@@ -15,9 +15,7 @@ export default {
       }
     },
   },
-  plugins: [
-    require('@tailwindcss/typography'),
-  ],
+  plugins: [],
   safelist: [
     'max-w-7xl',
     'max-w-2xl',
