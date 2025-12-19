@@ -5,6 +5,7 @@ import { AuthContext } from './AuthContext';
 import LoginModal from './LoginModal';
 import StripeCheckout from './StripeCheckout';
 import UserMenu from './UserMenu';
+import { canUserOptimize, recordOptimization, getOptimizationStats } from './optimizationManager';
 
 // Add the new props here inside the curly braces
 const PhaseNavigation = ({ phase, setPhase, isUploadComplete = false, isFormatTriggered = false }) => {
@@ -608,6 +609,15 @@ export default function ResumeAutomation() {
       return;
     }
 
+    // CHECK OPTIMIZATION AVAILABILITY
+    // Use 0 as estimated tokens (we'll record actual after API call)
+    const optCheck = canUserOptimize(user?.uid, user?.paymentStatus || 'free', 0);
+    if (!optCheck.canOptimize) {
+      setError(optCheck.message);
+      setShowStripeCheckout(true);
+      return;
+    }
+
     setLoadingOptimize(true);
     setError('');
 
@@ -628,17 +638,19 @@ export default function ResumeAutomation() {
       }
 
       setStructuredResume(data);
-      
       setOptimizedContent(JSON.stringify(data, null, 2));
-      
       setPhase('optimize');
+      setIsUploadComplete(true);
 
-      setIsUploadComplete(true)
+      // RECORD THE OPTIMIZATION
+      // Get actual token count from API response if available, otherwise estimate
+      const tokensUsed = data.tokensUsed || 5000; // API should return actual tokens used
+      recordOptimization(user?.uid, tokensUsed);
       
     } catch (error) {
       console.error('ERROR caught:', error);
       setError(`Error: ${error.message}`);
-      setIsUploadComplete(false)
+      setIsUploadComplete(false);
     } finally {
       setLoadingOptimize(false);
     }
@@ -1024,7 +1036,7 @@ export default function ResumeAutomation() {
                     </div>
                   </label>
                 </div>
-                
+
                 {isExtractingFile && (
                   <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-700">
@@ -1057,6 +1069,39 @@ export default function ResumeAutomation() {
                   {error}
                 </div>
               )}
+              
+              {/* Optimization Status */}
+              {user && (
+                <div className={`p-4 rounded-lg border ${
+                  user?.paymentStatus === 'free'
+                    ? 'bg-blue-50 border-blue-200'
+                    : 'bg-green-50 border-green-200'
+                }`}>
+                  {(() => {
+                    const stats = getOptimizationStats(user?.uid, user?.paymentStatus || 'free');
+                    return (
+                      <>
+                        <p className={`text-sm font-medium ${
+                          user?.paymentStatus === 'free' ? 'text-blue-800' : 'text-green-800'
+                        }`}>
+                          Optimizations Used: <strong>{stats.used} / {stats.max}</strong>
+                        </p>
+                        <p className={`text-xs mt-1 ${
+                          user?.paymentStatus === 'free' ? 'text-blue-700' : 'text-green-700'
+                        }`}>
+                          Tokens: <strong>{stats.tokensUsed.toLocaleString()} / {stats.tokensMax.toLocaleString()}</strong> ({stats.percentage}%)
+                        </p>
+                        {stats.remaining === 0 && (
+                          <p className="text-xs text-red-600 mt-2 font-medium">
+                            ⚠️ You've reached your optimization limit. Upgrade to continue.
+                          </p>
+                        )}
+                      </>
+                    );
+                  })()}
+                </div>
+              )}
+
               {/* Button to optimize resume */}
               <button
                 onClick={optimizeContent}

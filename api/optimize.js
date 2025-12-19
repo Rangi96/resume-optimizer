@@ -197,6 +197,14 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
     const cleaned = content.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
     const parsed = JSON.parse(cleaned);
     
+    // Extract token usage from Claude API response
+    const inputTokens = data.usage?.input_tokens || 0;
+    const outputTokens = data.usage?.output_tokens || 0;
+    const totalTokens = inputTokens + outputTokens;
+    
+    // Add token count to response
+    parsed.tokensUsed = totalTokens;
+    
     return res.status(200).json(parsed);
   } catch (error) {
     // Log error server-side, don't expose to client
