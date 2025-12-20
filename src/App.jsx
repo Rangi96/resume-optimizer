@@ -1074,6 +1074,7 @@ export default function ResumeAutomation() {
                     ? 'bg-blue-50 border-blue-200'
                     : 'bg-green-50 border-green-200'
                 }`}>
+                  {/* TEMPORARILY DISABLED - Stats display needs async refactoring
                   {(() => {
                     const stats = getOptimizationStats(user?.uid, user?.paymentStatus || 'free');
                     return (
@@ -1096,6 +1097,7 @@ export default function ResumeAutomation() {
                       </>
                     );
                   })()}
+                  */}
                 </div>
               )}
 

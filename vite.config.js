@@ -35,9 +35,12 @@ export default defineConfig({
   server: {
     port: 5173,
     strictPort: false,
+    headers: {
+    'Cross-Origin-Opener-Policy': 'same-origin-allow-popups',
+    },
     proxy: {
       '/api': {
-        target: 'http://localhost:3000',
+        target: 'https://resume-optimizer-sepia.vercel.app',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/api/, '/api')
       }

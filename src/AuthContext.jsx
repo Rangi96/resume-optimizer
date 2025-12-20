@@ -12,13 +12,20 @@ export const AuthProvider = ({ children }) => {
 
   // Check if user is logged in on load
 
-
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
-        await initializeUserDocument(currentUser.uid, currentUser);
+        // Add default paymentStatus to user object
+        currentUser.paymentStatus = 'free';
+        setUser(currentUser);
+        setLoading(false);
+        
+        // Initialize async, but DON'T wait for it
+        initializeUserDocument(currentUser.uid, currentUser);
+      } else {
+        setUser(null);
+        setLoading(false);
       }
-      setUser(currentUser);
     });
     return unsubscribe;
   }, []);
