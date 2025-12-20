@@ -91,8 +91,11 @@ const firestoreAdapter = {
     if (!userId) return null;
     
     try {
+      console.log('Firestore: Starting recordOptimization for user:', userId);
+      
       const userRef = doc(db, 'users', userId);
       const currentData = await this.getOptimizationData(userId);
+      console.log('Firestore: Current data:', currentData);
       
       const updatedData = {
         optimizations: {
@@ -103,14 +106,16 @@ const firestoreAdapter = {
         updatedAt: serverTimestamp()
       };
       
+      console.log('Firestore: About to write:', updatedData);
       await setDoc(userRef, updatedData, { merge: true });
+      console.log('Firestore: Write successful!');
       
       return {
         count: updatedData.optimizations.count,
         totalTokens: updatedData.optimizations.totalTokens
       };
     } catch (error) {
-      console.error('Error recording optimization:', error);
+      console.error('Firestore ERROR:', error);
       return null;
     }
   },
