@@ -642,7 +642,9 @@ export default function ResumeAutomation() {
 
       // NOW ASYNC - Wait for database write
       const tokensUsed = data.tokensUsed || 5000;
+      console.log('About to call recordOptimization with:', user?.uid, tokensUsed);
       await recordOptimization(user?.uid, tokensUsed);
+      console.log('recordOptimization completed');
       
     } catch (error) {
       console.error('ERROR caught:', error);
@@ -1074,7 +1076,7 @@ export default function ResumeAutomation() {
                     ? 'bg-blue-50 border-blue-200'
                     : 'bg-green-50 border-green-200'
                 }`}>
-                  {/* TEMPORARILY DISABLED - Stats display needs async refactoring
+                  {/* TEMPORARILY DISABLED - Stats display needs async refactoring*/}
                   {(() => {
                     const stats = getOptimizationStats(user?.uid, user?.paymentStatus || 'free');
                     return (
@@ -1097,7 +1099,7 @@ export default function ResumeAutomation() {
                       </>
                     );
                   })()}
-                  */}
+                  {/**/}
                 </div>
               )}
 
