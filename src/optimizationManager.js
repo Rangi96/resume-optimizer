@@ -157,6 +157,5 @@ export const getAllTierLimits = () => {
  * @param {object} userData - User data from Firebase auth
  */
 export const initializeUserDocument = async (userId, userData) => {
-  console.log('recordOptimization called with:', userId, tokensUsed)
   return storageAdapter.initializeUserDocument(userId, userData);
 };
