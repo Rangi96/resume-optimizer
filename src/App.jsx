@@ -1092,7 +1092,7 @@ export default function ResumeAutomation() {
                         }`}>
                           Tokens: <strong>{stats.tokensUsed.toLocaleString()} / {stats.tokensMax.toLocaleString()}</strong> ({stats.percentage}%)
                         </p>
-                        {stats.remaining === 0 && (
+                        {stats.remaining === 0 && ( 
                           <p className="text-xs text-red-600 mt-2 font-medium">
                             ⚠️ You've reached your optimization limit. Upgrade to continue.
                           </p>
