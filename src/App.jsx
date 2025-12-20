@@ -598,7 +598,6 @@ export default function ResumeAutomation() {
   };//FALTABA
 
   const optimizeContent = async () => {
-    // Check if user is logged in
     if (!user) {
       setShowLoginModal(true);
       return;
@@ -609,9 +608,8 @@ export default function ResumeAutomation() {
       return;
     }
 
-    // CHECK OPTIMIZATION AVAILABILITY
-    // Use 0 as estimated tokens (we'll record actual after API call)
-    const optCheck = canUserOptimize(user?.uid, user?.paymentStatus || 'free', 0);
+    // NOW ASYNC - Wait for database check
+    const optCheck = await canUserOptimize(user?.uid, user?.paymentStatus || 'free', 0);
     if (!optCheck.canOptimize) {
       setError(optCheck.message);
       setShowStripeCheckout(true);
@@ -642,10 +640,9 @@ export default function ResumeAutomation() {
       setPhase('optimize');
       setIsUploadComplete(true);
 
-      // RECORD THE OPTIMIZATION
-      // Get actual token count from API response if available, otherwise estimate
-      const tokensUsed = data.tokensUsed || 5000; // API should return actual tokens used
-      recordOptimization(user?.uid, tokensUsed);
+      // NOW ASYNC - Wait for database write
+      const tokensUsed = data.tokensUsed || 5000;
+      await recordOptimization(user?.uid, tokensUsed);
       
     } catch (error) {
       console.error('ERROR caught:', error);

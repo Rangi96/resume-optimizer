@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import { auth, googleProvider } from './firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
+  import { initializeUserDocument } from './optimizationManager';
 
 export const AuthContext = createContext();
 
@@ -10,10 +11,14 @@ export const AuthProvider = ({ children }) => {
   const [error, setError] = useState('');
 
   // Check if user is logged in on load
+
+
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        await initializeUserDocument(currentUser.uid, currentUser);
+      }
       setUser(currentUser);
-      setLoading(false);
     });
     return unsubscribe;
   }, []);

@@ -1,7 +1,10 @@
 /**
- * Optimization Manager Utility
+ * Optimization Manager Utility - ADAPTER VERSION
  * 
- * Tracks user optimization count and token consumption per tier
+ * Uses storage adapter to switch between localStorage and Firestore
+ * Set VITE_STORAGE_PROVIDER in .env to toggle:
+ * - localStorage (development, free, browser-only)
+ * - firestore (production, persistent, multi-device)
  * 
  * Free Tier:
  * - 1 optimization (lifetime)
@@ -15,6 +18,8 @@
  * - 20 optimizations
  * - Max 1,000,000 tokens total
  */
+
+import storageAdapter from './storageAdapter';
 
 const OPTIMIZATION_LIMITS = {
   free: {
@@ -35,28 +40,13 @@ const OPTIMIZATION_LIMITS = {
 };
 
 /**
- * Get the storage key for a user's optimization data
- * @param {string} userId - Firebase user ID
- * @returns {string} Storage key
- */
-const getStorageKey = (userId) => `optimization_${userId}`;
-
-/**
  * Get optimization data for a user
+ * Uses adapter to choose localStorage or Firestore
  * @param {string} userId - Firebase user ID
- * @returns {object} { count: number, totalTokens: number, timestamp: number }
+ * @returns {Promise<object>} { count: number, totalTokens: number }
  */
-export const getOptimizationData = (userId) => {
-  if (!userId) return null;
-  
-  const key = getStorageKey(userId);
-  const stored = localStorage.getItem(key);
-  
-  if (!stored) {
-    return { count: 0, totalTokens: 0, timestamp: Date.now() };
-  }
-  
-  return JSON.parse(stored);
+export const getOptimizationData = async (userId) => {
+  return storageAdapter.getOptimizationData(userId);
 };
 
 /**
@@ -64,9 +54,9 @@ export const getOptimizationData = (userId) => {
  * @param {string} userId - Firebase user ID
  * @param {string} paymentStatus - Payment status ('free', 'premium_299', 'premium_495')
  * @param {number} estimatedTokens - Estimated tokens this optimization will cost
- * @returns {object} { canOptimize: boolean, count: number, remaining: number, maxCount: number, tokenUsed: number, tokenMax: number, message: string }
+ * @returns {Promise<object>} { canOptimize: boolean, count: number, remaining: number, ... }
  */
-export const canUserOptimize = (userId, paymentStatus = 'free', estimatedTokens = 0) => {
+export const canUserOptimize = async (userId, paymentStatus = 'free', estimatedTokens = 0) => {
   if (!userId) {
     return {
       canOptimize: false,
@@ -79,7 +69,7 @@ export const canUserOptimize = (userId, paymentStatus = 'free', estimatedTokens 
     };
   }
   
-  const data = getOptimizationData(userId);
+  const data = await getOptimizationData(userId);
   const limits = OPTIMIZATION_LIMITS[paymentStatus] || OPTIMIZATION_LIMITS.free;
   
   // Check optimization count
@@ -114,32 +104,23 @@ export const canUserOptimize = (userId, paymentStatus = 'free', estimatedTokens 
 
 /**
  * Record an optimization and its token cost
+ * Uses adapter to choose localStorage or Firestore
  * @param {string} userId - Firebase user ID
  * @param {number} tokensUsed - Actual tokens consumed by this optimization
- * @returns {object} Updated optimization data
+ * @returns {Promise<object>} Updated optimization data
  */
-export const recordOptimization = (userId, tokensUsed = 0) => {
-  if (!userId) return null;
-  
-  const data = getOptimizationData(userId);
-  data.count += 1;
-  data.totalTokens += tokensUsed;
-  data.timestamp = Date.now();
-  
-  const key = getStorageKey(userId);
-  localStorage.setItem(key, JSON.stringify(data));
-  
-  return data;
+export const recordOptimization = async (userId, tokensUsed = 0) => {
+  return storageAdapter.recordOptimization(userId, tokensUsed);
 };
 
 /**
  * Get optimization status for display
  * @param {string} userId - Firebase user ID
  * @param {string} paymentStatus - Payment status ('free', 'premium_299', 'premium_495')
- * @returns {object} Display-friendly info { used: number, remaining: number, max: number, tokensUsed: number, tokensMax: number, percentage: number }
+ * @returns {Promise<object>} Display-friendly info
  */
-export const getOptimizationStats = (userId, paymentStatus = 'free') => {
-  const data = getOptimizationData(userId);
+export const getOptimizationStats = async (userId, paymentStatus = 'free') => {
+  const data = await getOptimizationData(userId);
   const limits = OPTIMIZATION_LIMITS[paymentStatus] || OPTIMIZATION_LIMITS.free;
   
   return {
@@ -162,19 +143,19 @@ export const getTierInfo = (paymentStatus = 'free') => {
 };
 
 /**
- * Reset optimization data for a user (admin only)
- * @param {string} userId - Firebase user ID
- */
-export const resetOptimizations = (userId) => {
-  if (!userId) return;
-  const key = getStorageKey(userId);
-  localStorage.removeItem(key);
-};
-
-/**
  * Get all tier limits for display
  * @returns {object} All tier limits
  */
 export const getAllTierLimits = () => {
   return OPTIMIZATION_LIMITS;
+};
+
+/**
+ * Initialize user document on first login
+ * Uses adapter to choose localStorage or Firestore
+ * @param {string} userId - Firebase user ID
+ * @param {object} userData - User data from Firebase auth
+ */
+export const initializeUserDocument = async (userId, userData) => {
+  return storageAdapter.initializeUserDocument(userId, userData);
 };
