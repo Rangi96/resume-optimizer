@@ -598,6 +598,7 @@ export default function ResumeAutomation() {
   };//FALTABA
 
   const optimizeContent = async () => {
+    console.log('=== optimizeContent function called ===');
     if (!user) {
       setShowLoginModal(true);
       return;
