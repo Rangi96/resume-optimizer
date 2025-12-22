@@ -8,7 +8,7 @@
  */
 
 import { db } from './firebase';
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, increment, updateDoc } from 'firebase/firestore';
 
 // Get provider from environment variable
 const STORAGE_PROVIDER = import.meta.env.VITE_STORAGE_PROVIDER || 'localStorage';
@@ -91,33 +91,52 @@ const firestoreAdapter = {
 
   async recordOptimization(userId, tokensUsed = 0) {
     if (!userId) return null;
-    
+
     try {
       console.log('Firestore: Starting recordOptimization for user:', userId);
-      
+      console.log('Firestore: Using ATOMIC increment to prevent race conditions');
+
       const userRef = doc(db, 'users', userId);
-      const currentData = await this.getOptimizationData(userId);
-      console.log('Firestore: Current data:', currentData);
-      
+
+      // Check if document exists
+      const docSnap = await getDoc(userRef);
+      if (!docSnap.exists()) {
+        console.log('Firestore: User document does not exist, initializing...');
+        // Initialize document with first optimization
+        await setDoc(userRef, {
+          uid: userId,
+          optimizations: {
+            count: 1,
+            totalTokens: tokensUsed,
+            lastOptimizedAt: serverTimestamp()
+          },
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp()
+        });
+        console.log('Firestore: User document initialized with first optimization');
+        return { count: 1, totalTokens: tokensUsed };
+      }
+
+      // Use atomic increment to prevent race conditions
       const updatedData = {
-        optimizations: {
-          count: currentData.count + 1,
-          totalTokens: currentData.totalTokens + tokensUsed,
-          lastOptimizedAt: serverTimestamp()
-        },
+        'optimizations.count': increment(1),
+        'optimizations.totalTokens': increment(tokensUsed),
+        'optimizations.lastOptimizedAt': serverTimestamp(),
         updatedAt: serverTimestamp()
       };
-      
-      console.log('Firestore: About to write:', updatedData);
-      await setDoc(userRef, updatedData, { merge: true });
-      console.log('Firestore: Write successful!');
-      
-      return {
-        count: updatedData.optimizations.count,
-        totalTokens: updatedData.optimizations.totalTokens
-      };
+
+      console.log('Firestore: About to write with atomic increment:', { tokensUsed });
+      await updateDoc(userRef, updatedData);
+      console.log('Firestore: Atomic write successful!');
+
+      // Read the updated values to return
+      const updatedSnapshot = await this.getOptimizationData(userId);
+      console.log('Firestore: Updated data after write:', updatedSnapshot);
+
+      return updatedSnapshot;
     } catch (error) {
       console.error('Firestore ERROR:', error);
+      console.error('Firestore ERROR details:', error.message);
       return null;
     }
   },
