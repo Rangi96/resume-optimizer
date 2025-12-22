@@ -57,7 +57,10 @@ export const getOptimizationData = async (userId) => {
  * @returns {Promise<object>} { canOptimize: boolean, count: number, remaining: number, ... }
  */
 export const canUserOptimize = async (userId, paymentStatus = 'free', estimatedTokens = 0) => {
+  console.log('🔍 canUserOptimize called with userId:', userId, 'paymentStatus:', paymentStatus, 'estimatedTokens:', estimatedTokens);
+
   if (!userId) {
+    console.log('🔍 No userId provided');
     return {
       canOptimize: false,
       count: 0,
@@ -68,9 +71,12 @@ export const canUserOptimize = async (userId, paymentStatus = 'free', estimatedT
       message: 'Please log in to optimize your resume.'
     };
   }
-  
+
+  console.log('🔍 Getting optimization data for user...');
   const data = await getOptimizationData(userId);
+  console.log('🔍 User optimization data:', data);
   const limits = OPTIMIZATION_LIMITS[paymentStatus] || OPTIMIZATION_LIMITS.free;
+  console.log('🔍 Limits for payment status:', limits);
   
   // Check optimization count
   const countExceeded = data.count >= limits.maxOptimizations;
@@ -110,7 +116,10 @@ export const canUserOptimize = async (userId, paymentStatus = 'free', estimatedT
  * @returns {Promise<object>} Updated optimization data
  */
 export const recordOptimization = async (userId, tokensUsed = 0) => {
-  return storageAdapter.recordOptimization(userId, tokensUsed);
+  console.log('📝 optimizationManager.recordOptimization called with userId:', userId, 'tokensUsed:', tokensUsed);
+  const result = await storageAdapter.recordOptimization(userId, tokensUsed);
+  console.log('📝 optimizationManager.recordOptimization result:', result);
+  return result;
 };
 
 /**

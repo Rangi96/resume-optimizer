@@ -12,6 +12,8 @@ import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 // Get provider from environment variable
 const STORAGE_PROVIDER = import.meta.env.VITE_STORAGE_PROVIDER || 'localStorage';
+console.log('🔧 STORAGE_PROVIDER set to:', STORAGE_PROVIDER);
+console.log('🔧 Environment variable VITE_STORAGE_PROVIDER:', import.meta.env.VITE_STORAGE_PROVIDER);
 
 /**
  * localStorage implementation
@@ -148,6 +150,7 @@ const firestoreAdapter = {
  * Select adapter based on environment
  */
 const storageAdapter = STORAGE_PROVIDER === 'firestore' ? firestoreAdapter : localStorageAdapter;
+console.log('🔧 Selected adapter:', STORAGE_PROVIDER === 'firestore' ? 'firestoreAdapter' : 'localStorageAdapter');
 
 export default storageAdapter;
 export { localStorageAdapter, firestoreAdapter };

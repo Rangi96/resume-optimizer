@@ -599,18 +599,28 @@ export default function ResumeAutomation() {
 
   const optimizeContent = async () => {
     console.log('=== optimizeContent function called ===');
+    console.log('👤 User object:', user);
+    console.log('👤 User ID:', user?.uid);
+    console.log('👤 User email:', user?.email);
+    console.log('👤 Payment status:', user?.paymentStatus);
+
     if (!user) {
+      console.log('❌ No user - showing login modal');
       setShowLoginModal(true);
       return;
     }
 
     if (!jobDescription || !resumeText) {
+      console.log('❌ Missing job description or resume text');
       setError('Please provide both job description and resume.');
       return;
     }
 
+    console.log('✅ Starting optimization process...');
     // NOW ASYNC - Wait for database check
+    console.log('🔍 Checking if user can optimize...');
     const optCheck = await canUserOptimize(user?.uid, user?.paymentStatus || 'free', 0);
+    console.log('🔍 canUserOptimize result:', optCheck);
     if (!optCheck.canOptimize) {
       setError(optCheck.message);
       setShowStripeCheckout(true);
@@ -621,6 +631,7 @@ export default function ResumeAutomation() {
     setError('');
 
     try {
+      console.log('📡 Calling /api/optimize...');
       const response = await fetch('/api/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -630,12 +641,15 @@ export default function ResumeAutomation() {
         })
       });
 
+      console.log('📡 Response status:', response.status);
       const data = await response.json();
+      console.log('📡 Response data:', data);
 
       if (!response.ok) {
         throw new Error(data.error || data.details || 'Failed to optimize resume');
       }
 
+      console.log('✅ API call successful, setting state...');
       setStructuredResume(data);
       setOptimizedContent(JSON.stringify(data, null, 2));
       setPhase('optimize');
@@ -643,9 +657,9 @@ export default function ResumeAutomation() {
 
       // NOW ASYNC - Wait for database write
       const tokensUsed = data.tokensUsed || 5000;
-      console.log('About to call recordOptimization with:', user?.uid, tokensUsed);
-      await recordOptimization(user?.uid, tokensUsed);
-      console.log('recordOptimization completed');
+      console.log('💾 About to call recordOptimization with userId:', user?.uid, 'tokensUsed:', tokensUsed);
+      const recordResult = await recordOptimization(user?.uid, tokensUsed);
+      console.log('💾 recordOptimization completed. Result:', recordResult);
       
     } catch (error) {
       console.error('ERROR caught:', error);
