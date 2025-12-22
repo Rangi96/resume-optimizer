@@ -143,9 +143,26 @@ const firestoreAdapter = {
 
   async initializeUserDocument(userId, userData) {
     if (!userId) return;
-    
+
     try {
       const userRef = doc(db, 'users', userId);
+
+      // Check if document already exists
+      const docSnap = await getDoc(userRef);
+
+      if (docSnap.exists()) {
+        console.log('🔧 User document already exists, NOT resetting optimization count');
+        // Only update basic user info, preserve optimizations
+        await updateDoc(userRef, {
+          email: userData.email || '',
+          displayName: userData.displayName || 'User',
+          updatedAt: serverTimestamp()
+        });
+        return;
+      }
+
+      // Document doesn't exist - create it with initial values
+      console.log('🔧 Creating new user document with count=0');
       await setDoc(userRef, {
         uid: userId,
         email: userData.email || '',
@@ -158,7 +175,7 @@ const firestoreAdapter = {
         },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-      }, { merge: true });
+      });
     } catch (error) {
       console.error('Error initializing user document:', error);
     }
