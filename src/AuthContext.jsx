@@ -1,7 +1,8 @@
 import React, { createContext, useState, useEffect } from 'react';
-import { auth, googleProvider } from './firebase';
+import { auth, googleProvider, db } from './firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
-  import { initializeUserDocument } from './optimizationManager';
+import { doc, getDoc } from 'firebase/firestore';
+import { initializeUserDocument } from './optimizationManager';
 
 export const AuthContext = createContext();
 
@@ -13,15 +14,36 @@ export const AuthProvider = ({ children }) => {
   // Check if user is logged in on load
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        // Add default paymentStatus to user object
-        currentUser.paymentStatus = 'free';
-        setUser(currentUser);
-        setLoading(false);
-        
-        // Initialize async, but DON'T wait for it
-        initializeUserDocument(currentUser.uid, currentUser);
+        try {
+          // Initialize user document if it doesn't exist
+          await initializeUserDocument(currentUser.uid, currentUser);
+
+          // Read paymentStatus from Firestore
+          const userDocRef = doc(db, 'users', currentUser.uid);
+          const userDoc = await getDoc(userDocRef);
+
+          if (userDoc.exists()) {
+            const userData = userDoc.data();
+            // Add paymentStatus from Firestore to user object
+            currentUser.paymentStatus = userData.paymentStatus || 'free';
+            console.log('✅ User loaded with paymentStatus:', currentUser.paymentStatus);
+          } else {
+            // Fallback to free if document doesn't exist
+            currentUser.paymentStatus = 'free';
+            console.log('⚠️ User document not found, defaulting to free');
+          }
+
+          setUser(currentUser);
+          setLoading(false);
+        } catch (error) {
+          console.error('Error loading user payment status:', error);
+          // Fallback to free on error
+          currentUser.paymentStatus = 'free';
+          setUser(currentUser);
+          setLoading(false);
+        }
       } else {
         setUser(null);
         setLoading(false);
