@@ -468,16 +468,16 @@ export default function ResumeAutomation() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get('session_id');
-    const canceled = window.location.pathname === '/canceled';
+    const canceled = params.get('canceled');
 
     if (sessionId) {
       setPaymentSessionId(sessionId);
       setShowPaymentSuccess(true);
       // Clear URL parameters
-      window.history.replaceState({}, document.title, window.location.pathname);
+      window.history.replaceState({}, document.title, '/');
     } else if (canceled) {
       setShowPaymentCanceled(true);
-      // Clear URL path
+      // Clear URL parameters
       window.history.replaceState({}, document.title, '/');
     }
   }, []);

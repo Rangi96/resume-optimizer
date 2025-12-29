@@ -91,8 +91,8 @@ export default async function handler(req, res) {
         'line_items[0][price]': plan.priceId,
         'line_items[0][quantity]': '1',
         'mode': 'payment',
-        'success_url': `${process.env.VITE_API_URL || 'https://resume-optimizer-sepia.vercel.app'}/success?session_id={CHECKOUT_SESSION_ID}`,
-        'cancel_url': `${process.env.VITE_API_URL || 'https://resume-optimizer-sepia.vercel.app'}/canceled`,
+        'success_url': `${process.env.VITE_API_URL || 'https://resume-optimizer-sepia.vercel.app'}/?session_id={CHECKOUT_SESSION_ID}`,
+        'cancel_url': `${process.env.VITE_API_URL || 'https://resume-optimizer-sepia.vercel.app'}/?canceled=true`,
         'client_reference_id': plan.priceId, // Store price ID for webhook
       }),
     });
