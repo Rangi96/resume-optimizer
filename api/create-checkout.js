@@ -93,6 +93,7 @@ export default async function handler(req, res) {
         'mode': 'payment',
         'success_url': `${process.env.VITE_API_URL || 'https://resume-optimizer-sepia.vercel.app'}/success?session_id={CHECKOUT_SESSION_ID}`,
         'cancel_url': `${process.env.VITE_API_URL || 'https://resume-optimizer-sepia.vercel.app'}/canceled`,
+        'client_reference_id': plan.priceId, // Store price ID for webhook
       }),
     });
 

@@ -1,4 +1,25 @@
 import crypto from 'crypto';
+import { initializeApp, getApps, cert } from 'firebase-admin/app';
+import { getFirestore } from 'firebase-admin/firestore';
+
+// Initialize Firebase Admin if not already initialized
+if (!getApps().length) {
+  initializeApp({
+    credential: cert({
+      projectId: process.env.FIREBASE_PROJECT_ID,
+      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+      privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n'),
+    }),
+  });
+}
+
+const db = getFirestore();
+
+// Map Stripe price IDs to payment statuses
+const PRICE_TO_STATUS = {
+  [process.env.STRIPE_PRICE_ID_10]: { status: 'premium_10', exports: 10 },
+  [process.env.STRIPE_PRICE_ID_20]: { status: 'premium_20', exports: 20 },
+};
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -15,22 +36,72 @@ export default async function handler(req, res) {
     // Handle checkout.session.completed event
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      
+
       console.log('Payment successful:', {
         sessionId: session.id,
         amount: session.amount_total,
         customerEmail: session.customer_email,
+        customerDetails: session.customer_details,
       });
 
-      // TODO: Update user's export count in database
-      // This would connect to your database to add credits
-      // Example:
-      // await db.users.update({
-      //   email: session.customer_email,
-      //   exportCount: exportCount + planExports
-      // });
+      // Get the price ID from client_reference_id (set during checkout)
+      const priceId = session.client_reference_id;
 
-      return res.status(200).json({ received: true });
+      if (!priceId) {
+        console.error('No price ID in session');
+        return res.status(400).json({ error: 'No price ID' });
+      }
+
+      // Get payment status from price ID
+      const paymentInfo = PRICE_TO_STATUS[priceId];
+
+      if (!paymentInfo) {
+        console.error('Unknown price ID:', priceId, 'Available:', Object.keys(PRICE_TO_STATUS));
+        return res.status(400).json({ error: 'Unknown price ID' });
+      }
+
+      const customerEmail = session.customer_details?.email || session.customer_email;
+
+      if (!customerEmail) {
+        console.error('No customer email in session');
+        return res.status(400).json({ error: 'No customer email' });
+      }
+
+      try {
+        // Find user by email
+        const usersRef = db.collection('users');
+        const snapshot = await usersRef.where('email', '==', customerEmail).get();
+
+        if (snapshot.empty) {
+          console.error('No user found with email:', customerEmail);
+          return res.status(404).json({ error: 'User not found' });
+        }
+
+        // Update user's payment status
+        const userDoc = snapshot.docs[0];
+        await userDoc.ref.update({
+          paymentStatus: paymentInfo.status,
+          lastPayment: {
+            date: new Date().toISOString(),
+            amount: session.amount_total / 100, // Convert cents to dollars
+            sessionId: session.id,
+            exports: paymentInfo.exports
+          },
+          updatedAt: new Date().toISOString()
+        });
+
+        console.log('✅ User payment status updated:', {
+          userId: userDoc.id,
+          email: customerEmail,
+          paymentStatus: paymentInfo.status,
+          exports: paymentInfo.exports
+        });
+
+        return res.status(200).json({ received: true });
+      } catch (error) {
+        console.error('Error updating user:', error);
+        return res.status(500).json({ error: 'Failed to update user' });
+      }
     }
 
     return res.status(200).json({ received: true });

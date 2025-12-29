@@ -1,9 +1,11 @@
-import React, { useState, useRef, useContext } from 'react';
+import React, { useState, useRef, useContext, useEffect } from 'react';
 import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle } from 'lucide-react';
 import * as mammoth from 'mammoth';
 import { AuthContext } from './AuthContext';
 import LoginModal from './LoginModal';
 import StripeCheckout from './StripeCheckout';
+import PaymentSuccess from './PaymentSuccess';
+import PaymentCanceled from './PaymentCanceled';
 import UserMenu from './UserMenu';
 import { canUserOptimize, recordOptimization, getOptimizationStats } from './optimizationManager';
 
@@ -457,7 +459,28 @@ export default function ResumeAutomation() {
   const [loadingGaps, setLoadingGaps] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
+  const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
+  const [showPaymentCanceled, setShowPaymentCanceled] = useState(false);
+  const [paymentSessionId, setPaymentSessionId] = useState('');
   const { user } = useContext(AuthContext);
+
+  // Check for payment success/cancel in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const sessionId = params.get('session_id');
+    const canceled = window.location.pathname === '/canceled';
+
+    if (sessionId) {
+      setPaymentSessionId(sessionId);
+      setShowPaymentSuccess(true);
+      // Clear URL parameters
+      window.history.replaceState({}, document.title, window.location.pathname);
+    } else if (canceled) {
+      setShowPaymentCanceled(true);
+      // Clear URL path
+      window.history.replaceState({}, document.title, '/');
+    }
+  }, []);
 
   // Gap filling
   const [addingGap, setAddingGap] = useState(null);
@@ -1776,10 +1799,29 @@ export default function ResumeAutomation() {
         />
         
         {/* Stripe Checkout Modal */}
-        <StripeCheckout 
-          isOpen={showStripeCheckout} 
-          onClose={() => setShowStripeCheckout(false)} 
+        <StripeCheckout
+          isOpen={showStripeCheckout}
+          onClose={() => setShowStripeCheckout(false)}
         />
+
+        {/* Payment Success Modal */}
+        {showPaymentSuccess && (
+          <PaymentSuccess
+            sessionId={paymentSessionId}
+            onClose={() => {
+              setShowPaymentSuccess(false);
+              // Optionally reload to refresh user stats
+              window.location.reload();
+            }}
+          />
+        )}
+
+        {/* Payment Canceled Modal */}
+        {showPaymentCanceled && (
+          <PaymentCanceled
+            onClose={() => setShowPaymentCanceled(false)}
+          />
+        )}
       </div>
     </div>
   );

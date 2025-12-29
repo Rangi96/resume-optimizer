@@ -27,15 +27,15 @@ const OPTIMIZATION_LIMITS = {
     maxTokens: 20000,
     price: null
   },
-  premium_299: {
+  premium_10: {
     maxOptimizations: 10,
     maxTokens: 400000,
-    price: 2.99
+    price: 3.00
   },
-  premium_495: {
+  premium_20: {
     maxOptimizations: 20,
     maxTokens: 1000000,
-    price: 4.95
+    price: 5.00
   }
 };
 
