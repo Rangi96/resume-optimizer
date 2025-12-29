@@ -66,6 +66,19 @@ export default async function handler(req, res) {
 
     const plan = PLANS[planId];
 
+    // Validate required environment variables
+    if (!process.env.STRIPE_SECRET_KEY) {
+      console.error('Missing STRIPE_SECRET_KEY environment variable');
+      return res.status(500).json({ error: 'Stripe not configured' });
+    }
+
+    if (!plan.priceId) {
+      console.error(`Missing price ID for plan ${planId}. Environment variable needed: STRIPE_PRICE_ID_${planId === 'plan_10_exports' ? '10' : '20'}`);
+      return res.status(500).json({ error: 'Plan not configured' });
+    }
+
+    console.log(`Creating checkout session for plan: ${planId}, priceId: ${plan.priceId}`);
+
     // Create Stripe checkout session
     const sessionResponse = await fetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
@@ -78,21 +91,27 @@ export default async function handler(req, res) {
         'line_items[0][price]': plan.priceId,
         'line_items[0][quantity]': '1',
         'mode': 'payment',
-        'success_url': `${process.env.VITE_API_URL}/success?session_id={CHECKOUT_SESSION_ID}`,
-        'cancel_url': `${process.env.VITE_API_URL}/canceled`,
+        'success_url': `${process.env.VITE_API_URL || 'https://resume-optimizer-sepia.vercel.app'}/success?session_id={CHECKOUT_SESSION_ID}`,
+        'cancel_url': `${process.env.VITE_API_URL || 'https://resume-optimizer-sepia.vercel.app'}/canceled`,
       }),
     });
 
     if (!sessionResponse.ok) {
       const error = await sessionResponse.json();
       console.error('Stripe API error:', error);
-      return res.status(500).json({ error: 'Failed to create checkout session' });
+      return res.status(500).json({
+        error: 'Failed to create checkout session',
+        details: error.error?.message || 'Unknown error'
+      });
     }
 
     const session = await sessionResponse.json();
 
-    return res.status(200).json({ 
+    console.log('Checkout session created successfully:', session.id);
+
+    return res.status(200).json({
       sessionId: session.id,
+      sessionUrl: session.url,
       publicKey: process.env.STRIPE_PUBLISHABLE_KEY
     });
   } catch (error) {

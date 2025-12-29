@@ -35,15 +35,19 @@ const StripeCheckout = ({ isOpen, onClose }) => {
         body: JSON.stringify({ planId })
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        throw new Error(data.details || data.error || 'Failed to create checkout session');
       }
 
-      const { sessionId, publicKey } = await response.json();
+      if (!data.sessionUrl) {
+        throw new Error(data.details || 'No checkout URL received');
+      }
 
       // Redirect to Stripe checkout
-      // For now, store session ID (you'll need @stripe/stripe-js to complete this)
-      window.location.href = `https://checkout.stripe.com/pay/${sessionId}`;
+      console.log('Redirecting to Stripe checkout...');
+      window.location.href = data.sessionUrl;
     } catch (err) {
       setError(err.message || 'Failed to create checkout session');
       setLoading(false);
