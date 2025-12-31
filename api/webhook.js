@@ -1,6 +1,13 @@
-import crypto from 'crypto';
+import Stripe from 'stripe';
 import { initializeApp, getApps, cert } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
+
+// Disable body parsing for webhook signature verification
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 
 // Initialize Firebase Admin if not already initialized
 if (!getApps().length) {
@@ -21,10 +28,19 @@ const PRICE_TO_STATUS = {
   [process.env.STRIPE_PRICE_ID_20]: { status: 'premium_20', exports: 20 },
 };
 
+// Helper to get raw body from request
+async function getRawBody(req) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', (chunk) => chunks.push(chunk));
+    req.on('end', () => resolve(Buffer.concat(chunks).toString('utf8')));
+    req.on('error', reject);
+  });
+}
+
 export default async function handler(req, res) {
   console.log('🔔 Webhook called!', {
     method: req.method,
-    headers: Object.keys(req.headers),
     hasSignature: !!req.headers['stripe-signature']
   });
 
@@ -33,22 +49,34 @@ export default async function handler(req, res) {
   }
 
   const sig = req.headers['stripe-signature'];
-  const body = req.body;
 
-  console.log('📦 Webhook body type:', typeof body);
-  console.log('📦 Webhook event type:', body?.type);
+  if (!sig) {
+    console.error('❌ No Stripe signature in headers');
+    return res.status(400).json({ error: 'No signature' });
+  }
+
+  if (!process.env.STRIPE_WEBHOOK_SECRET) {
+    console.error('❌ No STRIPE_WEBHOOK_SECRET configured');
+    return res.status(500).json({ error: 'Webhook secret not configured' });
+  }
 
   try {
-    // For testing, skip signature verification if no secret is set
-    // In production, always verify!
-    let event;
-    if (process.env.STRIPE_WEBHOOK_SECRET && sig) {
-      console.log('🔐 Verifying webhook signature...');
-      event = verifyWebhook(body, sig);
-    } else {
-      console.log('⚠️ Skipping signature verification (no secret or signature)');
-      event = typeof body === 'string' ? JSON.parse(body) : body;
-    }
+    // Get raw body for signature verification
+    const rawBody = await getRawBody(req);
+    console.log('📦 Raw body length:', rawBody.length);
+
+    // Initialize Stripe
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+
+    // Verify webhook signature using Stripe library
+    console.log('🔐 Verifying webhook signature...');
+    const event = stripe.webhooks.constructEvent(
+      rawBody,
+      sig,
+      process.env.STRIPE_WEBHOOK_SECRET
+    );
+
+    console.log('✅ Signature verified! Event type:', event.type);
 
     // Handle checkout.session.completed event
     if (event.type === 'checkout.session.completed') {
@@ -123,36 +151,10 @@ export default async function handler(req, res) {
 
     return res.status(200).json({ received: true });
   } catch (error) {
-    console.error('Webhook error:', error);
-    return res.status(400).json({ error: 'Webhook signature verification failed' });
+    console.error('❌ Webhook error:', error.message);
+    return res.status(400).json({
+      error: 'Webhook processing failed',
+      message: error.message
+    });
   }
-}
-
-function verifyWebhook(body, sig) {
-  const whSecret = process.env.STRIPE_WEBHOOK_SECRET;
-  
-  if (!whSecret || !sig) {
-    throw new Error('Missing webhook secret or signature');
-  }
-
-  // For raw body in Vercel, need to handle differently
-  let bodyString;
-  if (typeof body === 'string') {
-    bodyString = body;
-  } else {
-    bodyString = JSON.stringify(body);
-  }
-
-  const hash = crypto
-    .createHmac('sha256', whSecret)
-    .update(bodyString)
-    .digest('hex');
-
-  const [time, signature] = sig.split(',').map(part => part.split('=')[1]);
-
-  if (hash !== signature) {
-    throw new Error('Invalid signature');
-  }
-
-  return JSON.parse(bodyString);
 }

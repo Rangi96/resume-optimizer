@@ -17,6 +17,7 @@
     "mammoth": "^1.6.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "stripe": "^20.1.0",
     "terser": "^5.44.1"
   },
   "devDependencies": {
