@@ -1,5 +1,5 @@
 import React, { useContext, useState } from 'react';
-import { AuthContext } from './AuthContext';
+import { AuthContext } from '../AuthContext';
 import { Loader2 } from 'lucide-react';
 
 const LoginModal = ({ isOpen, onClose }) => {

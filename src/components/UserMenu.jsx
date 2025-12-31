@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { LogOut, User, ChevronDown, Sparkles } from 'lucide-react';
-import { AuthContext } from './AuthContext';
-import { getOptimizationStats, getAllTierLimits } from './optimizationManager';
+import { AuthContext } from '../AuthContext';
+import { getOptimizationStats, getAllTierLimits } from '../optimizationManager';
 
 export default function UserMenu() {
   const { user, logout } = useContext(AuthContext);
