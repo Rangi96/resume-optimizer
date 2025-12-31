@@ -15,7 +15,7 @@ export default function Footer() {
           <div>
             <h3 className="text-lg font-bold mb-4 text-white">Resume Optimizer</h3>
             <p className="text-gray-300 text-sm leading-relaxed mb-4">
-              AI-powered resume optimization platform by controlBIA LLC. Transform your resume with intelligent suggestions and professional templates.
+              AI-powered resume optimization platform by Control BIA LLC. Transform your resume with intelligent suggestions and professional templates.
             </p>
             <div className="flex gap-3">
               <a
@@ -93,15 +93,15 @@ export default function Footer() {
             <ul className="space-y-3">
               <li>
                 <a
-                  href="mailto:jorge.rangel@controlbia.com"
+                  href="mailto:Contact@controlbia.com"
                   className="text-gray-300 hover:text-white transition-colors flex items-center gap-2 text-sm"
                 >
                   <Mail className="w-4 h-4" />
-                  jorge.rangel@controlbia.com
+                  Contact@controlbia.com
                 </a>
               </li>
               <li className="text-gray-400 text-sm">
-                <strong className="text-gray-300">Company:</strong> controlBIA LLC
+                <strong className="text-gray-300">Company:</strong> Control BIA LLC
               </li>
               <li className="text-gray-400 text-sm">
                 <strong className="text-gray-300">Location:</strong> United States
@@ -165,7 +165,7 @@ export default function Footer() {
           {/* Bottom Footer - Copyright & Additional Info */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm text-center md:text-left">
-              &copy; {currentYear} <strong className="text-gray-300">controlBIA LLC</strong>. All rights reserved.
+              &copy; {currentYear} <strong className="text-gray-300">Control BIA LLC</strong>. All rights reserved.
             </p>
 
             <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-400">

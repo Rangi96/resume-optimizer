@@ -28,7 +28,7 @@ export default function PrivacyPolicy() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Introduction</h2>
             <p className="text-gray-700 leading-relaxed">
-              controlBIA LLC ("we," "our," or "us") operates Resume Optimizer, an AI-powered resume optimization platform.
+              Control BIA LLC ("we," "our," or "us") operates Resume Optimizer, an AI-powered resume optimization platform.
               This Privacy Policy explains how we collect, use, disclose, and safeguard your information when you use our service.
               We are committed to protecting your privacy and ensuring GDPR and CCPA compliance.
             </p>
@@ -182,8 +182,8 @@ export default function PrivacyPolicy() {
 
             <p className="text-gray-700 leading-relaxed mt-4">
               <strong>To exercise these rights,</strong> contact us at{' '}
-              <a href="mailto:jorge.rangel@controlbia.com" className="text-blue-600 hover:underline">
-                jorge.rangel@controlbia.com
+              <a href="mailto:Contact@controlbia.com" className="text-blue-600 hover:underline">
+                Contact@controlbia.com
               </a>.
               We will respond within 30 days as required by law.
             </p>
@@ -231,9 +231,9 @@ export default function PrivacyPolicy() {
                 If you have questions about this Privacy Policy or wish to exercise your rights:
               </p>
               <p className="text-gray-900">
-                <strong>controlBIA LLC</strong><br/>
-                Email: <a href="mailto:jorge.rangel@controlbia.com" className="text-blue-600 hover:underline font-semibold">
-                  jorge.rangel@controlbia.com
+                <strong>Control BIA LLC</strong><br/>
+                Email: <a href="mailto:Contact@controlbia.com" className="text-blue-600 hover:underline font-semibold">
+                  Contact@controlbia.com
                 </a><br/>
                 Response Time: Within 30 days
               </p>

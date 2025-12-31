@@ -28,12 +28,12 @@ export default function TermsOfService() {
           <section>
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Agreement to Terms</h2>
             <p className="text-gray-700 leading-relaxed mb-3">
-              By accessing or using Resume Optimizer ("the Service"), operated by controlBIA LLC ("we," "our," or "us"),
+              By accessing or using Resume Optimizer ("the Service"), operated by Control BIA LLC ("we," "our," or "us"),
               you agree to be bound by these Terms of Service ("Terms"). If you do not agree to these Terms, you may not
               access or use the Service.
             </p>
             <p className="text-gray-700 leading-relaxed">
-              These Terms constitute a legally binding agreement between you and controlBIA LLC. Please read them carefully.
+              These Terms constitute a legally binding agreement between you and Control BIA LLC. Please read them carefully.
             </p>
           </section>
 
@@ -147,7 +147,7 @@ export default function TermsOfService() {
               work experience, education, and other personal information.
             </p>
             <p className="text-gray-700 leading-relaxed mb-3">
-              By using the Service, you grant controlBIA LLC a limited, non-exclusive, worldwide license to:
+              By using the Service, you grant Control BIA LLC a limited, non-exclusive, worldwide license to:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li>Process your content through AI systems to provide optimization services</li>
@@ -160,7 +160,7 @@ export default function TermsOfService() {
 
             <h3 className="text-xl font-semibold text-gray-800 mb-3 mt-6">Our Content</h3>
             <p className="text-gray-700 leading-relaxed">
-              The Resume Optimizer platform, including its design, code, features, and branding, is owned by controlBIA LLC
+              The Resume Optimizer platform, including its design, code, features, and branding, is owned by Control BIA LLC
               and protected by copyright, trademark, and other intellectual property laws. You may not copy, modify, distribute,
               or create derivative works without written permission.
             </p>
@@ -179,7 +179,7 @@ export default function TermsOfService() {
             </div>
 
             <p className="text-gray-700 leading-relaxed mb-3">
-              <strong>To the maximum extent permitted by law, controlBIA LLC shall not be liable for:</strong>
+              <strong>To the maximum extent permitted by law, Control BIA LLC shall not be liable for:</strong>
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
               <li>Any indirect, incidental, special, consequential, or punitive damages</li>
@@ -262,9 +262,9 @@ export default function TermsOfService() {
                 If you have questions about these Terms of Service:
               </p>
               <p className="text-gray-900">
-                <strong>controlBIA LLC</strong><br/>
-                Email: <a href="mailto:jorge.rangel@controlbia.com" className="text-blue-600 hover:underline font-semibold">
-                  jorge.rangel@controlbia.com
+                <strong>Control BIA LLC</strong><br/>
+                Email: <a href="mailto:Contact@controlbia.com" className="text-blue-600 hover:underline font-semibold">
+                  Contact@controlbia.com
                 </a><br/>
                 Response Time: Within 30 days
               </p>
