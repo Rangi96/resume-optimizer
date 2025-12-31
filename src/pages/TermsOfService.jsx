@@ -117,8 +117,8 @@ export default function TermsOfService() {
               Resume Optimizer offers the following one-time payment plans:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-gray-700">
-              <li><strong>10 Exports Package:</strong> $9.99 USD - Includes 10 PDF/HTML/JSON exports</li>
-              <li><strong>20 Exports Package:</strong> $14.99 USD - Includes 20 PDF/HTML/JSON exports</li>
+              <li><strong>10 Exports Package:</strong> $3.00 USD - Includes 10 PDF/HTML/JSON exports</li>
+              <li><strong>20 Exports Package:</strong> $5.00 USD - Includes 20 PDF/HTML/JSON exports</li>
             </ul>
 
             <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg mt-4">
