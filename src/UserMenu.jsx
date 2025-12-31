@@ -1,11 +1,20 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { LogOut, User, ChevronDown } from 'lucide-react';
+import { LogOut, User, ChevronDown, Sparkles } from 'lucide-react';
 import { AuthContext } from './AuthContext';
+import { getOptimizationStats, getAllTierLimits } from './optimizationManager';
 
 export default function UserMenu() {
   const { user, logout } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(false);
+  const [stats, setStats] = useState(null);
   const menuRef = useRef(null);
+
+  // Load optimization stats when menu opens
+  useEffect(() => {
+    if (isOpen && user) {
+      getOptimizationStats(user.uid, user.paymentStatus || 'free').then(setStats);
+    }
+  }, [isOpen, user]);
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -25,6 +34,9 @@ export default function UserMenu() {
 
   const userEmail = user.email || 'User';
   const userInitial = userEmail.charAt(0).toUpperCase();
+  const tierLimits = getAllTierLimits();
+  const currentTier = user.paymentStatus || 'free';
+  const tierName = currentTier === 'free' ? 'Free' : currentTier === 'premium_10' ? 'Premium 10' : 'Premium 20';
 
   return (
     <div className="relative" ref={menuRef}>
@@ -45,6 +57,36 @@ export default function UserMenu() {
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm text-gray-600">Signed in as</p>
             <p className="text-sm font-semibold text-gray-900 truncate">{userEmail}</p>
+          </div>
+
+          {/* Optimization Stats */}
+          <div className="px-4 py-3 border-b border-gray-100 bg-blue-50">
+            <div className="flex items-center gap-2 mb-2">
+              <Sparkles className="w-4 h-4 text-blue-600" />
+              <p className="text-xs font-semibold text-blue-900">{tierName} Plan</p>
+            </div>
+            {stats ? (
+              <div className="space-y-1">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-600">Optimizations:</span>
+                  <span className="font-semibold text-gray-900">
+                    {stats.remaining} of {stats.max} remaining
+                  </span>
+                </div>
+                {/* Progress bar */}
+                <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
+                  <div
+                    className="bg-blue-600 h-2 rounded-full transition-all"
+                    style={{ width: `${(stats.remaining / stats.max) * 100}%` }}
+                  />
+                </div>
+                <p className="text-xs text-gray-500">
+                  Used: {stats.used} | Tokens: {stats.tokensUsed.toLocaleString()} / {stats.tokensMax.toLocaleString()}
+                </p>
+              </div>
+            ) : (
+              <p className="text-xs text-gray-500">Loading...</p>
+            )}
           </div>
 
           {/* Menu Items */}
