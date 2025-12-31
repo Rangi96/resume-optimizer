@@ -122,10 +122,12 @@ export default async function handler(req, res) {
           return res.status(404).json({ error: 'User not found' });
         }
 
-        // Update user's payment status
+        // Update user's payment status AND reset optimization count
         const userDoc = snapshot.docs[0];
         await userDoc.ref.update({
           paymentStatus: paymentInfo.status,
+          'optimizations.count': 0, // Reset count to 0 on new purchase
+          'optimizations.totalTokens': 0, // Reset tokens to 0 on new purchase
           lastPayment: {
             date: new Date().toISOString(),
             amount: session.amount_total / 100, // Convert cents to dollars
@@ -135,11 +137,12 @@ export default async function handler(req, res) {
           updatedAt: new Date().toISOString()
         });
 
-        console.log('✅ User payment status updated:', {
+        console.log('✅ User payment status updated and optimizations reset:', {
           userId: userDoc.id,
           email: customerEmail,
           paymentStatus: paymentInfo.status,
-          exports: paymentInfo.exports
+          exports: paymentInfo.exports,
+          optimizationsReset: true
         });
 
         return res.status(200).json({ received: true });
