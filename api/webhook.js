@@ -39,7 +39,7 @@ async function getRawBody(req) {
 }
 
 export default async function handler(req, res) {
-  console.log('🔔 Webhook called!', {
+  console.log('🔔 Webhook called! [NEW CODE v2]', {
     method: req.method,
     hasSignature: !!req.headers['stripe-signature']
   });
