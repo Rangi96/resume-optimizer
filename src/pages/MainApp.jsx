@@ -951,7 +951,7 @@ export default function MainApp() {
             <div className="flex items-center gap-3">
               <Sparkles className="w-7 h-7" />
               <div>
-                <h1 className="text-2xl font-bold">AI Resume Optimizer</h1>
+                <h1 className="text-2xl font-bold">Optimal Resume</h1>
                 <p className="text-sm text-blue-100">Optimize, analyze gaps, and format beautifully</p>
               </div>
             </div>
