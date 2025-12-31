@@ -81,7 +81,7 @@ export default function UserMenu() {
                   />
                 </div>
                 <p className="text-xs text-gray-500">
-                  Used: {stats.used} | Tokens: {stats.tokensUsed.toLocaleString()} / {stats.tokensMax.toLocaleString()}
+                  Used: {stats.used}
                 </p>
               </div>
             ) : (
