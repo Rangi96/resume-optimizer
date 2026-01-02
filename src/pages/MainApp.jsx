@@ -843,6 +843,7 @@ export default function MainApp() {
 
       const data = await response.json();
       setPreviewBullet(data.bullet || '');
+      setShowPreview(true); // Show the preview section
     } catch (error) {
       setError('Failed to generate preview');
     } finally {
