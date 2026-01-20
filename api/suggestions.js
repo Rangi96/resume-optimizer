@@ -58,7 +58,7 @@ export default async function handler(req, res) {
       return res.status(429).json({ error: 'Too many requests. Please try again later.' });
     }
 
-    const { resumeText } = req.body;
+    const { resumeText, language = 'en' } = req.body;
 
     // Input validation
     if (!resumeText || typeof resumeText !== 'string') {
@@ -74,6 +74,13 @@ export default async function handler(req, res) {
     }
 
     const cleanResume = sanitizeString(resumeText);
+
+    // Language instruction for AI response
+    const languageInstructions = {
+      'en': 'Provide all suggestions in English.',
+      'es': 'Proporciona todas las sugerencias en español.'
+    };
+    const languageInstruction = languageInstructions[language] || languageInstructions['en'];
 
     // Timeout for API call
     const controller = new AbortController();
@@ -91,7 +98,9 @@ export default async function handler(req, res) {
         max_tokens: 1500,
         messages: [{
           role: "user",
-          content: `Analyze this resume and provide 4-6 specific, actionable improvement suggestions as a numbered list. Each suggestion should follow this format:
+          content: `${languageInstruction}
+
+Analyze this resume and provide 4-6 specific, actionable improvement suggestions as a numbered list. Each suggestion should follow this format:
 
 1. **[Bold heading summarizing the improvement]** - [Detailed explanation with specific examples]
 

@@ -81,7 +81,7 @@ export default async function handler(req, res) {
       return res.status(429).json({ error: 'Too many requests. Please try again later.' });
     }
 
-    const { resumeInput, jobDescription } = req.body;
+    const { resumeInput, jobDescription, language = 'en' } = req.body;
 
     // Input validation
     const validationErrors = validateInputs(resumeInput, jobDescription);
@@ -95,6 +95,13 @@ export default async function handler(req, res) {
     // Sanitize inputs
     const cleanResume = sanitizeString(resumeInput);
     const cleanJobDesc = sanitizeString(jobDescription);
+
+    // Language instruction for AI response
+    const languageInstructions = {
+      'en': '\n\nIMPORTANT: Respond ONLY in English. All output must be in English.',
+      'es': '\n\nIMPORTANTE: Responde SOLO en español. Toda la salida debe estar en español.'
+    };
+    const languageInstruction = languageInstructions[language] || languageInstructions['en'];
 
     // Timeout for API call
     const controller = new AbortController();
@@ -112,7 +119,7 @@ export default async function handler(req, res) {
         max_tokens: 8000,
         messages: [{
           role: "user",
-          content: `You are an expert resume optimizer. Your task is to analyze the job description and strategically reword the candidate's EXISTING resume to make them appear as a better fit for this specific role.
+          content: `You are an expert resume optimizer. Your task is to analyze the job description and strategically reword the candidate's EXISTING resume to make them appear as a better fit for this specific role.${languageInstruction}
 
 CRITICAL RULES - NEVER VIOLATE:
 1. DO NOT invent, fabricate, or add ANY job titles, companies, experiences, or accomplishments that aren't in the original resume

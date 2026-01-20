@@ -719,12 +719,14 @@ export default function MainApp() {
       console.log('📡 Calling /api/optimize...');
       console.log('📡 Sending resumeInput length:', resumeText.length);
       console.log('📡 Sending jobDescription length:', jobDescription.length);
+      console.log('🌐 Current language:', i18n.language);
       const response = await fetch('/api/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           resumeInput: resumeText,
-          jobDescription: jobDescription
+          jobDescription: jobDescription,
+          language: i18n.language
         })
       });
 
@@ -770,12 +772,14 @@ export default function MainApp() {
       try {
         const resumeData = JSON.stringify(structuredResume);
         console.log('Sending resumeText:', resumeData.substring(0, 100) + '...');
-        
+        console.log('🌐 Current language:', i18n.language);
+
         const response = await fetch('/api/suggestions', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            resumeText: resumeData
+            resumeText: resumeData,
+            language: i18n.language
           })
         });
         
@@ -807,13 +811,15 @@ export default function MainApp() {
         const resumeData = JSON.stringify(structuredResume);
         console.log('Sending resumeText:', resumeData.substring(0, 100) + '...');
         console.log('Sending jobDescription:', jobDescription.substring(0, 100) + '...');
-        
+        console.log('🌐 Current language:', i18n.language);
+
         const response = await fetch('/api/gaps', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             resumeText: resumeData,
-            jobDescription: jobDescription
+            jobDescription: jobDescription,
+            language: i18n.language
           })
         });
         

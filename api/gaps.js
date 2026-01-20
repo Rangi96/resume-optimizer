@@ -59,7 +59,7 @@ export default async function handler(req, res) {
       return res.status(429).json({ error: 'Too many requests. Please try again later.' });
     }
 
-    const { resumeText, jobDescription } = req.body;
+    const { resumeText, jobDescription, language = 'en' } = req.body;
 
     // Input validation
     if (!resumeText || typeof resumeText !== 'string') {
@@ -85,6 +85,13 @@ export default async function handler(req, res) {
     const cleanResume = sanitizeString(resumeText);
     const cleanJobDesc = sanitizeString(jobDescription);
 
+    // Language instruction for AI response
+    const languageInstructions = {
+      'en': 'Respond in English.',
+      'es': 'Responde en español.'
+    };
+    const languageInstruction = languageInstructions[language] || languageInstructions['en'];
+
     // Timeout for API call
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 30000);
@@ -101,7 +108,9 @@ export default async function handler(req, res) {
         max_tokens: 2000,
         messages: [{
           role: "user",
-          content: `Analyze the job description and identify skills or requirements that are NOT clearly demonstrated in the resume. Find gaps where the candidate could strengthen their application.
+          content: `${languageInstruction}
+
+Analyze the job description and identify skills or requirements that are NOT clearly demonstrated in the resume. Find gaps where the candidate could strengthen their application.
 
 Resume:
 ${cleanResume}
