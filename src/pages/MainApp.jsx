@@ -53,7 +53,7 @@ const renderTextWithBold = (text) => {
 };
 
 // Add the new props here inside the curly braces
-const PhaseNavigation = ({ phase, setPhase, isUploadComplete = false, isFormatTriggered = false }) => {
+const PhaseNavigation = ({ phase, setPhase, isUploadComplete = false, isFormatTriggered = false, t }) => {
   const phases = ['upload', 'optimize', 'format'];
   const currentIndex = phases.indexOf(phase);
   
@@ -66,11 +66,11 @@ const PhaseNavigation = ({ phase, setPhase, isUploadComplete = false, isFormatTr
   return (
     <div className="flex justify-between items-center mb-6">
       {currentIndex > 0 ? (
-        <button 
-          onClick={() => setPhase(phases[currentIndex - 1])} 
+        <button
+          onClick={() => setPhase(phases[currentIndex - 1])}
           className="px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded-lg text-sm font-medium"
         >
-          ← Back
+          {t ? t('navigation.back') : '← Back'}
         </button>
       ) : <div />}
       
@@ -81,12 +81,12 @@ const PhaseNavigation = ({ phase, setPhase, isUploadComplete = false, isFormatTr
           }}
           disabled={isNextDisabled}
           className={`px-4 py-2 rounded-lg text-sm font-medium ${
-            isNextDisabled 
-              ? 'bg-gray-300 text-gray-500 cursor-not-allowed' 
+            isNextDisabled
+              ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
               : 'bg-blue-500 hover:bg-blue-600 text-white'
           }`}
         >
-          Next →
+          {t ? t('navigation.next') : 'Next →'}
         </button>
       )}
     </div>
@@ -1026,8 +1026,8 @@ export default function MainApp() {
             <div className="flex items-center gap-3">
               <Sparkles className="w-7 h-7" />
               <div>
-                <h1 className="text-2xl font-bold">Optimal Resume</h1>
-                <p className="text-sm text-blue-100">Optimize, analyze gaps, and format beautifully</p>
+                <h1 className="text-2xl font-bold">{t('app.title')}</h1>
+                <p className="text-sm text-blue-100">{t('app.tagline')}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
@@ -1049,7 +1049,7 @@ export default function MainApp() {
                   }}
                   className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors"
                 >
-                  ← Start Over
+                  {t('navigation.startOver')}
                 </button>
               )}
              <LanguageSwitcher />
@@ -1077,10 +1077,11 @@ export default function MainApp() {
                 
                 {/* Navigation */}
                 <div className="ml-auto">
-                  <PhaseNavigation 
-                    phase={phase} 
+                  <PhaseNavigation
+                    phase={phase}
                     setPhase={setPhase}
                     isUploadComplete={isUploadComplete}
+                    t={t}
                     isFormatTriggered={isFormatTriggered}
                   />
                 </div>
@@ -1227,12 +1228,12 @@ export default function MainApp() {
                 {loadingOptimize ? (
                   <>
                     <Loader2 className="animate-spin w-5 h-5" />
-                    Optimizing Resume...
+                    {t('optimize.title')}
                   </>
                 ) : (
                   <>
                     <Wand2 className="w-5 h-5" />
-                    Optimize My Resume
+                    {t('buttons.optimize')}
                     <ArrowRight className="w-5 h-5" />
                   </>
                 )}
@@ -1245,10 +1246,11 @@ export default function MainApp() {
         {phase === 'optimize' && (
           <div className="space-y-6">
             {/* UPDATE THIS LINE */}
-            <PhaseNavigation 
-              phase={phase} 
-              setPhase={setPhase} 
-              isUploadComplete={true} 
+            <PhaseNavigation
+              phase={phase}
+              setPhase={setPhase}
+              isUploadComplete={true}
+              t={t} 
               isFormatTriggered={isFormatTriggered} 
             />
             {/* Action Buttons */}
@@ -1264,7 +1266,7 @@ export default function MainApp() {
                   ) : (
                     <>
                       <Lightbulb className="w-5 h-5" />
-                      Get Suggestions
+                      {t('buttons.getSuggestions')}
                     </>
                   )}
                 </button>
@@ -1278,7 +1280,7 @@ export default function MainApp() {
                   ) : (
                     <>
                       <Search className="w-5 h-5" />
-                      Find Missing Skills
+                      {t('buttons.findGaps')}
                     </>
                   )}
                 </button>
@@ -1290,7 +1292,7 @@ export default function MainApp() {
                   className="bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
-                  Format & Export
+                  {t('buttons.formatExport')}
                 </button>
               </div>
             </div>
@@ -1579,10 +1581,11 @@ export default function MainApp() {
         {phase === 'format' && structuredResume.contact?.name && (
           <div className="space-y-6">
             {/* Navigation */}
-            <PhaseNavigation 
-              phase={phase} 
-              setPhase={setPhase} 
+            <PhaseNavigation
+              phase={phase}
+              setPhase={setPhase}
               isUploadComplete={isUploadComplete}
+              t={t}
               isFormatTriggered={isFormatTriggered}
             />
             
