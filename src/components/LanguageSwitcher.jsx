@@ -7,6 +7,17 @@ const LANGUAGES = [
   { code: 'es', name: 'Español', flag: '🇪🇸' },
 ];
 
+const PAGE_METADATA = {
+  en: {
+    title: 'AI Resume Optimizer - Optimal Resume',
+    description: 'AI-powered resume optimization tool with gap analysis and formatting'
+  },
+  es: {
+    title: 'Optimizador de Currículum con IA - Optimal Resume',
+    description: 'Herramienta de optimización de currículum con IA con análisis de brechas y formato'
+  }
+};
+
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
@@ -14,10 +25,20 @@ export default function LanguageSwitcher() {
 
   const changeLanguage = (langCode) => {
     i18n.changeLanguage(langCode);
-    // Update HTML lang attribute for accessibility
-    document.documentElement.lang = langCode;
     setIsOpen(false);
   };
+
+  // Update page metadata when language changes
+  useEffect(() => {
+    const metadata = PAGE_METADATA[i18n.language] || PAGE_METADATA.en;
+    document.title = metadata.title;
+    document.documentElement.lang = i18n.language;
+
+    const metaDescription = document.querySelector('meta[name="description"]');
+    if (metaDescription) {
+      metaDescription.setAttribute('content', metadata.description);
+    }
+  }, [i18n.language]);
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -49,8 +70,10 @@ export default function LanguageSwitcher() {
             <button
               key={lang.code}
               onClick={() => changeLanguage(lang.code)}
-              className={`w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-50 first:rounded-t-lg last:rounded-b-lg ${
-                i18n.language === lang.code ? 'bg-blue-50 text-blue-600' : ''
+              className={`w-full flex items-center gap-3 px-4 py-2 text-left hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg transition-colors ${
+                i18n.language === lang.code
+                  ? 'bg-blue-50 text-blue-600 font-semibold'
+                  : 'text-gray-800 hover:text-gray-900'
               }`}
             >
               <span className="text-xl">{lang.flag}</span>
