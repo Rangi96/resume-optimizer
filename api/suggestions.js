@@ -91,7 +91,19 @@ export default async function handler(req, res) {
         max_tokens: 1500,
         messages: [{
           role: "user",
-          content: `Provide 4-6 specific, actionable improvement suggestions for this resume. Focus on content, wording, and impact. Return as a numbered list.
+          content: `Analyze this resume and provide 4-6 specific, actionable improvement suggestions. Each suggestion should follow this format:
+
+**[Bold heading summarizing the improvement]** - [Detailed explanation with specific examples]
+
+Example format:
+**Add a compelling headline below your name** - Include a targeted headline like "Senior Data Analyst | Business Intelligence Specialist | $67M+ Budget Impact" to immediately communicate your value proposition and catch recruiters' attention.
+
+Focus on high-impact improvements like:
+- Adding quantifiable metrics and achievements
+- Strengthening action verbs and impact statements
+- Improving headline and professional summary
+- Highlighting relevant skills and keywords
+- Better formatting and structure
 
 Resume:
 ${cleanResume}`

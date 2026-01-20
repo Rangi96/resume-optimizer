@@ -9,6 +9,47 @@ import PaymentCanceled from '../components/PaymentCanceled';
 import UserMenu from '../components/UserMenu';
 import { canUserOptimize, recordOptimization, getOptimizationStats } from '../optimizationManager';
 
+// Helper function to render text with markdown-style bold
+const renderTextWithBold = (text) => {
+  if (!text) return null;
+
+  const parts = [];
+  let lastIndex = 0;
+  const regex = /\*\*(.*?)\*\*/g;
+  let match;
+
+  while ((match = regex.exec(text)) !== null) {
+    // Add text before the bold part
+    if (match.index > lastIndex) {
+      parts.push(
+        <span key={`text-${lastIndex}`}>
+          {text.substring(lastIndex, match.index)}
+        </span>
+      );
+    }
+
+    // Add the bold part
+    parts.push(
+      <strong key={`bold-${match.index}`} className="font-bold text-gray-900">
+        {match[1]}
+      </strong>
+    );
+
+    lastIndex = match.index + match[0].length;
+  }
+
+  // Add any remaining text after the last bold part
+  if (lastIndex < text.length) {
+    parts.push(
+      <span key={`text-${lastIndex}`}>
+        {text.substring(lastIndex)}
+      </span>
+    );
+  }
+
+  return parts.length > 0 ? parts : text;
+};
+
 // Add the new props here inside the curly braces
 const PhaseNavigation = ({ phase, setPhase, isUploadComplete = false, isFormatTriggered = false }) => {
   const phases = ['upload', 'optimize', 'format'];
@@ -1257,7 +1298,9 @@ export default function MainApp() {
                     <div className="space-y-3">
                       {suggestions.map((suggestion, i) => (
                         <div key={i} className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                          <p className="text-sm text-gray-700">{suggestion}</p>
+                          <p className="text-sm text-gray-700 leading-relaxed">
+                            {renderTextWithBold(suggestion)}
+                          </p>
                         </div>
                       ))}
                     </div>
