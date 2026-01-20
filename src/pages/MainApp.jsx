@@ -1305,7 +1305,7 @@ export default function MainApp() {
                   <div className="bg-white rounded-xl shadow-lg p-6">
                     <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                       <CheckCircle className="w-5 h-5 text-green-600" />
-                      Improvement Suggestions
+                      {t('optimize.suggestions')}
                     </h3>
                     <div className="space-y-3">
                       {suggestions.map((suggestion, i) => (
@@ -1324,7 +1324,7 @@ export default function MainApp() {
                   <div className="bg-white rounded-xl shadow-lg p-6">
                     <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
                       <AlertCircle className="w-5 h-5 text-amber-600" />
-                      Missing Skills Analysis
+                      {t('optimize.gaps')}
                     </h3>
                     <div className="space-y-3">
                       {gaps.map((gap, i) => (
@@ -1784,24 +1784,24 @@ export default function MainApp() {
         {addingGap !== null && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <h3 className="text-xl font-semibold mb-2">Add Missing Skill to Resume</h3>
+              <h3 className="text-xl font-semibold mb-2">{t('modals.addSkill.title')}</h3>
               <div className="mb-4 p-3 bg-amber-50 border border-amber-200 rounded">
-                <p className="text-sm font-medium">Missing Skill:</p>
+                <p className="text-sm font-medium">{t('modals.addSkill.missingSkill')}</p>
                 <p className="text-base font-semibold mt-1">{gaps[addingGap]?.requirement}</p>
               </div>
 
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-2">Select which experience to add this to:</label>
-                <select 
-                  value={selectedExperience} 
+                <label className="block text-sm font-medium mb-2">{t('modals.addSkill.selectExperience')}</label>
+                <select
+                  value={selectedExperience}
                   onChange={(e) => {
                     setSelectedExperience(e.target.value);
                     setShowPreview(false);
                     setPreviewBullet('');
-                  }} 
+                  }}
                   className="w-full p-3 border rounded-lg"
                 >
-                  <option value="">Choose an experience...</option>
+                  <option value="">{t('modals.addSkill.chooseExperience')}</option>
                   {structuredResume.experience?.map((exp, i) => (
                     <option key={i} value={i}>{exp.title} | {exp.company}</option>
                   ))}
@@ -1817,12 +1817,12 @@ export default function MainApp() {
                   {generatingBullet ? (
                     <>
                       <Loader2 className="animate-spin w-5 h-5" />
-                      Generating Preview...
+                      {t('modals.generateBullet.generating')}
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-5 h-5" />
-                      Generate Preview Bullet
+                      {t('modals.generateBullet.title')}
                     </>
                   )}
                 </button>
@@ -1831,22 +1831,22 @@ export default function MainApp() {
               {showPreview && (
                 <div className="mb-4 space-y-3">
                   <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                    <p className="text-sm font-medium text-green-800 mb-2">✓ Preview Bullet Point:</p>
+                    <p className="text-sm font-medium text-green-800 mb-2">{t('modals.generateBullet.preview')}</p>
                     <textarea 
                       value={previewBullet} 
                       onChange={(e) => setPreviewBullet(e.target.value)} 
                       className="w-full p-2 border rounded text-sm resize-none" 
                       rows="3" 
                     />
-                    <p className="text-xs text-gray-600 mt-2">You can edit this before adding</p>
+                    <p className="text-xs text-gray-600 mt-2">{t('modals.addSkill.editNote')}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button 
-                      onClick={generatePreview} 
-                      disabled={generatingBullet} 
+                    <button
+                      onClick={generatePreview}
+                      disabled={generatingBullet}
                       className="flex-1 py-2 border border-blue-500 text-blue-600 rounded-lg font-medium hover:bg-blue-50"
                     >
-                      {generatingBullet ? <Loader2 className="animate-spin w-4 h-4 mx-auto" /> : '🔄 Regenerate'}
+                      {generatingBullet ? <Loader2 className="animate-spin w-4 h-4 mx-auto" /> : t('buttons.regenerate')}
                     </button>
                     <button 
                       onClick={addBulletToResume} 
