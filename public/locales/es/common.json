@@ -168,24 +168,37 @@
     "disclaimer": "Resume Optimizer proporciona sugerencias generadas por IA. Revisa todo el contenido antes de usar. No garantizamos resultados de empleo. Consulta los Términos de Servicio para más detalles."
   },
   "cookies": {
-    "title": "Usamos cookies",
-    "description": "Usamos cookies esenciales para autenticación y cookies opcionales para mejorar tu experiencia. Puedes personalizar tus preferencias o aceptar todas. Consulta nuestra Política de Privacidad para más detalles.",
-    "essential": {
-      "title": "Cookies Esenciales (Requeridas)",
-      "description": "Requeridas para autenticación, seguridad y funcionalidad principal. No se pueden desactivar."
+    "settings": {
+      "title": "Preferencias de Cookies",
+      "closeSettings": "Cerrar configuración"
     },
-    "analytics": {
-      "title": "Cookies de Análisis (Opcionales)",
-      "description": "Nos ayudan a entender cómo usas la aplicación para mejorar el rendimiento y la experiencia del usuario."
+    "types": {
+      "essential": {
+        "title": "Cookies Esenciales",
+        "description": "Requeridas para autenticación, seguridad y funcionalidad principal. No se pueden desactivar."
+      },
+      "analytics": {
+        "title": "Cookies de Análisis",
+        "description": "Nos ayudan a entender cómo usas la aplicación para mejorar el rendimiento y la experiencia del usuario."
+      },
+      "preference": {
+        "title": "Cookies de Preferencias",
+        "description": "Recuerdan tus configuraciones y preferencias para una experiencia personalizada."
+      }
     },
-    "preferences": {
-      "title": "Cookies de Preferencias (Opcionales)",
-      "description": "Recuerdan tus configuraciones y preferencias para una experiencia personalizada."
+    "required": "Requeridas",
+    "optional": "Opcionales",
+    "buttons": {
+      "savePreferences": "Guardar Preferencias",
+      "acceptAll": "Aceptar Todas",
+      "rejectAll": "Rechazar Todas",
+      "customize": "Personalizar"
     },
-    "rejectAll": "Rechazar Todas",
-    "customize": "Personalizar",
-    "acceptAll": "Aceptar Todas",
-    "savePreferences": "Guardar Preferencias",
-    "close": "Cerrar configuración"
+    "banner": {
+      "title": "Usamos cookies",
+      "message": "Usamos cookies esenciales para autenticación y cookies opcionales para mejorar tu experiencia. Puedes personalizar tus preferencias o aceptar todas. Consulta nuestra",
+      "privacyPolicy": "Política de Privacidad",
+      "forDetails": "para más detalles."
+    }
   }
 }

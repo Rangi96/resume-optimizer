@@ -168,24 +168,37 @@
     "disclaimer": "Resume Optimizer provides AI-generated suggestions. Review all content before use. We do not guarantee employment outcomes. See Terms of Service for details."
   },
   "cookies": {
-    "title": "We use cookies",
-    "description": "We use essential cookies for authentication and optional cookies to improve your experience. You can customize your preferences or accept all. See our Privacy Policy for details.",
-    "essential": {
-      "title": "Essential Cookies (Required)",
-      "description": "Required for authentication, security, and core functionality. Cannot be disabled."
+    "settings": {
+      "title": "Cookie Preferences",
+      "closeSettings": "Close settings"
     },
-    "analytics": {
-      "title": "Analytics Cookies (Optional)",
-      "description": "Help us understand how you use the app to improve performance and user experience."
+    "types": {
+      "essential": {
+        "title": "Essential Cookies",
+        "description": "Required for authentication, security, and core functionality. Cannot be disabled."
+      },
+      "analytics": {
+        "title": "Analytics Cookies",
+        "description": "Help us understand how you use the app to improve performance and user experience."
+      },
+      "preference": {
+        "title": "Preference Cookies",
+        "description": "Remember your settings and preferences for a personalized experience."
+      }
     },
-    "preferences": {
-      "title": "Preference Cookies (Optional)",
-      "description": "Remember your settings and preferences for a personalized experience."
+    "required": "Required",
+    "optional": "Optional",
+    "buttons": {
+      "savePreferences": "Save Preferences",
+      "acceptAll": "Accept All",
+      "rejectAll": "Reject All",
+      "customize": "Customize"
     },
-    "rejectAll": "Reject All",
-    "customize": "Customize",
-    "acceptAll": "Accept All",
-    "savePreferences": "Save Preferences",
-    "close": "Close settings"
+    "banner": {
+      "title": "We use cookies",
+      "message": "We use essential cookies for authentication and optional cookies to improve your experience. You can customize your preferences or accept all. See our",
+      "privacyPolicy": "Privacy Policy",
+      "forDetails": "for details."
+    }
   }
 }

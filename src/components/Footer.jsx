@@ -1,8 +1,10 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { Mail, Github, FileText, Shield, Linkedin, Twitter } from 'lucide-react';
 
 export default function Footer() {
+  const { t } = useTranslation('common');
   const currentYear = new Date().getFullYear();
 
   return (
@@ -13,9 +15,9 @@ export default function Footer() {
 
           {/* Company Column */}
           <div>
-            <h3 className="text-lg font-bold mb-4 text-white">Resume Optimizer</h3>
+            <h3 className="text-lg font-bold mb-4 text-white">{t('footer.title')}</h3>
             <p className="text-gray-300 text-sm leading-relaxed mb-4">
-              AI-powered resume optimization platform by Control BIA LLC. Transform your resume with intelligent suggestions and professional templates.
+              {t('footer.description')}
             </p>
             <div className="flex gap-3">
               <a
@@ -50,7 +52,7 @@ export default function Footer() {
 
           {/* Legal Column */}
           <div>
-            <h3 className="text-lg font-bold mb-4 text-white">Legal</h3>
+            <h3 className="text-lg font-bold mb-4 text-white">{t('footer.legal')}</h3>
             <ul className="space-y-3">
               <li>
                 <Link
@@ -58,7 +60,7 @@ export default function Footer() {
                   className="text-gray-300 hover:text-white transition-colors flex items-center gap-2 text-sm"
                 >
                   <Shield className="w-4 h-4" />
-                  Privacy Policy
+                  {t('footer.privacyPolicy')}
                 </Link>
               </li>
               <li>
@@ -67,7 +69,7 @@ export default function Footer() {
                   className="text-gray-300 hover:text-white transition-colors flex items-center gap-2 text-sm"
                 >
                   <FileText className="w-4 h-4" />
-                  Terms of Service
+                  {t('footer.termsOfService')}
                 </Link>
               </li>
               <li>
@@ -81,7 +83,7 @@ export default function Footer() {
                   }}
                   className="text-gray-300 hover:text-white transition-colors text-sm"
                 >
-                  Cookie Settings
+                  {t('footer.cookieSettings')}
                 </a>
               </li>
             </ul>
@@ -89,7 +91,7 @@ export default function Footer() {
 
           {/* Contact Column */}
           <div>
-            <h3 className="text-lg font-bold mb-4 text-white">Contact</h3>
+            <h3 className="text-lg font-bold mb-4 text-white">{t('footer.contact')}</h3>
             <ul className="space-y-3">
               <li>
                 <a
@@ -97,24 +99,24 @@ export default function Footer() {
                   className="text-gray-300 hover:text-white transition-colors flex items-center gap-2 text-sm"
                 >
                   <Mail className="w-4 h-4" />
-                  Contact@controlbia.com
+                  {t('footer.contactEmail')}
                 </a>
               </li>
               <li className="text-gray-400 text-sm">
-                <strong className="text-gray-300">Company:</strong> Control BIA LLC
+                <strong className="text-gray-300">{t('footer.company')}</strong> {t('footer.companyName')}
               </li>
               <li className="text-gray-400 text-sm">
-                <strong className="text-gray-300">Location:</strong> United States
+                <strong className="text-gray-300">{t('footer.location')}</strong> {t('footer.locationValue')}
               </li>
               <li className="text-gray-400 text-sm">
-                <strong className="text-gray-300">Response Time:</strong> Within 30 days
+                <strong className="text-gray-300">{t('footer.responseTime')}</strong> {t('footer.responseTimeValue')}
               </li>
             </ul>
           </div>
 
           {/* Resources Column */}
           <div>
-            <h3 className="text-lg font-bold mb-4 text-white">Resources</h3>
+            <h3 className="text-lg font-bold mb-4 text-white">{t('footer.resources')}</h3>
             <ul className="space-y-3">
               <li>
                 <a
@@ -123,7 +125,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-white transition-colors text-sm"
                 >
-                  Powered by Anthropic Claude
+                  {t('footer.poweredBy')}
                 </a>
               </li>
               <li>
@@ -133,7 +135,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-white transition-colors text-sm"
                 >
-                  Firebase by Google
+                  {t('footer.firebase')}
                 </a>
               </li>
               <li>
@@ -143,7 +145,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-white transition-colors text-sm"
                 >
-                  Payments by Stripe
+                  {t('footer.stripe')}
                 </a>
               </li>
               <li>
@@ -153,7 +155,7 @@ export default function Footer() {
                   rel="noopener noreferrer"
                   className="text-gray-300 hover:text-white transition-colors text-sm"
                 >
-                  Hosted on Vercel
+                  {t('footer.vercel')}
                 </a>
               </li>
             </ul>
@@ -165,27 +167,22 @@ export default function Footer() {
           {/* Bottom Footer - Copyright & Additional Info */}
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <p className="text-gray-400 text-sm text-center md:text-left">
-              &copy; {currentYear} <strong className="text-gray-300">Control BIA LLC</strong>. All rights reserved.
+              &copy; {currentYear} <strong className="text-gray-300">{t('footer.companyName')}</strong>. {t('footer.copyright')}
             </p>
 
             <div className="flex flex-wrap justify-center gap-4 text-xs text-gray-400">
-              <span>Made with AI</span>
+              <span>{t('footer.madeWithAI')}</span>
               <span>•</span>
-              <span>GDPR & CCPA Compliant</span>
+              <span>{t('footer.gdpr')}</span>
               <span>•</span>
-              <span>Data Protected</span>
+              <span>{t('footer.dataProtected')}</span>
             </div>
           </div>
 
           {/* Disclaimer */}
           <div className="mt-6 text-center">
             <p className="text-xs text-gray-500 max-w-3xl mx-auto">
-              Resume Optimizer provides AI-generated suggestions. Review all content before use.
-              We do not guarantee employment outcomes. See{' '}
-              <Link to="/terms" className="text-gray-400 hover:text-white underline">
-                Terms of Service
-              </Link>
-              {' '}for details.
+              {t('footer.disclaimer')}
             </p>
           </div>
         </div>
