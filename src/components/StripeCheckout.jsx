@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Loader2 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 
 const StripeCheckout = ({ isOpen, onClose }) => {
+  const { t } = useTranslation('common');
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -9,17 +11,17 @@ const StripeCheckout = ({ isOpen, onClose }) => {
   const plans = [
     {
       id: 'plan_10_exports',
-      name: '10 Resume Exports',
-      price: '$3.00',
+      nameKey: 'payment.plan10.name',
+      priceKey: 'payment.plan10.price',
       exports: 10,
-      description: 'Perfect for targeted applications'
+      descriptionKey: 'payment.plan10.description'
     },
     {
       id: 'plan_20_exports',
-      name: '20 Resume Exports',
-      price: '$5.00',
+      nameKey: 'payment.plan20.name',
+      priceKey: 'payment.plan20.price',
       exports: 20,
-      description: 'Best value for job searchers'
+      descriptionKey: 'payment.plan20.description'
     }
   ];
 
@@ -61,7 +63,7 @@ const StripeCheckout = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-xl shadow-lg p-8 max-w-2xl w-full">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-gray-800">Unlock More Exports</h2>
+          <h2 className="text-2xl font-bold text-gray-800">{t('payment.unlock')}</h2>
           <button
             onClick={onClose}
             className="text-gray-500 hover:text-gray-700 text-2xl"
@@ -89,11 +91,11 @@ const StripeCheckout = ({ isOpen, onClose }) => {
               } ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
               <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                {plan.name}
+                {t(plan.nameKey)}
               </h3>
-              <p className="text-sm text-gray-600 mb-4">{plan.description}</p>
+              <p className="text-sm text-gray-600 mb-4">{t(plan.descriptionKey)}</p>
               <div className="flex items-baseline gap-2 mb-4">
-                <span className="text-3xl font-bold text-blue-600">{plan.price}</span>
+                <span className="text-3xl font-bold text-blue-600">{t(plan.priceKey)}</span>
               </div>
               <button
                 className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-gray-400 text-white py-2 rounded-lg font-medium flex items-center justify-center gap-2"
@@ -102,10 +104,10 @@ const StripeCheckout = ({ isOpen, onClose }) => {
                 {selectedPlan === plan.id && loading ? (
                   <>
                     <Loader2 className="animate-spin w-4 h-4" />
-                    Processing...
+                    {t('payment.processing')}
                   </>
                 ) : (
-                  'Get Started'
+                  t('buttons.getStarted')
                 )}
               </button>
             </button>
@@ -113,7 +115,7 @@ const StripeCheckout = ({ isOpen, onClose }) => {
         </div>
 
         <p className="text-sm text-gray-600 text-center">
-          💳 Secure payment powered by Stripe
+          {t('payment.secure')}
         </p>
       </div>
     </div>

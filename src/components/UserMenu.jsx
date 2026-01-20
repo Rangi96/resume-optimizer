@@ -1,9 +1,11 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { LogOut, User, ChevronDown, Sparkles } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../AuthContext';
 import { getOptimizationStats, getAllTierLimits } from '../optimizationManager';
 
 export default function UserMenu() {
+  const { t } = useTranslation('auth');
   const { user, logout } = useContext(AuthContext);
   const [isOpen, setIsOpen] = useState(false);
   const [stats, setStats] = useState(null);
@@ -36,7 +38,7 @@ export default function UserMenu() {
   const userInitial = userEmail.charAt(0).toUpperCase();
   const tierLimits = getAllTierLimits();
   const currentTier = user.paymentStatus || 'free';
-  const tierName = currentTier === 'free' ? 'Free' : currentTier === 'premium_10' ? 'Premium 10' : 'Premium 20';
+  const tierName = currentTier === 'free' ? t('userMenu.freePlan') : currentTier === 'premium_10' ? t('userMenu.premium10') : t('userMenu.premium20');
 
   return (
     <div className="relative" ref={menuRef}>
@@ -55,7 +57,7 @@ export default function UserMenu() {
         <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg overflow-hidden z-50 border border-gray-200">
           {/* User Info */}
           <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-sm text-gray-600">Signed in as</p>
+            <p className="text-sm text-gray-600">{t('userMenu.signedInAs')}</p>
             <p className="text-sm font-semibold text-gray-900 truncate">{userEmail}</p>
           </div>
 
@@ -63,14 +65,14 @@ export default function UserMenu() {
           <div className="px-4 py-3 border-b border-gray-100 bg-blue-50">
             <div className="flex items-center gap-2 mb-2">
               <Sparkles className="w-4 h-4 text-blue-600" />
-              <p className="text-xs font-semibold text-blue-900">{tierName} Plan</p>
+              <p className="text-xs font-semibold text-blue-900">{tierName} {t('userMenu.plan')}</p>
             </div>
             {stats ? (
               <div className="space-y-1">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Optimizations:</span>
+                  <span className="text-gray-600">{t('userMenu.optimizations')}</span>
                   <span className="font-semibold text-gray-900">
-                    {stats.remaining} of {stats.max} remaining
+                    {stats.remaining} {t('userMenu.of')} {stats.max} {t('userMenu.remaining')}
                   </span>
                 </div>
                 {/* Progress bar */}
@@ -81,11 +83,11 @@ export default function UserMenu() {
                   />
                 </div>
                 <p className="text-xs text-gray-500">
-                  Used: {stats.used}
+                  {t('userMenu.used')} {stats.used}
                 </p>
               </div>
             ) : (
-              <p className="text-xs text-gray-500">Loading...</p>
+              <p className="text-xs text-gray-500">{t('userMenu.loading')}</p>
             )}
           </div>
 
@@ -99,7 +101,7 @@ export default function UserMenu() {
               className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2 transition-colors"
             >
               <User className="w-4 h-4" />
-              Profile Settings
+              {t('userMenu.profileSettings')}
             </button>
           </div>
 
@@ -113,7 +115,7 @@ export default function UserMenu() {
               className="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2 transition-colors font-medium"
             >
               <LogOut className="w-4 h-4" />
-              Sign Out
+              {t('userMenu.signOut')}
             </button>
           </div>
         </div>
