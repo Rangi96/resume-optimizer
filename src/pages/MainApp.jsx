@@ -506,7 +506,7 @@ export default function MainApp() {
   const [showPaymentCanceled, setShowPaymentCanceled] = useState(false);
   const [paymentSessionId, setPaymentSessionId] = useState('');
   const { user } = useContext(AuthContext);
-  const { t, i18n } = useTranslation(['common', 'templates']);
+  const { t, i18n } = useTranslation(['common', 'templates', 'errors']);
 
   // Check for payment success/cancel in URL
   useEffect(() => {
@@ -600,12 +600,12 @@ export default function MainApp() {
           const text = await readFile(file);
           setResumeText(text);
           if (text.length < 50) {
-            setError('Warning: The extracted text seems too short. Please check the file.');
+            setError(t('errors:textTooShort'));
           } else {
             setError(''); // Clear errors on success
           }
         } catch (error) {
-          setError('Error reading file. Please try a different format.');
+          setError(t('errors:fileReadError'));
           setResumeFile(null);
           setResumeText('');
         } finally {
@@ -681,7 +681,7 @@ export default function MainApp() {
       console.log('❌ Missing job description or resume text');
       console.log('❌ jobDescription length:', jobDescription?.length || 0);
       console.log('❌ resumeText length:', resumeText?.length || 0);
-      setError('Please provide both job description and resume.');
+      setError(t('errors:missingFields'));
       return;
     }
 
@@ -692,13 +692,13 @@ export default function MainApp() {
     // Validation check before API call
     if (resumeText.length < 50) {
       console.log('❌ Resume text too short:', resumeText.length, 'characters');
-      setError('Resume text is too short. Please provide a complete resume (at least 50 characters).');
+      setError(t('errors:resumeTooShort'));
       return;
     }
 
     if (jobDescription.length < 50) {
       console.log('❌ Job description too short:', jobDescription.length, 'characters');
-      setError('Job description is too short. Please provide a complete job description (at least 50 characters).');
+      setError(t('errors:jobTooShort'));
       return;
     }
 
@@ -1071,8 +1071,8 @@ export default function MainApp() {
                 </div>
                 {/* Text */}
                 <div>
-                  <h2 className="text-xl font-bold text-gray-800">Step 1: Upload Your Information</h2>
-                  <p className="text-sm text-gray-600">Provide your resume and the job description</p>
+                  <h2 className="text-xl font-bold text-gray-800">{t('upload.step1')}</h2>
+                  <p className="text-sm text-gray-600">{t('upload.subtitle')}</p>
                 </div>
                 
                 {/* Navigation */}
@@ -1090,17 +1090,17 @@ export default function MainApp() {
             <div className="space-y-6">
               {/* Job Description */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Job Description *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t('upload.jobLabel')}</label>
                 <textarea
                   value={jobDescription}
                   onChange={(e) => setJobDescription(e.target.value)}
-                  placeholder="Paste the full job description here..."
+                  placeholder={t('upload.jobPlaceholder')}
                   className="w-full h-48 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                 />
               </div>
               {/* Resume Upload */}
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-2">Your Resume *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">{t('upload.resumeLabel')}</label>
                 <div className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
                   isExtractingFile 
                     ? 'border-blue-400 bg-blue-50' 
@@ -1131,21 +1131,21 @@ export default function MainApp() {
                     </div>
                     <div>
                       <p className="text-lg font-semibold text-gray-700">
-                        {isExtractingFile 
-                          ? 'Extracting text...' 
-                          : resumeFile 
-                            ? resumeFile.name 
-                            : 'Upload Resume'
+                        {isExtractingFile
+                          ? t('upload.extracting')
+                          : resumeFile
+                            ? resumeFile.name
+                            : t('upload.uploadButton')
                         }
                       </p>
                       <p className="text-sm text-gray-500 mt-1">
-                        {isExtractingFile 
-                          ? 'Please wait while we extract your resume...' 
-                          : 'Click to upload PDF, Word, or Text file'
+                        {isExtractingFile
+                          ? t('upload.extractingMessage')
+                          : t('upload.clickToUpload')
                         }
                       </p>
                       <p className="text-xs text-gray-400 mt-2">
-                        Supported: .pdf, .doc, .docx, .txt
+                        {t('upload.supported')}
                       </p>
                     </div>
                   </label>
@@ -1155,18 +1155,18 @@ export default function MainApp() {
                   <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
                     <p className="text-sm text-blue-700">
                       <Loader2 className="w-4 h-4 inline animate-spin mr-2" />
-                      <span className="font-medium">Extracting text from your resume...</span>
+                      <span className="font-medium">{t('upload.extractingMessage')}</span>
                     </p>
-                    <p className="text-xs text-blue-600 mt-1">This usually takes 5-10 seconds for PDFs</p>
+                    <p className="text-xs text-blue-600 mt-1">{t('upload.extractingTime')}</p>
                   </div>
                 )}
                 
                 {resumeText && (
-                  <button 
-                    onClick={() => setShowResumePreview(!showResumePreview)} 
+                  <button
+                    onClick={() => setShowResumePreview(!showResumePreview)}
                     className="mt-2 text-xs text-blue-600 underline"
                   >
-                    {showResumePreview ? 'Hide' : 'Preview'} extracted text
+                    {showResumePreview ? t('buttons.hide') : t('buttons.preview')} {t('upload.extractedText')}
                   </button>
                 )}
                 
@@ -1191,7 +1191,7 @@ export default function MainApp() {
                     ? 'bg-blue-50 border-blue-200'
                     : 'bg-green-50 border-green-200'
                 }`}>
-                  <p className="text-sm text-gray-600">Optimization status display coming soon...</p>
+                  <p className="text-sm text-gray-600">{t('optimize.statusDisplay')}</p>
                   {/* TEMPORARILY DISABLED - Stats display needs async refactoring
                   {(() => {
                     const stats = getOptimizationStats(user?.uid, user?.paymentStatus || 'free');

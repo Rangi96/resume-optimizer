@@ -29,5 +29,19 @@
       "name": "Creativo",
       "description": "Colorido y único"
     }
+  },
+  "fonts": {
+    "inter": "Inter",
+    "georgia": "Georgia",
+    "times": "Times New Roman",
+    "arial": "Arial",
+    "roboto": "Roboto"
+  },
+  "colors": {
+    "black": "Negro Clásico",
+    "blue": "Azul Marino",
+    "green": "Verde Bosque",
+    "burgundy": "Borgoña",
+    "purple": "Púrpura Real"
   }
 }

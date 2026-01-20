@@ -1,4 +1,9 @@
 {
+  "textTooShort": "Warning: The extracted text seems too short. Please check the file.",
+  "fileReadError": "Error reading file. Please try a different format.",
+  "missingFields": "Please provide both job description and resume.",
+  "resumeTooShort": "Resume text is too short. Please provide a complete resume (at least 50 characters).",
+  "jobTooShort": "Job description is too short. Please provide a complete job description (at least 50 characters).",
   "validation": {
     "resumeTooShort": "Resume text is too short. Please provide a complete resume (at least 50 characters).",
     "jobDescTooShort": "Job description is too short. Please provide a complete job description (at least 50 characters).",

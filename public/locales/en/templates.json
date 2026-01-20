@@ -29,5 +29,19 @@
       "name": "Creative",
       "description": "Colorful, unique"
     }
+  },
+  "fonts": {
+    "inter": "Inter",
+    "georgia": "Georgia",
+    "times": "Times New Roman",
+    "arial": "Arial",
+    "roboto": "Roboto"
+  },
+  "colors": {
+    "black": "Classic Black",
+    "blue": "Navy Blue",
+    "green": "Forest Green",
+    "burgundy": "Burgundy",
+    "purple": "Royal Purple"
   }
 }

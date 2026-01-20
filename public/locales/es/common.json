@@ -38,27 +38,46 @@
     "getStarted": "Comenzar"
   },
   "upload": {
-    "title": "Paso 1: Sube Tu Información",
+    "step1": "Paso 1: Sube Tu Información",
     "subtitle": "Proporciona tu currículum y la descripción del trabajo",
-    "dragDrop": "Haz clic para subir archivo PDF, Word o Texto",
-    "supported": "Soportado: .pdf, .doc, .docx, .txt",
-    "orPaste": "O pega el texto de tu currículum",
-    "placeholder": "Pega el contenido de tu currículum aquí...",
-    "extracting": "Extrayendo texto...",
-    "extractingMessage": "Por favor espera mientras extraemos tu currículum...",
-    "extractingTime": "Esto usualmente toma 5-10 segundos para PDFs",
-    "previewText": "texto extraído",
-    "jobDescription": "Descripción del Trabajo *",
+    "jobLabel": "Descripción del Trabajo *",
     "jobPlaceholder": "Pega la descripción completa del trabajo aquí...",
-    "yourResume": "Tu Currículum *"
+    "resumeLabel": "Tu Currículum *",
+    "uploadButton": "Subir Currículum",
+    "extracting": "Extrayendo texto...",
+    "clickToUpload": "Haz clic para subir archivo PDF, Word o Texto",
+    "supported": "Soportado: .pdf, .doc, .docx, .txt",
+    "extractingMessage": "Extrayendo texto de tu currículum...",
+    "extractingTime": "Esto usualmente toma 5-10 segundos para PDFs",
+    "preview": "Vista Previa",
+    "hide": "Ocultar",
+    "extractedText": "texto extraído"
   },
   "optimize": {
     "title": "Optimizando Currículum...",
     "optimizeButton": "Optimizar Mi Currículum",
     "suggestions": "Sugerencias de Mejora",
     "gaps": "Análisis de Habilidades Faltantes",
-    "content": "Contenido del Currículum Optimizado",
-    "statusDisplay": "Visualización del estado de optimización próximamente..."
+    "optimizedContent": "Contenido del Currículum Optimizado",
+    "statusDisplay": "Visualización del estado de optimización próximamente...",
+    "sections": {
+      "professionalSummary": "Resumen Profesional",
+      "experience": "Experiencia",
+      "education": "Educación",
+      "certifications": "Certificaciones",
+      "skills": "Habilidades"
+    },
+    "labels": {
+      "jobTitle": "Título del Trabajo",
+      "company": "Empresa",
+      "location": "Ubicación",
+      "start": "Inicio",
+      "end": "Fin",
+      "bullets": "Viñetas:",
+      "category": "Categoría (ej., Lenguajes de Programación)",
+      "skillsLabel": "Habilidades:",
+      "jobDescription": "Descripción del trabajo"
+    }
   },
   "format": {
     "tabs": {
@@ -70,6 +89,7 @@
     "fontFamily": "Tipo de Letra",
     "colorScheme": "Esquema de Color",
     "fontSize": "Tamaño de Letra",
+    "lineHeight": "Altura de Línea",
     "exportOptions": "Opciones de Exportación",
     "livePreview": "Vista Previa en Vivo"
   },

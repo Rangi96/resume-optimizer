@@ -1,4 +1,9 @@
 {
+  "textTooShort": "Advertencia: El texto extraído parece demasiado corto. Por favor verifica el archivo.",
+  "fileReadError": "Error al leer el archivo. Por favor intenta con un formato diferente.",
+  "missingFields": "Por favor proporciona tanto la descripción del trabajo como el currículum.",
+  "resumeTooShort": "El texto del currículum es demasiado corto. Por favor proporciona un currículum completo (al menos 50 caracteres).",
+  "jobTooShort": "La descripción del trabajo es demasiado corta. Por favor proporciona una descripción completa (al menos 50 caracteres).",
   "validation": {
     "resumeTooShort": "El texto del currículum es demasiado corto. Por favor proporciona un currículum completo (al menos 50 caracteres).",
     "jobDescTooShort": "La descripción del trabajo es demasiado corta. Por favor proporciona una descripción completa (al menos 50 caracteres).",

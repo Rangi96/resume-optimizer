@@ -38,27 +38,46 @@
     "getStarted": "Get Started"
   },
   "upload": {
-    "title": "Step 1: Upload Your Information",
+    "step1": "Step 1: Upload Your Information",
     "subtitle": "Provide your resume and the job description",
-    "dragDrop": "Click to upload PDF, Word, or Text file",
-    "supported": "Supported: .pdf, .doc, .docx, .txt",
-    "orPaste": "Or paste your resume text",
-    "placeholder": "Paste your resume content here...",
-    "extracting": "Extracting text...",
-    "extractingMessage": "Please wait while we extract your resume...",
-    "extractingTime": "This usually takes 5-10 seconds for PDFs",
-    "previewText": "extracted text",
-    "jobDescription": "Job Description *",
+    "jobLabel": "Job Description *",
     "jobPlaceholder": "Paste the full job description here...",
-    "yourResume": "Your Resume *"
+    "resumeLabel": "Your Resume *",
+    "uploadButton": "Upload Resume",
+    "extracting": "Extracting text...",
+    "clickToUpload": "Click to upload PDF, Word, or Text file",
+    "supported": "Supported: .pdf, .doc, .docx, .txt",
+    "extractingMessage": "Extracting text from your resume...",
+    "extractingTime": "This usually takes 5-10 seconds for PDFs",
+    "preview": "Preview",
+    "hide": "Hide",
+    "extractedText": "extracted text"
   },
   "optimize": {
     "title": "Optimizing Resume...",
     "optimizeButton": "Optimize My Resume",
     "suggestions": "Improvement Suggestions",
     "gaps": "Missing Skills Analysis",
-    "content": "Optimized Resume Content",
-    "statusDisplay": "Optimization status display coming soon..."
+    "optimizedContent": "Optimized Resume Content",
+    "statusDisplay": "Optimization status display coming soon...",
+    "sections": {
+      "professionalSummary": "Professional Summary",
+      "experience": "Experience",
+      "education": "Education",
+      "certifications": "Certifications",
+      "skills": "Skills"
+    },
+    "labels": {
+      "jobTitle": "Job Title",
+      "company": "Company",
+      "location": "Location",
+      "start": "Start",
+      "end": "End",
+      "bullets": "Bullets:",
+      "category": "Category (e.g., Programming Languages)",
+      "skillsLabel": "Skills:",
+      "jobDescription": "Job description"
+    }
   },
   "format": {
     "tabs": {
@@ -70,6 +89,7 @@
     "fontFamily": "Font Family",
     "colorScheme": "Color Scheme",
     "fontSize": "Font Size",
+    "lineHeight": "Line Height",
     "exportOptions": "Export Options",
     "livePreview": "Live Preview"
   },
