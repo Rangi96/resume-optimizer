@@ -17,10 +17,15 @@ export const AuthProvider = ({ children }) => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         try {
-          // Initialize user document if it doesn't exist
-          await initializeUserDocument(currentUser.uid, currentUser);
+          console.log('🔐 Auth state changed - User signed in:', currentUser.uid);
 
-          // Read paymentStatus from Firestore
+          // CRITICAL: Initialize user document FIRST and WAIT for completion
+          console.log('📝 Calling initializeUserDocument...');
+          await initializeUserDocument(currentUser.uid, currentUser);
+          console.log('✅ initializeUserDocument completed successfully');
+
+          // THEN read paymentStatus from Firestore
+          console.log('🔍 Reading user document from Firestore...');
           const userDocRef = doc(db, 'users', currentUser.uid);
           const userDoc = await getDoc(userDocRef);
 
@@ -29,22 +34,36 @@ export const AuthProvider = ({ children }) => {
             // Add paymentStatus from Firestore to user object
             currentUser.paymentStatus = userData.paymentStatus || 'free';
             console.log('✅ User loaded with paymentStatus:', currentUser.paymentStatus);
+            console.log('✅ User document data:', {
+              uid: userData.uid,
+              email: userData.email,
+              paymentStatus: userData.paymentStatus,
+              optimizationsCount: userData.optimizations?.count
+            });
           } else {
+            // This should NEVER happen after initializeUserDocument completes
+            console.error('❌ CRITICAL ERROR: User document does not exist after initialization!');
+            console.error('❌ This indicates initializeUserDocument failed silently');
             // Fallback to free if document doesn't exist
             currentUser.paymentStatus = 'free';
             console.log('⚠️ User document not found, defaulting to free');
+            setError('Account setup incomplete. Please sign out and sign in again.');
           }
 
           setUser(currentUser);
           setLoading(false);
         } catch (error) {
-          console.error('Error loading user payment status:', error);
+          console.error('❌ ERROR in auth state change handler:', error);
+          console.error('❌ Error details:', error.message);
+          console.error('❌ Error stack:', error.stack);
           // Fallback to free on error
           currentUser.paymentStatus = 'free';
           setUser(currentUser);
           setLoading(false);
+          setError('Error setting up account. Please try signing in again.');
         }
       } else {
+        console.log('🔐 Auth state changed - User signed out');
         setUser(null);
         setLoading(false);
       }

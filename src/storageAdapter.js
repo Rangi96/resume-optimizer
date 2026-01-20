@@ -68,43 +68,66 @@ const localStorageAdapter = {
  */
 const firestoreAdapter = {
   async getOptimizationData(userId) {
-    if (!userId) return { count: 0, totalTokens: 0 };
-    
+    if (!userId) {
+      console.error('❌ getOptimizationData called without userId');
+      return { count: 0, totalTokens: 0 };
+    }
+
     try {
+      console.log('📊 Firestore: Getting optimization data for userId:', userId);
       const userRef = doc(db, 'users', userId);
       const userDoc = await getDoc(userRef);
-      
+
       if (!userDoc.exists()) {
+        console.error('❌ Firestore: User document does NOT exist when getting optimization data!');
+        console.error('❌ Firestore: UserId:', userId);
+        console.error('❌ Firestore: This means the user was not properly initialized');
         return { count: 0, totalTokens: 0 };
       }
-      
+
       const data = userDoc.data();
-      return {
+      const result = {
         count: data.optimizations?.count || 0,
         totalTokens: data.optimizations?.totalTokens || 0
       };
+      console.log('📊 Firestore: Retrieved optimization data:', result);
+      return result;
     } catch (error) {
-      console.error('Error getting optimization data:', error);
+      console.error('❌ Firestore: Error getting optimization data:', error);
+      console.error('❌ Firestore: Error code:', error.code);
+      console.error('❌ Firestore: Error message:', error.message);
       return { count: 0, totalTokens: 0 };
     }
   },
 
   async recordOptimization(userId, tokensUsed = 0) {
-    if (!userId) return null;
+    if (!userId) {
+      console.error('❌ recordOptimization called without userId');
+      return null;
+    }
 
     try {
-      console.log('Firestore: Starting recordOptimization for user:', userId);
-      console.log('Firestore: Using ATOMIC increment to prevent race conditions');
+      console.log('💾 Firestore: Starting recordOptimization for user:', userId);
+      console.log('💾 Firestore: Tokens to record:', tokensUsed);
+      console.log('💾 Firestore: Using ATOMIC increment to prevent race conditions');
 
       const userRef = doc(db, 'users', userId);
 
       // Check if document exists
+      console.log('💾 Firestore: Checking if user document exists...');
       const docSnap = await getDoc(userRef);
+
       if (!docSnap.exists()) {
-        console.log('Firestore: User document does not exist, initializing...');
-        // Initialize document with first optimization
+        console.error('❌ Firestore: CRITICAL ERROR - User document does not exist when trying to record optimization!');
+        console.error('❌ Firestore: This should NEVER happen if initializeUserDocument worked correctly');
+        console.error('❌ Firestore: Attempting to create document as fallback...');
+
+        // Fallback: Initialize document with first optimization
         await setDoc(userRef, {
           uid: userId,
+          email: '', // We don't have email here
+          displayName: 'User',
+          paymentStatus: 'free',
           optimizations: {
             count: 1,
             totalTokens: tokensUsed,
@@ -113,9 +136,14 @@ const firestoreAdapter = {
           createdAt: serverTimestamp(),
           updatedAt: serverTimestamp()
         });
-        console.log('Firestore: User document initialized with first optimization');
+        console.log('⚠️ Firestore: User document created as fallback with first optimization');
         return { count: 1, totalTokens: tokensUsed };
       }
+
+      console.log('✅ Firestore: User document exists, proceeding with atomic increment');
+      const existingData = docSnap.data();
+      console.log('📊 Firestore: Current optimization count BEFORE increment:', existingData.optimizations?.count || 0);
+      console.log('📊 Firestore: Current token usage BEFORE increment:', existingData.optimizations?.totalTokens || 0);
 
       // Use atomic increment to prevent race conditions
       const updatedData = {
@@ -125,45 +153,66 @@ const firestoreAdapter = {
         updatedAt: serverTimestamp()
       };
 
-      console.log('Firestore: About to write with atomic increment:', { tokensUsed });
+      console.log('💾 Firestore: About to write with atomic increment:', { tokensUsed });
       await updateDoc(userRef, updatedData);
-      console.log('Firestore: Atomic write successful!');
+      console.log('✅ Firestore: Atomic write successful!');
 
       // Read the updated values to return
       const updatedSnapshot = await this.getOptimizationData(userId);
-      console.log('Firestore: Updated data after write:', updatedSnapshot);
+      console.log('📊 Firestore: Updated data AFTER write:', updatedSnapshot);
+      console.log('✅ Firestore: New optimization count:', updatedSnapshot.count);
+      console.log('✅ Firestore: New token total:', updatedSnapshot.totalTokens);
 
       return updatedSnapshot;
     } catch (error) {
-      console.error('Firestore ERROR:', error);
-      console.error('Firestore ERROR details:', error.message);
+      console.error('❌ Firestore ERROR in recordOptimization:', error);
+      console.error('❌ Firestore ERROR code:', error.code);
+      console.error('❌ Firestore ERROR message:', error.message);
+      console.error('❌ Firestore ERROR stack:', error.stack);
       return null;
     }
   },
 
   async initializeUserDocument(userId, userData) {
-    if (!userId) return;
+    if (!userId) {
+      console.error('❌ initializeUserDocument called without userId');
+      throw new Error('User ID is required to initialize user document');
+    }
+
+    if (!userData || !userData.email) {
+      console.error('❌ initializeUserDocument called without user data or email');
+      throw new Error('User data with email is required');
+    }
 
     try {
+      console.log('🔧 Firestore: initializeUserDocument called for userId:', userId);
+      console.log('🔧 Firestore: User email:', userData.email);
+      console.log('🔧 Firestore: User displayName:', userData.displayName);
+
       const userRef = doc(db, 'users', userId);
 
       // Check if document already exists
+      console.log('🔧 Firestore: Checking if user document exists...');
       const docSnap = await getDoc(userRef);
 
       if (docSnap.exists()) {
-        console.log('🔧 User document already exists, NOT resetting optimization count');
+        console.log('🔧 Firestore: User document already exists, NOT resetting optimization count');
+        const existingData = docSnap.data();
+        console.log('🔧 Firestore: Existing optimization count:', existingData.optimizations?.count);
+
         // Only update basic user info, preserve optimizations
         await updateDoc(userRef, {
           email: userData.email || '',
           displayName: userData.displayName || 'User',
           updatedAt: serverTimestamp()
         });
+        console.log('✅ Firestore: User document updated successfully');
         return;
       }
 
       // Document doesn't exist - create it with initial values
-      console.log('🔧 Creating new user document with count=0');
-      await setDoc(userRef, {
+      console.log('🔧 Firestore: Creating NEW user document with count=0');
+      const newUserData = {
         uid: userId,
         email: userData.email || '',
         displayName: userData.displayName || 'User',
@@ -175,9 +224,28 @@ const firestoreAdapter = {
         },
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-      });
+      };
+      console.log('🔧 Firestore: New user data to be created:', newUserData);
+
+      await setDoc(userRef, newUserData);
+
+      // VERIFY the document was created
+      console.log('🔍 Firestore: Verifying document was created...');
+      const verifySnap = await getDoc(userRef);
+      if (verifySnap.exists()) {
+        console.log('✅ Firestore: User document created and verified successfully!');
+        console.log('✅ Firestore: Created data:', verifySnap.data());
+      } else {
+        console.error('❌ Firestore: CRITICAL ERROR - Document not found after creation!');
+        throw new Error('Failed to verify user document creation');
+      }
     } catch (error) {
-      console.error('Error initializing user document:', error);
+      console.error('❌ Firestore: Error initializing user document:', error);
+      console.error('❌ Firestore: Error code:', error.code);
+      console.error('❌ Firestore: Error message:', error.message);
+      console.error('❌ Firestore: Full error:', error);
+      // RE-THROW the error so AuthContext knows it failed
+      throw error;
     }
   }
 };
