@@ -635,11 +635,29 @@ export default function MainApp() {
 
     if (!jobDescription || !resumeText) {
       console.log('❌ Missing job description or resume text');
+      console.log('❌ jobDescription length:', jobDescription?.length || 0);
+      console.log('❌ resumeText length:', resumeText?.length || 0);
       setError('Please provide both job description and resume.');
       return;
     }
 
     console.log('✅ Starting optimization process...');
+    console.log('📝 Resume text length:', resumeText.length);
+    console.log('📝 Job description length:', jobDescription.length);
+
+    // Validation check before API call
+    if (resumeText.length < 50) {
+      console.log('❌ Resume text too short:', resumeText.length, 'characters');
+      setError('Resume text is too short. Please provide a complete resume (at least 50 characters).');
+      return;
+    }
+
+    if (jobDescription.length < 50) {
+      console.log('❌ Job description too short:', jobDescription.length, 'characters');
+      setError('Job description is too short. Please provide a complete job description (at least 50 characters).');
+      return;
+    }
+
     // NOW ASYNC - Wait for database check
     console.log('🔍 Checking if user can optimize...');
     const optCheck = await canUserOptimize(user?.uid, user?.paymentStatus || 'free', 0);
@@ -655,6 +673,8 @@ export default function MainApp() {
 
     try {
       console.log('📡 Calling /api/optimize...');
+      console.log('📡 Sending resumeInput length:', resumeText.length);
+      console.log('📡 Sending jobDescription length:', jobDescription.length);
       const response = await fetch('/api/optimize', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -669,7 +689,11 @@ export default function MainApp() {
       console.log('📡 Response data:', data);
 
       if (!response.ok) {
-        throw new Error(data.error || data.details || 'Failed to optimize resume');
+        // Show specific validation error if available
+        const errorMessage = data.details || data.error || 'Failed to optimize resume';
+        console.error('❌ API Error:', errorMessage);
+        console.error('❌ Full error response:', data);
+        throw new Error(errorMessage);
       }
 
       console.log('✅ API call successful, setting state...');
