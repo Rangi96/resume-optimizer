@@ -1,12 +1,14 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
 import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle } from 'lucide-react';
 import * as mammoth from 'mammoth';
+import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../AuthContext';
 import LoginModal from '../components/LoginModal';
 import StripeCheckout from '../components/StripeCheckout';
 import PaymentSuccess from '../components/PaymentSuccess';
 import PaymentCanceled from '../components/PaymentCanceled';
 import UserMenu from '../components/UserMenu';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 import { canUserOptimize, recordOptimization, getOptimizationStats } from '../optimizationManager';
 
 // Helper function to render text with markdown-style bold
@@ -115,7 +117,7 @@ const colorSchemes = [
   { id: 'purple', name: 'Royal Purple', primary: '#4c1d95', accent: '#7c3aed' }
 ];
 
-const ClassicTemplate = ({ data, style }) => (
+const ClassicTemplate = ({ data, style, t }) => (
   <div style={{ fontFamily: style.fontFamily, fontSize: style.fontSize, lineHeight: style.lineHeight, color: '#000' }}>
     <div style={{ textAlign: 'center', borderBottom: `2px solid ${style.primary}`, paddingBottom: '12px', marginBottom: '16px' }}>
       <h1 style={{ fontSize: '1.8em', fontWeight: 'bold', color: style.primary, margin: 0 }}>{data.contact?.name}</h1>
@@ -125,13 +127,13 @@ const ClassicTemplate = ({ data, style }) => (
     </div>
     {data.professionalSummary && (
       <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>Professional Summary</h2>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{t ? t('templates:sections.professionalSummary') : 'Professional Summary'}</h2>
         <p style={{ textAlign: 'justify', fontSize: '0.9em' }}>{data.professionalSummary}</p>
       </div>
     )}
     {data.experience?.length > 0 && (
       <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>Professional Experience</h2>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{t ? t('templates:sections.experience') : 'Professional Experience'}</h2>
         {data.experience.map((exp, i) => (
           <div key={i} style={{ marginBottom: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -148,7 +150,7 @@ const ClassicTemplate = ({ data, style }) => (
     )}
     {data.education?.length > 0 && (
       <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>Education</h2>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{t ? t('templates:sections.education') : 'Education'}</h2>
         {data.education.map((edu, i) => (
           <div key={i} style={{ marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
             <div><strong>{edu.degree}</strong> — {edu.institution}{edu.location ? `, ${edu.location}` : ''}</div>
@@ -159,7 +161,7 @@ const ClassicTemplate = ({ data, style }) => (
     )}
     {data.certifications?.length > 0 && (
       <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>Certifications</h2>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{t ? t('templates:sections.certifications') : 'Certifications'}</h2>
         {data.certifications.map((cert, i) => (
           <div key={i} style={{ marginBottom: '4px', fontSize: '0.9em' }}>
             <strong>{cert.name}</strong> — {cert.issuer} ({cert.date})
@@ -169,7 +171,7 @@ const ClassicTemplate = ({ data, style }) => (
     )}
     {data.skills?.length > 0 && (
       <div>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>Skills</h2>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{t ? t('templates:sections.skills') : 'Skills'}</h2>
         {data.skills.map((skill, i) => (
           <div key={i} style={{ marginBottom: '4px', fontSize: '0.9em' }}>
             <strong>{skill.category}:</strong> {skill.items?.join(', ')}
@@ -180,7 +182,7 @@ const ClassicTemplate = ({ data, style }) => (
   </div>
 );
 
-const ModernTemplate = ({ data, style }) => (
+const ModernTemplate = ({ data, style, t }) => (
   <div style={{ fontFamily: style.fontFamily, fontSize: style.fontSize, lineHeight: style.lineHeight }}>
     <div style={{ background: `linear-gradient(135deg, ${style.primary}, ${style.accent})`, color: 'white', padding: '20px', margin: '-20px -20px 20px -20px' }}>
       <h1 style={{ fontSize: '1.8em', fontWeight: '700', margin: 0 }}>{data.contact?.name}</h1>
@@ -198,7 +200,7 @@ const ModernTemplate = ({ data, style }) => (
     {data.experience?.length > 0 && (
       <div style={{ marginBottom: '18px' }}>
         <h2 style={{ fontSize: '1.1em', fontWeight: '600', color: style.primary, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-          <span style={{ width: '24px', height: '2px', background: style.accent }}></span>Experience
+          <span style={{ width: '24px', height: '2px', background: style.accent }}></span>{t ? t('templates:sections.experience') : 'Experience'}
         </h2>
         {data.experience.map((exp, i) => (
           <div key={i} style={{ marginBottom: '14px', paddingLeft: '12px', borderLeft: '2px solid #e5e7eb' }}>
@@ -218,7 +220,7 @@ const ModernTemplate = ({ data, style }) => (
       {data.education?.length > 0 && (
         <div>
           <h2 style={{ fontSize: '1.1em', fontWeight: '600', color: style.primary, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ width: '24px', height: '2px', background: style.accent }}></span>Education
+            <span style={{ width: '24px', height: '2px', background: style.accent }}></span>{t ? t('templates:sections.education') : 'Education'}
           </h2>
           {data.education.map((edu, i) => (
             <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
@@ -231,7 +233,7 @@ const ModernTemplate = ({ data, style }) => (
       {data.certifications?.length > 0 && (
         <div>
           <h2 style={{ fontSize: '1.1em', fontWeight: '600', color: style.primary, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ width: '24px', height: '2px', background: style.accent }}></span>Certifications
+            <span style={{ width: '24px', height: '2px', background: style.accent }}></span>{t ? t('templates:sections.certifications') : 'Certifications'}
           </h2>
           {data.certifications.map((cert, i) => (
             <div key={i} style={{ marginBottom: '6px', fontSize: '0.85em' }}>
@@ -245,7 +247,7 @@ const ModernTemplate = ({ data, style }) => (
     {data.skills?.length > 0 && (
       <div style={{ marginTop: '18px' }}>
         <h2 style={{ fontSize: '1.1em', fontWeight: '600', color: style.primary, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-          <span style={{ width: '24px', height: '2px', background: style.accent }}></span>Skills
+          <span style={{ width: '24px', height: '2px', background: style.accent }}></span>{t ? t('templates:sections.skills') : 'Skills'}
         </h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {data.skills.flatMap(s => s.items || []).map((item, i) => (
@@ -257,7 +259,7 @@ const ModernTemplate = ({ data, style }) => (
   </div>
 );
 
-const ATSTemplate = ({ data, style }) => (
+const ATSTemplate = ({ data, style, t }) => (
   <div style={{ fontFamily: 'Arial, sans-serif', fontSize: style.fontSize, lineHeight: '1.5', color: '#000' }}>
     <div style={{ marginBottom: '12px' }}>
       <h1 style={{ fontSize: '1.6em', fontWeight: 'bold', margin: '0 0 4px 0' }}>{data.contact?.name}</h1>
@@ -267,13 +269,13 @@ const ATSTemplate = ({ data, style }) => (
     </div>
     {data.professionalSummary && (
       <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 6px 0', textTransform: 'uppercase' }}>Summary</h2>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 6px 0', textTransform: 'uppercase' }}>{t ? t('templates:sections.summary') : 'Summary'}</h2>
         <p style={{ margin: 0, fontSize: '0.9em' }}>{data.professionalSummary}</p>
       </div>
     )}
     {data.experience?.length > 0 && (
       <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Professional Experience</h2>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>{t ? t('templates:sections.experience') : 'Professional Experience'}</h2>
         {data.experience.map((exp, i) => (
           <div key={i} style={{ marginBottom: '12px' }}>
             <p style={{ margin: 0, fontWeight: 'bold' }}>{exp.title}</p>
@@ -287,7 +289,7 @@ const ATSTemplate = ({ data, style }) => (
     )}
     {data.education?.length > 0 && (
       <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Education</h2>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>{t ? t('templates:sections.education') : 'Education'}</h2>
         {data.education.map((edu, i) => (
           <p key={i} style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}>
             <strong>{edu.degree}</strong>, {edu.institution}{edu.location ? `, ${edu.location}` : ''} - {edu.date}
@@ -297,7 +299,7 @@ const ATSTemplate = ({ data, style }) => (
     )}
     {data.certifications?.length > 0 && (
       <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Certifications</h2>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>{t ? t('templates:sections.certifications') : 'Certifications'}</h2>
         {data.certifications.map((cert, i) => (
           <p key={i} style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}>{cert.name}, {cert.issuer}, {cert.date}</p>
         ))}
@@ -305,7 +307,7 @@ const ATSTemplate = ({ data, style }) => (
     )}
     {data.skills?.length > 0 && (
       <div>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>Skills</h2>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>{t ? t('templates:sections.skills') : 'Skills'}</h2>
         {data.skills.map((skill, i) => (
           <p key={i} style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}><strong>{skill.category}:</strong> {skill.items?.join(', ')}</p>
         ))}
@@ -314,7 +316,7 @@ const ATSTemplate = ({ data, style }) => (
   </div>
 );
 
-const ExecutiveTemplate = ({ data, style }) => (
+const ExecutiveTemplate = ({ data, style, t }) => (
   <div style={{ fontFamily: style.fontFamily, fontSize: style.fontSize, lineHeight: style.lineHeight }}>
     <div style={{ borderBottom: `4px solid ${style.primary}`, paddingBottom: '16px', marginBottom: '16px' }}>
       <h1 style={{ fontSize: '2.2em', fontWeight: '800', color: style.primary, margin: 0, letterSpacing: '-0.5px' }}>{data.contact?.name}</h1>
@@ -333,7 +335,7 @@ const ExecutiveTemplate = ({ data, style }) => (
       <div>
         {data.experience?.length > 0 && (
           <div>
-            <h2 style={{ fontSize: '1.2em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '6px', marginBottom: '14px' }}>Experience</h2>
+            <h2 style={{ fontSize: '1.2em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '6px', marginBottom: '14px' }}>{t ? t('templates:sections.experience') : 'Experience'}</h2>
             {data.experience.map((exp, i) => (
               <div key={i} style={{ marginBottom: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -352,7 +354,7 @@ const ExecutiveTemplate = ({ data, style }) => (
       <div>
         {data.education?.length > 0 && (
           <div style={{ marginBottom: '18px' }}>
-            <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>Education</h2>
+            <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>{t ? t('templates:sections.education') : 'Education'}</h2>
             {data.education.map((edu, i) => (
               <div key={i} style={{ marginBottom: '10px', fontSize: '0.85em' }}>
                 <strong style={{ color: style.primary }}>{edu.degree}</strong>
@@ -364,7 +366,7 @@ const ExecutiveTemplate = ({ data, style }) => (
         )}
         {data.certifications?.length > 0 && (
           <div style={{ marginBottom: '18px' }}>
-            <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>Certifications</h2>
+            <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>{t ? t('templates:sections.certifications') : 'Certifications'}</h2>
             {data.certifications.map((cert, i) => (
               <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
                 <strong>{cert.name}</strong>
@@ -375,7 +377,7 @@ const ExecutiveTemplate = ({ data, style }) => (
         )}
         {data.skills?.length > 0 && (
           <div>
-            <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>Expertise</h2>
+            <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>{t ? t('templates:sections.expertise') : 'Expertise'}</h2>
             {data.skills.map((skill, i) => (
               <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
                 <strong style={{ color: style.primary }}>{skill.category}</strong>
@@ -389,7 +391,7 @@ const ExecutiveTemplate = ({ data, style }) => (
   </div>
 );
 
-const CreativeTemplate = ({ data, style }) => (
+const CreativeTemplate = ({ data, style, t }) => (
   <div style={{ fontFamily: style.fontFamily, fontSize: style.fontSize, lineHeight: style.lineHeight }}>
     <div style={{ background: `linear-gradient(135deg, ${style.primary} 0%, ${style.accent} 50%, #f472b6 100%)`, color: 'white', padding: '24px', margin: '-20px -20px 20px -20px', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: '-50px', right: '-50px', width: '150px', height: '150px', background: 'rgba(255,255,255,0.1)', borderRadius: '50%' }}></div>
@@ -410,7 +412,7 @@ const CreativeTemplate = ({ data, style }) => (
     {data.skills?.length > 0 && (
       <div style={{ marginBottom: '20px' }}>
         <h2 style={{ fontSize: '1.1em', fontWeight: '700', color: style.primary, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '1.2em' }}>⚡</span> Skills & Expertise
+          <span style={{ fontSize: '1.2em' }}>⚡</span> {t ? t('templates:sections.skills') : 'Skills'} & {t ? t('templates:sections.expertise') : 'Expertise'}
         </h2>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {data.skills.flatMap(s => s.items || []).map((item, i) => (
@@ -422,7 +424,7 @@ const CreativeTemplate = ({ data, style }) => (
     {data.experience?.length > 0 && (
       <div style={{ marginBottom: '20px' }}>
         <h2 style={{ fontSize: '1.1em', fontWeight: '700', color: style.primary, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '1.2em' }}>💼</span> Experience
+          <span style={{ fontSize: '1.2em' }}>💼</span> {t ? t('templates:sections.experience') : 'Experience'}
         </h2>
         {data.experience.map((exp, i) => (
           <div key={i} style={{ marginBottom: '16px', padding: '14px', background: '#f8f9fa', borderRadius: '10px', borderLeft: `4px solid ${style.accent}` }}>
@@ -442,7 +444,7 @@ const CreativeTemplate = ({ data, style }) => (
       {data.education?.length > 0 && (
         <div style={{ padding: '14px', background: `${style.primary}08`, borderRadius: '10px' }}>
           <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>🎓</span> Education
+            <span>🎓</span> {t ? t('templates:sections.education') : 'Education'}
           </h2>
           {data.education.map((edu, i) => (
             <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
@@ -455,7 +457,7 @@ const CreativeTemplate = ({ data, style }) => (
       {data.certifications?.length > 0 && (
         <div style={{ padding: '14px', background: `${style.accent}08`, borderRadius: '10px' }}>
           <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>🏆</span> Certifications
+            <span>🏆</span> {t ? t('templates:sections.certifications') : 'Certifications'}
           </h2>
           {data.certifications.map((cert, i) => (
             <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
@@ -504,6 +506,7 @@ export default function MainApp() {
   const [showPaymentCanceled, setShowPaymentCanceled] = useState(false);
   const [paymentSessionId, setPaymentSessionId] = useState('');
   const { user } = useContext(AuthContext);
+  const { t, i18n } = useTranslation(['common', 'templates']);
 
   // Check for payment success/cancel in URL
   useEffect(() => {
@@ -938,7 +941,7 @@ export default function MainApp() {
 
   const renderTemplate = () => {
     if (!structuredResume) return null;
-    const props = { data: structuredResume, style };
+    const props = { data: structuredResume, style, t };
     switch (selectedTemplate) {
       case 'classic': return <ClassicTemplate {...props} />;
       case 'modern': return <ModernTemplate {...props} />;
@@ -1043,6 +1046,7 @@ export default function MainApp() {
                   ← Start Over
                 </button>
               )}
+             <LanguageSwitcher />
              <UserMenu />
             </div>
           </div>

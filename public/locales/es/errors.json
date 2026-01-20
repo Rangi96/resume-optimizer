@@ -1,0 +1,26 @@
+{
+  "validation": {
+    "resumeTooShort": "El texto del currículum es demasiado corto. Por favor proporciona un currículum completo (al menos 50 caracteres).",
+    "jobDescTooShort": "La descripción del trabajo es demasiado corta. Por favor proporciona una descripción completa (al menos 50 caracteres).",
+    "resumeRequired": "Se requiere el texto del currículum",
+    "jobDescRequired": "Se requiere la descripción del trabajo",
+    "fileTooLarge": "El currículum excede el tamaño máximo de {{size}}KB",
+    "invalidFile": "Error al leer el archivo. Por favor intenta con un formato diferente.",
+    "noChanges": "No hay cambios para confirmar",
+    "uploadFailed": "Error al subir el archivo"
+  },
+  "api": {
+    "rateLimit": "Demasiadas solicitudes. Por favor intenta más tarde.",
+    "timeout": "Tiempo de espera agotado. Por favor intenta de nuevo.",
+    "optimizeFailed": "Error al optimizar el currículum",
+    "suggestionsFailed": "Error al obtener sugerencias",
+    "gapsFailed": "Error al analizar brechas",
+    "extractFailed": "Error al extraer texto del archivo",
+    "generateBulletFailed": "Error al generar viñeta"
+  },
+  "auth": {
+    "loginRequired": "Por favor inicia sesión para continuar",
+    "sessionExpired": "Tu sesión ha expirado. Por favor inicia sesión nuevamente.",
+    "unauthorized": "No estás autorizado para realizar esta acción"
+  }
+}

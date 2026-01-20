@@ -1,0 +1,33 @@
+{
+  "sections": {
+    "professionalSummary": "Resumen Profesional",
+    "experience": "Experiencia Profesional",
+    "education": "Educación",
+    "certifications": "Certificaciones",
+    "skills": "Habilidades",
+    "summary": "Resumen",
+    "expertise": "Experiencia"
+  },
+  "templates": {
+    "classic": {
+      "name": "Clásico",
+      "description": "Fuentes tradicionales, serif"
+    },
+    "modern": {
+      "name": "Moderno",
+      "description": "Diseño limpio y minimalista"
+    },
+    "ats": {
+      "name": "Optimizado para ATS",
+      "description": "Optimizado para analizadores"
+    },
+    "executive": {
+      "name": "Ejecutivo",
+      "description": "Audaz y profesional"
+    },
+    "creative": {
+      "name": "Creativo",
+      "description": "Colorido y único"
+    }
+  }
+}

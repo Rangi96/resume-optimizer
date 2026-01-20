@@ -1,0 +1,26 @@
+{
+  "validation": {
+    "resumeTooShort": "Resume text is too short. Please provide a complete resume (at least 50 characters).",
+    "jobDescTooShort": "Job description is too short. Please provide a complete job description (at least 50 characters).",
+    "resumeRequired": "Resume text is required",
+    "jobDescRequired": "Job description is required",
+    "fileTooLarge": "Resume exceeds maximum size of {{size}}KB",
+    "invalidFile": "Error reading file. Please try a different format.",
+    "noChanges": "No changes to commit",
+    "uploadFailed": "Failed to upload file"
+  },
+  "api": {
+    "rateLimit": "Too many requests. Please try again later.",
+    "timeout": "Request timeout. Please try again.",
+    "optimizeFailed": "Failed to optimize resume",
+    "suggestionsFailed": "Failed to get suggestions",
+    "gapsFailed": "Failed to analyze gaps",
+    "extractFailed": "Failed to extract text from file",
+    "generateBulletFailed": "Failed to generate bullet point"
+  },
+  "auth": {
+    "loginRequired": "Please sign in to continue",
+    "sessionExpired": "Your session has expired. Please sign in again.",
+    "unauthorized": "You are not authorized to perform this action"
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "sections": {
+    "professionalSummary": "Professional Summary",
+    "experience": "Professional Experience",
+    "education": "Education",
+    "certifications": "Certifications",
+    "skills": "Skills",
+    "summary": "Summary",
+    "expertise": "Expertise"
+  },
+  "templates": {
+    "classic": {
+      "name": "Classic",
+      "description": "Traditional, serif fonts"
+    },
+    "modern": {
+      "name": "Modern",
+      "description": "Clean, minimal design"
+    },
+    "ats": {
+      "name": "ATS-Friendly",
+      "description": "Optimized for parsers"
+    },
+    "executive": {
+      "name": "Executive",
+      "description": "Bold, professional"
+    },
+    "creative": {
+      "name": "Creative",
+      "description": "Colorful, unique"
+    }
+  }
+}

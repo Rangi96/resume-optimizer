@@ -1,0 +1,191 @@
+{
+  "app": {
+    "title": "Optimal Resume",
+    "tagline": "Optimiza, analiza brechas y formatea de manera hermosa"
+  },
+  "navigation": {
+    "upload": "Subir",
+    "optimize": "Optimizar",
+    "format": "Formatear",
+    "back": "← Atrás",
+    "next": "Siguiente →",
+    "startOver": "← Comenzar de Nuevo"
+  },
+  "buttons": {
+    "upload": "Subir Currículum",
+    "optimize": "Optimizar Mi Currículum",
+    "getSuggestions": "Obtener Sugerencias",
+    "findGaps": "Encontrar Habilidades Faltantes",
+    "formatExport": "Formatear y Exportar",
+    "download": "Descargar",
+    "copy": "Copiar",
+    "generate": "Generar",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "addToResume": "+ Añadir al Currículum",
+    "addBullet": "+ Añadir Viñeta",
+    "addExperience": "+ Añadir Experiencia",
+    "addEducation": "+ Añadir Educación",
+    "addCertification": "+ Añadir Certificación",
+    "addSkillCategory": "+ Añadir Categoría de Habilidad",
+    "addSkill": "+ Añadir Habilidad",
+    "regenerate": "🔄 Regenerar",
+    "preview": "Vista Previa",
+    "hide": "Ocultar",
+    "continue": "Continuar",
+    "getStarted": "Comenzar"
+  },
+  "upload": {
+    "title": "Paso 1: Sube Tu Información",
+    "subtitle": "Proporciona tu currículum y la descripción del trabajo",
+    "dragDrop": "Haz clic para subir archivo PDF, Word o Texto",
+    "supported": "Soportado: .pdf, .doc, .docx, .txt",
+    "orPaste": "O pega el texto de tu currículum",
+    "placeholder": "Pega el contenido de tu currículum aquí...",
+    "extracting": "Extrayendo texto...",
+    "extractingMessage": "Por favor espera mientras extraemos tu currículum...",
+    "extractingTime": "Esto usualmente toma 5-10 segundos para PDFs",
+    "previewText": "texto extraído",
+    "jobDescription": "Descripción del Trabajo *",
+    "jobPlaceholder": "Pega la descripción completa del trabajo aquí...",
+    "yourResume": "Tu Currículum *"
+  },
+  "optimize": {
+    "title": "Optimizando Currículum...",
+    "optimizeButton": "Optimizar Mi Currículum",
+    "suggestions": "Sugerencias de Mejora",
+    "gaps": "Análisis de Habilidades Faltantes",
+    "content": "Contenido del Currículum Optimizado",
+    "statusDisplay": "Visualización del estado de optimización próximamente..."
+  },
+  "format": {
+    "tabs": {
+      "templates": "Plantillas",
+      "customize": "Personalizar",
+      "export": "Exportar"
+    },
+    "chooseTemplate": "Elegir Plantilla",
+    "fontFamily": "Tipo de Letra",
+    "colorScheme": "Esquema de Color",
+    "fontSize": "Tamaño de Letra",
+    "exportOptions": "Opciones de Exportación",
+    "livePreview": "Vista Previa en Vivo"
+  },
+  "export": {
+    "printPDF": "Imprimir / PDF",
+    "htmlFile": "Archivo HTML",
+    "jsonFile": "Archivo JSON",
+    "copyJSON": "Copiar JSON",
+    "copied": "¡Copiado!",
+    "tip": "💡 **Consejo:** Usa \"Imprimir / PDF\" y elige \"Guardar como PDF\" en el diálogo de impresión."
+  },
+  "resume": {
+    "contact": {
+      "name": "Nombre",
+      "email": "Correo Electrónico",
+      "phone": "Teléfono",
+      "linkedin": "LinkedIn",
+      "address": "Dirección"
+    },
+    "professionalSummary": "Resumen Profesional",
+    "experience": "Experiencia Profesional",
+    "education": "Educación",
+    "certifications": "Certificaciones",
+    "skills": "Habilidades",
+    "references": "Referencias",
+    "jobTitle": "Título del Trabajo",
+    "company": "Empresa",
+    "location": "Ubicación",
+    "start": "Inicio",
+    "end": "Fin",
+    "category": "Categoría (ej., Lenguajes de Programación)"
+  },
+  "modals": {
+    "addSkill": {
+      "title": "Añadir Habilidad Faltante al Currículum",
+      "missingSkill": "Habilidad Faltante:",
+      "selectExperience": "Selecciona a qué experiencia añadir esto:",
+      "chooseExperience": "Elige una experiencia...",
+      "editNote": "Puedes editar esto antes de añadir"
+    },
+    "generateBullet": {
+      "title": "Generar Vista Previa de Viñeta",
+      "generating": "Generando Vista Previa...",
+      "preview": "✓ Vista Previa de Viñeta:"
+    }
+  },
+  "payment": {
+    "unlock": "Desbloquear Más Exportaciones",
+    "plan10": {
+      "name": "10 Exportaciones de Currículum",
+      "description": "Perfecto para aplicaciones dirigidas",
+      "price": "$3.00"
+    },
+    "plan20": {
+      "name": "20 Exportaciones de Currículum",
+      "description": "Mejor valor para buscadores de empleo",
+      "price": "$5.00"
+    },
+    "secure": "💳 Pago seguro con Stripe",
+    "processing": "Procesando...",
+    "success": {
+      "title": "¡Pago Exitoso!",
+      "message": "Tu cuenta ha sido actualizada. Ahora puedes usar tus optimizaciones de currículum adicionales.",
+      "processingTitle": "Procesando Pago...",
+      "processingMessage": "Por favor espera mientras confirmamos tu compra."
+    },
+    "canceled": {
+      "title": "Pago Cancelado",
+      "message": "Tu pago fue cancelado. No se han realizado cargos a tu cuenta."
+    }
+  },
+  "footer": {
+    "title": "Resume Optimizer",
+    "description": "Plataforma de optimización de currículums impulsada por IA de Control BIA LLC. Transforma tu currículum con sugerencias inteligentes y plantillas profesionales.",
+    "legal": "Legal",
+    "contact": "Contacto",
+    "resources": "Recursos",
+    "privacyPolicy": "Política de Privacidad",
+    "termsOfService": "Términos de Servicio",
+    "cookieSettings": "Configuración de Cookies",
+    "contactEmail": "Contact@controlbia.com",
+    "company": "Empresa:",
+    "companyName": "Control BIA LLC",
+    "location": "Ubicación:",
+    "locationValue": "Estados Unidos",
+    "responseTime": "Tiempo de Respuesta:",
+    "responseTimeValue": "Dentro de 30 días",
+    "poweredBy": "Impulsado por Anthropic Claude",
+    "firebase": "Firebase de Google",
+    "stripe": "Pagos por Stripe",
+    "vercel": "Alojado en Vercel",
+    "copyright": "Todos los derechos reservados.",
+    "madeWithAI": "Hecho con IA",
+    "gdpr": "Cumple con GDPR y CCPA",
+    "dataProtected": "Datos Protegidos",
+    "disclaimer": "Resume Optimizer proporciona sugerencias generadas por IA. Revisa todo el contenido antes de usar. No garantizamos resultados de empleo. Consulta los Términos de Servicio para más detalles."
+  },
+  "cookies": {
+    "title": "Usamos cookies",
+    "description": "Usamos cookies esenciales para autenticación y cookies opcionales para mejorar tu experiencia. Puedes personalizar tus preferencias o aceptar todas. Consulta nuestra Política de Privacidad para más detalles.",
+    "essential": {
+      "title": "Cookies Esenciales (Requeridas)",
+      "description": "Requeridas para autenticación, seguridad y funcionalidad principal. No se pueden desactivar."
+    },
+    "analytics": {
+      "title": "Cookies de Análisis (Opcionales)",
+      "description": "Nos ayudan a entender cómo usas la aplicación para mejorar el rendimiento y la experiencia del usuario."
+    },
+    "preferences": {
+      "title": "Cookies de Preferencias (Opcionales)",
+      "description": "Recuerdan tus configuraciones y preferencias para una experiencia personalizada."
+    },
+    "rejectAll": "Rechazar Todas",
+    "customize": "Personalizar",
+    "acceptAll": "Aceptar Todas",
+    "savePreferences": "Guardar Preferencias",
+    "close": "Cerrar configuración"
+  }
+}

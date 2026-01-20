@@ -1,0 +1,191 @@
+{
+  "app": {
+    "title": "Optimal Resume",
+    "tagline": "Optimize, analyze gaps, and format beautifully"
+  },
+  "navigation": {
+    "upload": "Upload",
+    "optimize": "Optimize",
+    "format": "Format",
+    "back": "← Back",
+    "next": "Next →",
+    "startOver": "← Start Over"
+  },
+  "buttons": {
+    "upload": "Upload Resume",
+    "optimize": "Optimize My Resume",
+    "getSuggestions": "Get Suggestions",
+    "findGaps": "Find Missing Skills",
+    "formatExport": "Format & Export",
+    "download": "Download",
+    "copy": "Copy",
+    "generate": "Generate",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "addToResume": "+ Add to Resume",
+    "addBullet": "+ Add Bullet",
+    "addExperience": "+ Add Experience",
+    "addEducation": "+ Add Education",
+    "addCertification": "+ Add Certification",
+    "addSkillCategory": "+ Add Skill Category",
+    "addSkill": "+ Add Skill",
+    "regenerate": "🔄 Regenerate",
+    "preview": "Preview",
+    "hide": "Hide",
+    "continue": "Continue",
+    "getStarted": "Get Started"
+  },
+  "upload": {
+    "title": "Step 1: Upload Your Information",
+    "subtitle": "Provide your resume and the job description",
+    "dragDrop": "Click to upload PDF, Word, or Text file",
+    "supported": "Supported: .pdf, .doc, .docx, .txt",
+    "orPaste": "Or paste your resume text",
+    "placeholder": "Paste your resume content here...",
+    "extracting": "Extracting text...",
+    "extractingMessage": "Please wait while we extract your resume...",
+    "extractingTime": "This usually takes 5-10 seconds for PDFs",
+    "previewText": "extracted text",
+    "jobDescription": "Job Description *",
+    "jobPlaceholder": "Paste the full job description here...",
+    "yourResume": "Your Resume *"
+  },
+  "optimize": {
+    "title": "Optimizing Resume...",
+    "optimizeButton": "Optimize My Resume",
+    "suggestions": "Improvement Suggestions",
+    "gaps": "Missing Skills Analysis",
+    "content": "Optimized Resume Content",
+    "statusDisplay": "Optimization status display coming soon..."
+  },
+  "format": {
+    "tabs": {
+      "templates": "Templates",
+      "customize": "Customize",
+      "export": "Export"
+    },
+    "chooseTemplate": "Choose Template",
+    "fontFamily": "Font Family",
+    "colorScheme": "Color Scheme",
+    "fontSize": "Font Size",
+    "exportOptions": "Export Options",
+    "livePreview": "Live Preview"
+  },
+  "export": {
+    "printPDF": "Print / PDF",
+    "htmlFile": "HTML File",
+    "jsonFile": "JSON File",
+    "copyJSON": "Copy JSON",
+    "copied": "Copied!",
+    "tip": "💡 **Tip:** Use \"Print / PDF\" and choose \"Save as PDF\" in the print dialog."
+  },
+  "resume": {
+    "contact": {
+      "name": "Name",
+      "email": "Email",
+      "phone": "Phone",
+      "linkedin": "LinkedIn",
+      "address": "Address"
+    },
+    "professionalSummary": "Professional Summary",
+    "experience": "Professional Experience",
+    "education": "Education",
+    "certifications": "Certifications",
+    "skills": "Skills",
+    "references": "References",
+    "jobTitle": "Job Title",
+    "company": "Company",
+    "location": "Location",
+    "start": "Start",
+    "end": "End",
+    "category": "Category (e.g., Programming Languages)"
+  },
+  "modals": {
+    "addSkill": {
+      "title": "Add Missing Skill to Resume",
+      "missingSkill": "Missing Skill:",
+      "selectExperience": "Select which experience to add this to:",
+      "chooseExperience": "Choose an experience...",
+      "editNote": "You can edit this before adding"
+    },
+    "generateBullet": {
+      "title": "Generate Preview Bullet",
+      "generating": "Generating Preview...",
+      "preview": "✓ Preview Bullet Point:"
+    }
+  },
+  "payment": {
+    "unlock": "Unlock More Exports",
+    "plan10": {
+      "name": "10 Resume Exports",
+      "description": "Perfect for targeted applications",
+      "price": "$3.00"
+    },
+    "plan20": {
+      "name": "20 Resume Exports",
+      "description": "Best value for job searchers",
+      "price": "$5.00"
+    },
+    "secure": "💳 Secure payment powered by Stripe",
+    "processing": "Processing...",
+    "success": {
+      "title": "Payment Successful!",
+      "message": "Your account has been upgraded. You can now use your additional resume optimizations.",
+      "processingTitle": "Processing Payment...",
+      "processingMessage": "Please wait while we confirm your purchase."
+    },
+    "canceled": {
+      "title": "Payment Canceled",
+      "message": "Your payment was canceled. No charges have been made to your account."
+    }
+  },
+  "footer": {
+    "title": "Resume Optimizer",
+    "description": "AI-powered resume optimization platform by Control BIA LLC. Transform your resume with intelligent suggestions and professional templates.",
+    "legal": "Legal",
+    "contact": "Contact",
+    "resources": "Resources",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "cookieSettings": "Cookie Settings",
+    "contactEmail": "Contact@controlbia.com",
+    "company": "Company:",
+    "companyName": "Control BIA LLC",
+    "location": "Location:",
+    "locationValue": "United States",
+    "responseTime": "Response Time:",
+    "responseTimeValue": "Within 30 days",
+    "poweredBy": "Powered by Anthropic Claude",
+    "firebase": "Firebase by Google",
+    "stripe": "Payments by Stripe",
+    "vercel": "Hosted on Vercel",
+    "copyright": "All rights reserved.",
+    "madeWithAI": "Made with AI",
+    "gdpr": "GDPR & CCPA Compliant",
+    "dataProtected": "Data Protected",
+    "disclaimer": "Resume Optimizer provides AI-generated suggestions. Review all content before use. We do not guarantee employment outcomes. See Terms of Service for details."
+  },
+  "cookies": {
+    "title": "We use cookies",
+    "description": "We use essential cookies for authentication and optional cookies to improve your experience. You can customize your preferences or accept all. See our Privacy Policy for details.",
+    "essential": {
+      "title": "Essential Cookies (Required)",
+      "description": "Required for authentication, security, and core functionality. Cannot be disabled."
+    },
+    "analytics": {
+      "title": "Analytics Cookies (Optional)",
+      "description": "Help us understand how you use the app to improve performance and user experience."
+    },
+    "preferences": {
+      "title": "Preference Cookies (Optional)",
+      "description": "Remember your settings and preferences for a personalized experience."
+    },
+    "rejectAll": "Reject All",
+    "customize": "Customize",
+    "acceptAll": "Accept All",
+    "savePreferences": "Save Preferences",
+    "close": "Close settings"
+  }
+}
