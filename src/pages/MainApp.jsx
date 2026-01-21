@@ -1349,7 +1349,7 @@ export default function MainApp() {
 
             {/* Resume Preview */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Optimized Resume Content</h3>
+              <h3 className="text-lg font-bold text-gray-800 mb-4">{t('optimize.optimizedContent')}</h3>
               <div className="prose max-w-none">
                 <div className="space-y-4">
                   {/* Contact */}
@@ -1381,17 +1381,17 @@ export default function MainApp() {
                   {structuredResume.professionalSummary && (
                     <div className="bg-white rounded-lg shadow-sm p-6">
                       <div className="flex justify-between items-start mb-2">
-                        <h3 className="text-lg font-semibold">Professional Summary</h3>
+                        <h3 className="text-lg font-semibold">{t('optimize.sections.professionalSummary')}</h3>
                         {editingSection !== 'summary' && (
-                          <button onClick={()=>startEdit('summary',structuredResume.professionalSummary)} className="px-3 py-1 border rounded text-sm">Edit</button>
+                          <button onClick={()=>startEdit('summary',structuredResume.professionalSummary)} className="px-3 py-1 border rounded text-sm">{t('buttons.edit')}</button>
                         )}
                       </div>
                       {editingSection === 'summary' ? (
                         <div className="space-y-3">
                           <textarea value={editData} onChange={(e)=>setEditData(e.target.value)} className="w-full p-3 border rounded text-sm" rows="4" />
                           <div className="flex gap-2">
-                            <button onClick={()=>saveEdit('summary')} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">Save</button>
-                            <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">Cancel</button>
+                            <button onClick={()=>saveEdit('summary')} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">{t('buttons.save')}</button>
+                            <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">{t('buttons.cancel')}</button>
                           </div>
                         </div>
                       ) : (
@@ -1403,7 +1403,7 @@ export default function MainApp() {
                   {/* Experience */}
                   {structuredResume.experience && structuredResume.experience.length > 0 && (
                     <div>
-                      <h3 className="text-xl font-bold mb-4">Experience</h3>
+                      <h3 className="text-xl font-bold mb-4">{t('optimize.sections.experience')}</h3>
                       {structuredResume.experience.map((exp,idx)=>(
                         <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
                           <div className="flex gap-4">
@@ -1412,27 +1412,27 @@ export default function MainApp() {
                               {editingSection === `experience-${idx}` ? (
                                 <div className="space-y-3">
                                   <div className="grid grid-cols-2 gap-3">
-                                    <input type="text" value={editData.title} onChange={(e)=>setEditData({...editData,title:e.target.value})} placeholder="Job Title" className="p-2 border rounded font-semibold" />
-                                    <input type="text" value={editData.company} onChange={(e)=>setEditData({...editData,company:e.target.value})} placeholder="Company" className="p-2 border rounded" />
-                                    <input type="text" value={editData.location} onChange={(e)=>setEditData({...editData,location:e.target.value})} placeholder="Location" className="p-2 border rounded text-sm" />
+                                    <input type="text" value={editData.title} onChange={(e)=>setEditData({...editData,title:e.target.value})} placeholder={t('optimize.labels.jobTitle')} className="p-2 border rounded font-semibold" />
+                                    <input type="text" value={editData.company} onChange={(e)=>setEditData({...editData,company:e.target.value})} placeholder={t('optimize.labels.company')} className="p-2 border rounded" />
+                                    <input type="text" value={editData.location} onChange={(e)=>setEditData({...editData,location:e.target.value})} placeholder={t('optimize.labels.location')} className="p-2 border rounded text-sm" />
                                     <div className="flex gap-2">
-                                      <input type="text" value={editData.startDate} onChange={(e)=>setEditData({...editData,startDate:e.target.value})} placeholder="Start" className="p-2 border rounded text-sm flex-1" />
-                                      <input type="text" value={editData.endDate} onChange={(e)=>setEditData({...editData,endDate:e.target.value})} placeholder="End" className="p-2 border rounded text-sm flex-1" />
+                                      <input type="text" value={editData.startDate} onChange={(e)=>setEditData({...editData,startDate:e.target.value})} placeholder={t('optimize.labels.start')} className="p-2 border rounded text-sm flex-1" />
+                                      <input type="text" value={editData.endDate} onChange={(e)=>setEditData({...editData,endDate:e.target.value})} placeholder={t('optimize.labels.end')} className="p-2 border rounded text-sm flex-1" />
                                     </div>
                                   </div>
                                   <div className="space-y-2">
-                                    <label className="text-sm font-medium">Bullets:</label>
+                                    <label className="text-sm font-medium">{t('optimize.labels.bullets')}</label>
                                     {editData.bullets.map((bullet,bIdx)=>(
                                       <div key={bIdx} className="flex gap-2">
                                         <input type="text" value={bullet} onChange={(e)=>{const nb=[...editData.bullets];nb[bIdx]=e.target.value;setEditData({...editData,bullets:nb});}} className="flex-1 p-2 border rounded text-sm" />
                                         <button onClick={()=>{const nb=editData.bullets.filter((_,i)=>i!==bIdx);setEditData({...editData,bullets:nb});}} className="px-3 py-2 bg-red-100 text-red-600 rounded text-sm">✕</button>
                                       </div>
                                     ))}
-                                    <button onClick={()=>setEditData({...editData,bullets:[...editData.bullets,'']})} className="px-3 py-1 bg-gray-100 rounded text-sm">+ Add Bullet</button>
+                                    <button onClick={()=>setEditData({...editData,bullets:[...editData.bullets,'']})} className="px-3 py-1 bg-gray-100 rounded text-sm">{t('buttons.addBullet')}</button>
                                   </div>
                                   <div className="flex gap-2">
-                                    <button onClick={()=>saveEdit(`experience-${idx}`)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">Save</button>
-                                    <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">Cancel</button>
+                                    <button onClick={()=>saveEdit(`experience-${idx}`)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">{t('buttons.save')}</button>
+                                    <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">{t('buttons.cancel')}</button>
                                   </div>
                                 </div>
                               ) : (
@@ -1443,12 +1443,12 @@ export default function MainApp() {
                                       <p className="text-sm text-gray-600">{exp.location} | {exp.startDate} - {exp.endDate}</p>
                                     </div>
                                     <div className="flex gap-2">
-                                      <button onClick={()=>startEdit(`experience-${idx}`,exp)} className="px-3 py-1 border rounded text-sm">Edit</button>
-                                      <button onClick={()=>deleteItem('experience',idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">Delete</button>
+                                      <button onClick={()=>startEdit(`experience-${idx}`,exp)} className="px-3 py-1 border rounded text-sm">{t('buttons.edit')}</button>
+                                      <button onClick={()=>deleteItem('experience',idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">{t('buttons.delete')}</button>
                                     </div>
                                   </div>
                                   <div className="mt-3">
-                                    <p className="text-sm font-medium mb-2">Job description</p>
+                                    <p className="text-sm font-medium mb-2">{t('optimize.labels.jobDescription')}</p>
                                     {exp.bullets.map((bullet,bIdx)=>(
                                       <p key={bIdx} className="text-sm text-gray-700">• {bullet}</p>
                                     ))}
@@ -1459,14 +1459,14 @@ export default function MainApp() {
                           </div>
                         </div>
                       ))}
-                      <button onClick={()=>addNewItem('experience')} className="px-4 py-2 bg-blue-500 text-white rounded">+ Add Experience</button>
+                      <button onClick={()=>addNewItem('experience')} className="px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addExperience')}</button>
                     </div>
                   )}
 
                   {/* Education */}
                   {structuredResume.education && structuredResume.education.length>0 && (
                     <div>
-                      <h3 className="text-xl font-bold mb-4">Education</h3>
+                      <h3 className="text-xl font-bold mb-4">{t('optimize.sections.education')}</h3>
                       {structuredResume.education.map((edu,idx)=>(
                         <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
                           <div className="flex justify-between">
@@ -1474,18 +1474,18 @@ export default function MainApp() {
                               <h4 className="text-lg font-semibold">{edu.degree} | {edu.institution}</h4>
                               <p className="text-sm text-gray-600">{edu.location} | {edu.date}</p>
                             </div>
-                            <button onClick={()=>deleteItem('education',idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">Delete</button>
+                            <button onClick={()=>deleteItem('education',idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">{t('buttons.delete')}</button>
                           </div>
                         </div>
                       ))}
-                      <button onClick={()=>addNewItem('education')} className="px-4 py-2 bg-blue-500 text-white rounded">+ Add Education</button>
+                      <button onClick={()=>addNewItem('education')} className="px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addEducation')}</button>
                     </div>
                   )}
 
                   {/* Certifications */}
                   {structuredResume.certifications && structuredResume.certifications.length>0 && (
                     <div>
-                      <h3 className="text-xl font-bold mb-4">Certifications</h3>
+                      <h3 className="text-xl font-bold mb-4">{t('optimize.sections.certifications')}</h3>
                       <div className="bg-white rounded-lg shadow-sm p-6">
                         {structuredResume.certifications.map((cert,idx)=>(
                           <div key={idx} className="pb-3 mb-3 border-b last:border-0 flex justify-between">
@@ -1493,31 +1493,31 @@ export default function MainApp() {
                               <p className="font-semibold">{cert.name}</p>
                               <p className="text-sm text-gray-600">{cert.issuer} | {cert.date}</p>
                             </div>
-                            <button onClick={()=>deleteItem('certifications',idx)} className="px-2 py-1 border border-red-300 text-red-600 rounded text-xs">Delete</button>
+                            <button onClick={()=>deleteItem('certifications',idx)} className="px-2 py-1 border border-red-300 text-red-600 rounded text-xs">{t('buttons.delete')}</button>
                           </div>
                         ))}
                       </div>
-                      <button onClick={()=>addNewItem('certifications')} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">+ Add Certification</button>
+                      <button onClick={()=>addNewItem('certifications')} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addCertification')}</button>
                     </div>
                   )}
 
                   {/* Skills */}
                   {structuredResume.skills && structuredResume.skills.length > 0 && (
                     <div>
-                      <h3 className="text-xl font-bold mb-4">Skills</h3>
+                      <h3 className="text-xl font-bold mb-4">{t('optimize.sections.skills')}</h3>
                       {structuredResume.skills.map((sg, idx) => (
                         <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
                           {editingSection === `skills-${idx}` ? (
                             <div className="space-y-3">
-                              <input 
-                                type="text" 
-                                value={editData.category} 
-                                onChange={(e) => setEditData({...editData, category: e.target.value})} 
-                                placeholder="Category (e.g., Programming Languages)" 
-                                className="w-full p-2 border rounded font-semibold" 
+                              <input
+                                type="text"
+                                value={editData.category}
+                                onChange={(e) => setEditData({...editData, category: e.target.value})}
+                                placeholder={t('optimize.labels.category')}
+                                className="w-full p-2 border rounded font-semibold"
                               />
                               <div className="space-y-2">
-                                <label className="text-sm font-medium">Skills:</label>
+                                <label className="text-sm font-medium">{t('optimize.labels.skillsLabel')}</label>
                                 {editData.items.map((item, iIdx) => (
                                   <div key={iIdx} className="flex gap-2">
                                     <input 
@@ -1541,16 +1541,16 @@ export default function MainApp() {
                                     </button>
                                   </div>
                                 ))}
-                                <button 
-                                  onClick={() => setEditData({...editData, items: [...editData.items, '']})} 
+                                <button
+                                  onClick={() => setEditData({...editData, items: [...editData.items, '']})}
                                   className="px-3 py-1 bg-gray-100 rounded text-sm"
                                 >
-                                  + Add Skill
+                                  {t('buttons.addSkill')}
                                 </button>
                               </div>
                               <div className="flex gap-2">
-                                <button onClick={() => saveEdit(`skills-${idx}`)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">Save</button>
-                                <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">Cancel</button>
+                                <button onClick={() => saveEdit(`skills-${idx}`)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">{t('buttons.save')}</button>
+                                <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">{t('buttons.cancel')}</button>
                               </div>
                             </div>
                           ) : (
@@ -1561,14 +1561,14 @@ export default function MainApp() {
                                 </p>
                               </div>
                               <div className="flex gap-2">
-                                <button onClick={() => startEdit(`skills-${idx}`, sg)} className="px-3 py-1 border rounded text-sm">Edit</button>
-                                <button onClick={() => deleteItem('skills', idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">Delete</button>
+                                <button onClick={() => startEdit(`skills-${idx}`, sg)} className="px-3 py-1 border rounded text-sm">{t('buttons.edit')}</button>
+                                <button onClick={() => deleteItem('skills', idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">{t('buttons.delete')}</button>
                               </div>
                             </div>
                           )}
                         </div>
                       ))}
-                      <button onClick={() => addNewItem('skills')} className="px-4 py-2 bg-blue-500 text-white rounded">+ Add Skill Category</button>
+                      <button onClick={() => addNewItem('skills')} className="px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addSkillCategory')}</button>
                     </div>
                   )}
                 </div>
@@ -1600,12 +1600,12 @@ export default function MainApp() {
                       key={tab}
                       onClick={() => setActiveTab(tab)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                        activeTab === tab 
-                          ? 'bg-blue-600 text-white' 
+                        activeTab === tab
+                          ? 'bg-blue-600 text-white'
                           : 'bg-white text-gray-600 hover:bg-gray-100'
                       }`}
                     >
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                      {t(`format.tabs.${tab}`)}
                     </button>
                   ))}
                 </div>
@@ -1614,22 +1614,22 @@ export default function MainApp() {
                 {activeTab === 'templates' && (
                   <div className="p-4">
                     <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-4">
-                      <Layout className="w-4 h-4" /> Choose Template
+                      <Layout className="w-4 h-4" /> {t('format.chooseTemplate')}
                     </h2>
                     <div className="grid grid-cols-2 gap-3">
-                      {templates.map(t => (
+                      {templates.map(template => (
                         <button
-                          key={t.id}
-                          onClick={() => setSelectedTemplate(t.id)}
+                          key={template.id}
+                          onClick={() => setSelectedTemplate(template.id)}
                           className={`p-4 rounded-xl border-2 text-left transition-all ${
-                            selectedTemplate === t.id 
-                              ? 'border-blue-500 bg-blue-50' 
+                            selectedTemplate === template.id
+                              ? 'border-blue-500 bg-blue-50'
                               : 'border-gray-200 hover:border-gray-300'
                           }`}
                         >
-                          <span className="text-2xl mb-2 block">{t.icon}</span>
-                          <span className="font-semibold text-gray-800 block">{t.name}</span>
-                          <span className="text-xs text-gray-500">{t.desc}</span>
+                          <span className="text-2xl mb-2 block">{template.icon}</span>
+                          <span className="font-semibold text-gray-800 block">{t(`templates:templates.${template.id}.name`)}</span>
+                          <span className="text-xs text-gray-500">{t(`templates:templates.${template.id}.description`)}</span>
                         </button>
                       ))}
                     </div>
@@ -1641,7 +1641,7 @@ export default function MainApp() {
                   <div className="p-4 space-y-5">
                     <div>
                       <h3 className="font-medium text-gray-700 flex items-center gap-2 mb-3">
-                        <Type className="w-4 h-4" /> Font Family
+                        <Type className="w-4 h-4" /> {t('format.fontFamily')}
                       </h3>
                       <div className="grid grid-cols-3 gap-2">
                         {fontOptions.map(f => (
@@ -1649,20 +1649,20 @@ export default function MainApp() {
                             key={f.id}
                             onClick={() => setSelectedFont(f)}
                             className={`px-3 py-2 rounded-lg text-sm border transition-all ${
-                              selectedFont.id === f.id 
-                                ? 'border-blue-500 bg-blue-50 text-blue-700' 
+                              selectedFont.id === f.id
+                                ? 'border-blue-500 bg-blue-50 text-blue-700'
                                 : 'border-gray-200 hover:border-gray-300'
                             }`}
                             style={{ fontFamily: f.family }}
                           >
-                            {f.name}
+                            {t(`templates:fonts.${f.id}`)}
                           </button>
                         ))}
                       </div>
                     </div>
                     <div>
                       <h3 className="font-medium text-gray-700 flex items-center gap-2 mb-3">
-                        <Palette className="w-4 h-4" /> Color Scheme
+                        <Palette className="w-4 h-4" /> {t('format.colorScheme')}
                       </h3>
                       <div className="grid grid-cols-2 gap-2">
                         {colorSchemes.map(c => (
@@ -1670,19 +1670,19 @@ export default function MainApp() {
                             key={c.id}
                             onClick={() => setSelectedColor(c)}
                             className={`px-3 py-2 rounded-lg text-sm border flex items-center gap-2 transition-all ${
-                              selectedColor.id === c.id 
-                                ? 'border-blue-500 bg-blue-50' 
+                              selectedColor.id === c.id
+                                ? 'border-blue-500 bg-blue-50'
                                 : 'border-gray-200 hover:border-gray-300'
                             }`}
                           >
                             <span className="w-4 h-4 rounded-full" style={{ background: c.primary }}></span>
-                            <span className="text-xs">{c.name}</span>
+                            <span className="text-xs">{t(`templates:colors.${c.id}`)}</span>
                           </button>
                         ))}
                       </div>
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-700 mb-3">Font Size: {fontSize}px</h3>
+                      <h3 className="font-medium text-gray-700 mb-3">{t('format.fontSize')}: {fontSize}px</h3>
                       <input 
                         type="range" 
                         min="10" 
@@ -1693,7 +1693,7 @@ export default function MainApp() {
                       />
                     </div>
                     <div>
-                      <h3 className="font-medium text-gray-700 mb-3">Line Height: {lineHeight}</h3>
+                      <h3 className="font-medium text-gray-700 mb-3">{t('format.lineHeight')}: {lineHeight}</h3>
                       <input 
                         type="range" 
                         min="1.2" 
@@ -1711,32 +1711,32 @@ export default function MainApp() {
                 {activeTab === 'export' && (
                   <div className="p-4">
                     <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-3">
-                      <Download className="w-4 h-4" /> Export Options
+                      <Download className="w-4 h-4" /> {t('format.exportOptions')}
                     </h2>
                     <div className="grid grid-cols-2 gap-3">
-                      <button 
-                        onClick={exportPDF} 
+                      <button
+                        onClick={exportPDF}
                         className="p-3 bg-red-50 border border-red-200 rounded-lg hover:bg-red-100 transition-colors"
                       >
                         <Printer className="w-5 h-5 text-red-600 mx-auto mb-1" />
-                        <span className="text-sm font-medium text-red-700 block">Print / PDF</span>
+                        <span className="text-sm font-medium text-red-700 block">{t('export.printPDF')}</span>
                       </button>
-                      <button 
-                        onClick={exportHTML} 
+                      <button
+                        onClick={exportHTML}
                         className="p-3 bg-orange-50 border border-orange-200 rounded-lg hover:bg-orange-100 transition-colors"
                       >
                         <Code className="w-5 h-5 text-orange-600 mx-auto mb-1" />
-                        <span className="text-sm font-medium text-orange-700 block">HTML File</span>
+                        <span className="text-sm font-medium text-orange-700 block">{t('export.htmlFile')}</span>
                       </button>
-                      <button 
-                        onClick={exportJSON} 
+                      <button
+                        onClick={exportJSON}
                         className="p-3 bg-purple-50 border border-purple-200 rounded-lg hover:bg-purple-100 transition-colors"
                       >
                         <FileText className="w-5 h-5 text-purple-600 mx-auto mb-1" />
-                        <span className="text-sm font-medium text-purple-700 block">JSON File</span>
+                        <span className="text-sm font-medium text-purple-700 block">{t('export.jsonFile')}</span>
                       </button>
-                      <button 
-                        onClick={copyJSON} 
+                      <button
+                        onClick={copyJSON}
                         className="p-3 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
                       >
                         {copied ? (
@@ -1745,13 +1745,13 @@ export default function MainApp() {
                           <Copy className="w-5 h-5 text-blue-600 mx-auto mb-1" />
                         )}
                         <span className="text-sm font-medium text-blue-700 block">
-                          {copied ? 'Copied!' : 'Copy JSON'}
+                          {copied ? t('export.copied') : t('export.copyJSON')}
                         </span>
                       </button>
                     </div>
                     <div className="mt-4 p-3 bg-blue-50 rounded-lg">
                       <p className="text-sm text-blue-700">
-                        💡 <strong>Tip:</strong> Use "Print / PDF" and choose "Save as PDF" in the print dialog.
+                        {t('export.tip')}
                       </p>
                     </div>
                   </div>
@@ -1848,27 +1848,27 @@ export default function MainApp() {
                     >
                       {generatingBullet ? <Loader2 className="animate-spin w-4 h-4 mx-auto" /> : t('buttons.regenerate')}
                     </button>
-                    <button 
-                      onClick={addBulletToResume} 
+                    <button
+                      onClick={addBulletToResume}
                       className="flex-1 py-2 bg-green-500 text-white rounded-lg font-medium flex items-center justify-center gap-2 hover:bg-green-600"
                     >
                       <CheckCircle className="w-4 h-4" />
-                      Add to Resume
+                      {t('buttons.addToResume')}
                     </button>
                   </div>
                 </div>
               )}
 
-              <button 
+              <button
                 onClick={() => {
                   setAddingGap(null);
                   setSelectedExperience('');
                   setPreviewBullet('');
                   setShowPreview(false);
-                }} 
+                }}
                 className="w-full px-4 py-2 border rounded-lg hover:bg-gray-50"
               >
-                Cancel
+                {t('buttons.cancel')}
               </button>
             </div>
           </div>

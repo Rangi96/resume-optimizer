@@ -39,8 +39,8 @@
   },
   "colors": {
     "black": "Negro Clásico",
-    "blue": "Azul Marino",
-    "green": "Verde Bosque",
+    "navy": "Azul Marino",
+    "forest": "Verde Bosque",
     "burgundy": "Borgoña",
     "purple": "Púrpura Real"
   }

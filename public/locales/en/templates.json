@@ -39,8 +39,8 @@
   },
   "colors": {
     "black": "Classic Black",
-    "blue": "Navy Blue",
-    "green": "Forest Green",
+    "navy": "Navy Blue",
+    "forest": "Forest Green",
     "burgundy": "Burgundy",
     "purple": "Royal Purple"
   }
