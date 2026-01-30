@@ -20,6 +20,8 @@
  */
 
 import storageAdapter from './storageAdapter';
+import { db } from './firebase';
+import { doc, getDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
 
 const OPTIMIZATION_LIMITS = {
   free: {
@@ -66,6 +68,7 @@ export const canUserOptimize = async (userId, paymentStatus = 'free', estimatedT
       count: 0,
       remaining: 0,
       maxCount: 0,
+      bonusRemaining: 0,
       tokenUsed: 0,
       tokenMax: 0,
       message: 'Please log in to optimize your resume.'
@@ -77,34 +80,51 @@ export const canUserOptimize = async (userId, paymentStatus = 'free', estimatedT
   console.log('🔍 User optimization data:', data);
   const limits = OPTIMIZATION_LIMITS[paymentStatus] || OPTIMIZATION_LIMITS.free;
   console.log('🔍 Limits for payment status:', limits);
-  
+
+  // Get referral bonus data
+  const userRef = doc(db, 'users', userId);
+  const userDoc = await getDoc(userRef);
+  const userData = userDoc.data();
+  const bonusCredits = userData?.referral?.bonusCredits || 0;
+  const bonusCreditsUsed = userData?.referral?.bonusCreditsUsed || 0;
+  const bonusRemaining = bonusCredits - bonusCreditsUsed;
+  console.log('🎁 Bonus credits:', { bonusCredits, bonusCreditsUsed, bonusRemaining });
+
   // Check optimization count
-  const countExceeded = data.count >= limits.maxOptimizations;
-  
+  const tierCountExceeded = data.count >= limits.maxOptimizations;
+
   // Check token usage
   const tokenExceeded = (data.totalTokens + estimatedTokens) > limits.maxTokens;
-  
-  const canOptimize = !countExceeded && !tokenExceeded;
-  
+
+  // User can optimize if:
+  // 1. Within tier limits, OR
+  // 2. Tier exceeded but has bonus credits available
+  const canOptimize = (!tierCountExceeded && !tokenExceeded) || (bonusRemaining > 0 && !tokenExceeded);
+
   let message = '';
-  if (countExceeded) {
-    if (paymentStatus === 'free') {
-      message = `You've used your 1 free optimization. Upgrade to continue.`;
-    } else {
-      message = `You've used all ${limits.maxOptimizations} optimizations. Upgrade to a higher tier.`;
+  if (!canOptimize) {
+    if (tokenExceeded) {
+      message = `This optimization would exceed your token limit. Upgrade for more tokens.`;
+    } else if (tierCountExceeded && bonusRemaining === 0) {
+      if (paymentStatus === 'free') {
+        message = `You've used your 1 free optimization. Upgrade or refer friends for bonus credits.`;
+      } else {
+        message = `You've used all ${limits.maxOptimizations} optimizations. Upgrade or refer friends for bonus credits.`;
+      }
     }
-  } else if (tokenExceeded) {
-    message = `This optimization would exceed your token limit (${limits.maxTokens.toLocaleString()} max, ${data.totalTokens.toLocaleString()} used). Upgrade for more tokens.`;
   }
-  
+
   return {
     canOptimize,
     count: data.count,
     remaining: Math.max(0, limits.maxOptimizations - data.count),
     maxCount: limits.maxOptimizations,
+    bonusRemaining,
+    bonusTotal: bonusCredits,
     tokenUsed: data.totalTokens,
     tokenMax: limits.maxTokens,
-    message
+    message,
+    usingBonus: tierCountExceeded && bonusRemaining > 0
   };
 };
 
@@ -117,9 +137,45 @@ export const canUserOptimize = async (userId, paymentStatus = 'free', estimatedT
  */
 export const recordOptimization = async (userId, tokensUsed = 0) => {
   console.log('📝 optimizationManager.recordOptimization called with userId:', userId, 'tokensUsed:', tokensUsed);
-  const result = await storageAdapter.recordOptimization(userId, tokensUsed);
-  console.log('📝 optimizationManager.recordOptimization result:', result);
-  return result;
+
+  // Check if we should use bonus credit
+  const userRef = doc(db, 'users', userId);
+  const userDoc = await getDoc(userRef);
+  const userData = userDoc.data();
+  const limits = OPTIMIZATION_LIMITS[userData.paymentStatus || 'free'];
+
+  const tierOptimizations = userData.optimizations?.count || 0;
+  const bonusCredits = userData.referral?.bonusCredits || 0;
+  const bonusCreditsUsed = userData.referral?.bonusCreditsUsed || 0;
+  const bonusRemaining = bonusCredits - bonusCreditsUsed;
+
+  // If tier limit reached and bonus available, use bonus
+  const useBonusCredit = tierOptimizations >= limits.maxOptimizations && bonusRemaining > 0;
+
+  if (useBonusCredit) {
+    console.log('🎁 Using bonus credit for this optimization');
+    await updateDoc(userRef, {
+      'referral.bonusCreditsUsed': increment(1),
+      'optimizations.totalTokens': increment(tokensUsed),
+      'optimizations.lastOptimizedAt': serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+
+    // Return updated data
+    const updatedSnapshot = await getDoc(userRef);
+    const updatedData = updatedSnapshot.data();
+    return {
+      count: updatedData.optimizations.count,
+      totalTokens: updatedData.optimizations.totalTokens,
+      bonusRemaining: updatedData.referral.bonusCredits - updatedData.referral.bonusCreditsUsed,
+      usedBonus: true
+    };
+  } else {
+    // Use regular tier optimization
+    const result = await storageAdapter.recordOptimization(userId, tokensUsed);
+    console.log('📝 optimizationManager.recordOptimization result:', result);
+    return result;
+  }
 };
 
 /**
@@ -131,14 +187,24 @@ export const recordOptimization = async (userId, tokensUsed = 0) => {
 export const getOptimizationStats = async (userId, paymentStatus = 'free') => {
   const data = await getOptimizationData(userId);
   const limits = OPTIMIZATION_LIMITS[paymentStatus] || OPTIMIZATION_LIMITS.free;
-  
+
+  // Get bonus credits
+  const userRef = doc(db, 'users', userId);
+  const userDoc = await getDoc(userRef);
+  const userData = userDoc.data();
+  const bonusCredits = userData?.referral?.bonusCredits || 0;
+  const bonusCreditsUsed = userData?.referral?.bonusCreditsUsed || 0;
+  const bonusRemaining = bonusCredits - bonusCreditsUsed;
+
   return {
     used: data.count,
     remaining: Math.max(0, limits.maxOptimizations - data.count),
     max: limits.maxOptimizations,
     tokensUsed: data.totalTokens,
     tokensMax: limits.maxTokens,
-    percentage: Math.round((data.totalTokens / limits.maxTokens) * 100)
+    percentage: Math.round((data.totalTokens / limits.maxTokens) * 100),
+    bonusRemaining,
+    bonusTotal: bonusCredits
   };
 };
 
@@ -164,7 +230,8 @@ export const getAllTierLimits = () => {
  * Uses adapter to choose localStorage or Firestore
  * @param {string} userId - Firebase user ID
  * @param {object} userData - User data from Firebase auth
+ * @param {string} referralCode - Optional referral code from URL
  */
-export const initializeUserDocument = async (userId, userData) => {
-  return storageAdapter.initializeUserDocument(userId, userData);
+export const initializeUserDocument = async (userId, userData, referralCode = null) => {
+  return storageAdapter.initializeUserDocument(userId, userData, referralCode);
 };

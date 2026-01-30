@@ -9,6 +9,7 @@ import PaymentSuccess from '../components/PaymentSuccess';
 import PaymentCanceled from '../components/PaymentCanceled';
 import UserMenu from '../components/UserMenu';
 import LanguageSwitcher from '../components/LanguageSwitcher';
+import ReferralDashboard from '../components/ReferralDashboard';
 import { canUserOptimize, recordOptimization, getOptimizationStats } from '../optimizationManager';
 
 // Helper function to render text with markdown-style bold
@@ -508,11 +509,20 @@ export default function MainApp() {
   const { user } = useContext(AuthContext);
   const { t, i18n } = useTranslation(['common', 'templates', 'errors']);
 
-  // Check for payment success/cancel in URL
+  // Check for payment success/cancel and referral code in URL
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const sessionId = params.get('session_id');
     const canceled = params.get('canceled');
+    const referralCode = params.get('ref');
+
+    // Store referral code in localStorage BEFORE any OAuth redirect
+    if (referralCode) {
+      console.log('🔗 Referral code detected:', referralCode);
+      localStorage.setItem('pending_referral', referralCode);
+      // Clean URL to remove ref parameter (better UX)
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
 
     if (sessionId) {
       setPaymentSessionId(sessionId);
@@ -1060,6 +1070,13 @@ export default function MainApp() {
       </div>
 
       <div className="max-w-7xl mx-auto p-6">
+        {/* Referral Dashboard - Only show when user is authenticated */}
+        {user && (
+          <div className="mb-6">
+            <ReferralDashboard />
+          </div>
+        )}
+
         {/* PHASE 1: UPLOAD */}
         {phase === 'upload' && (
           <div className="bg-white rounded-xl shadow-lg p-6">

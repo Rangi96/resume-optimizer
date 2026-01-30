@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { LogOut, User, ChevronDown, Sparkles } from 'lucide-react';
+import { LogOut, User, ChevronDown, Sparkles, Gift } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../AuthContext';
 import { getOptimizationStats, getAllTierLimits } from '../optimizationManager';
@@ -75,6 +75,19 @@ export default function UserMenu() {
                     {stats.remaining} {t('userMenu.of')} {stats.max} {t('userMenu.remaining')}
                   </span>
                 </div>
+
+                {/* Bonus credits display */}
+                {stats.bonusRemaining > 0 && (
+                  <div className="flex justify-between text-sm bg-purple-50 px-2 py-1 rounded">
+                    <span className="text-purple-700 flex items-center gap-1">
+                      <Gift className="w-3 h-3" /> Bonus Credits
+                    </span>
+                    <span className="font-semibold text-purple-900">
+                      +{stats.bonusRemaining}
+                    </span>
+                  </div>
+                )}
+
                 {/* Progress bar */}
                 <div className="w-full bg-gray-200 rounded-full h-2 overflow-hidden">
                   <div

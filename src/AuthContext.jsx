@@ -19,10 +19,22 @@ export const AuthProvider = ({ children }) => {
         try {
           console.log('🔐 Auth state changed - User signed in:', currentUser.uid);
 
+          // Check for pending referral BEFORE initializing user
+          const pendingReferral = localStorage.getItem('pending_referral');
+          if (pendingReferral) {
+            console.log('🔗 Pending referral found:', pendingReferral);
+          }
+
           // CRITICAL: Initialize user document FIRST and WAIT for completion
           console.log('📝 Calling initializeUserDocument...');
-          await initializeUserDocument(currentUser.uid, currentUser);
+          await initializeUserDocument(currentUser.uid, currentUser, pendingReferral);
           console.log('✅ initializeUserDocument completed successfully');
+
+          // Clear pending referral
+          if (pendingReferral) {
+            localStorage.removeItem('pending_referral');
+            console.log('✅ Referral processed and cleared');
+          }
 
           // THEN read paymentStatus from Firestore
           console.log('🔍 Reading user document from Firestore...');

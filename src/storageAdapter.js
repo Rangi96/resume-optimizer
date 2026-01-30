@@ -8,12 +8,24 @@
  */
 
 import { db } from './firebase';
-import { doc, getDoc, setDoc, serverTimestamp, increment, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, increment, updateDoc, arrayUnion } from 'firebase/firestore';
 
 // Get provider from environment variable
 const STORAGE_PROVIDER = import.meta.env.VITE_STORAGE_PROVIDER || 'localStorage';
 console.log('🔧 STORAGE_PROVIDER set to:', STORAGE_PROVIDER);
 console.log('🔧 Environment variable VITE_STORAGE_PROVIDER:', import.meta.env.VITE_STORAGE_PROVIDER);
+
+/**
+ * Generate a unique referral code
+ * Pattern: First 4 letters of email + 3 random chars + 3 digits
+ * Example: "JOHN3X9", "MARY2K4"
+ */
+function generateReferralCode(email, uid) {
+  const emailPrefix = email.split('@')[0].toUpperCase().replace(/[^A-Z]/g, '').substring(0, 4);
+  const randomChars = Math.random().toString(36).substring(2, 5).toUpperCase();
+  const randomDigits = Math.floor(100 + Math.random() * 900); // 3 digits
+  return `${emailPrefix}${randomChars}${randomDigits}`;
+}
 
 /**
  * localStorage implementation
@@ -46,18 +58,27 @@ const localStorageAdapter = {
     return data;
   },
 
-  async initializeUserDocument(userId, userData) {
+  async initializeUserDocument(userId, userData, referralCode = null) {
     // localStorage doesn't need initialization
     // But we can store basic user info if needed
     const key = `user_${userId}`;
     const existing = localStorage.getItem(key);
-    
+
     if (!existing) {
       localStorage.setItem(key, JSON.stringify({
         uid: userId,
         email: userData.email || '',
         displayName: userData.displayName || 'User',
-        createdAt: Date.now()
+        createdAt: Date.now(),
+        referral: {
+          code: generateReferralCode(userData.email || 'user@example.com', userId),
+          totalReferrals: 0,
+          bonusCredits: referralCode ? 1 : 0,
+          bonusCreditsUsed: 0,
+          referredBy: null,
+          referredByCode: referralCode || null,
+          referralRewards: []
+        }
       }));
     }
   }
@@ -173,7 +194,90 @@ const firestoreAdapter = {
     }
   },
 
-  async initializeUserDocument(userId, userData) {
+  async processReferral(refereeUid, refereeEmail, referralCode) {
+    try {
+      console.log('🎁 Processing referral:', { refereeUid, referralCode });
+
+      // Step 1: Validate referral code exists
+      const codeRef = doc(db, 'referralCodes', referralCode);
+      const codeSnap = await getDoc(codeRef);
+
+      if (!codeSnap.exists()) {
+        console.error('❌ Invalid referral code:', referralCode);
+        return { success: false, error: 'Invalid referral code' };
+      }
+
+      const referrerUid = codeSnap.data().userId;
+
+      // Step 2: Prevent self-referral
+      if (referrerUid === refereeUid) {
+        console.error('❌ Self-referral attempt');
+        return { success: false, error: 'Cannot refer yourself' };
+      }
+
+      // Step 3: Check if referral already exists (prevent duplicates)
+      const referralDocRef = doc(db, 'referrals', refereeUid);
+      const existingReferral = await getDoc(referralDocRef);
+
+      if (existingReferral.exists()) {
+        console.error('❌ User already referred by:', existingReferral.data().referrerUid);
+        return { success: false, error: 'User already referred' };
+      }
+
+      // Step 4: Create referral tracking document
+      await setDoc(referralDocRef, {
+        refereeUid: refereeUid,
+        refereeEmail: refereeEmail,
+        referrerUid: referrerUid,
+        referrerCode: referralCode,
+        createdAt: serverTimestamp(),
+        rewardGranted: false,
+        rewardGrantedAt: null
+      });
+
+      // Step 5: Increment referrer's total count atomically
+      const referrerRef = doc(db, 'users', referrerUid);
+      await updateDoc(referrerRef, {
+        'referral.totalReferrals': increment(1)
+      });
+
+      // Step 6: Check if milestone reached (every 5 referrals)
+      const referrerSnap = await getDoc(referrerRef);
+      const referrerData = referrerSnap.data();
+      const totalReferrals = referrerData.referral.totalReferrals;
+
+      // If total is multiple of 5, grant reward
+      if (totalReferrals % 5 === 0) {
+        console.log('🎉 Milestone reached! Granting 5 bonus credits');
+
+        await updateDoc(referrerRef, {
+          'referral.bonusCredits': increment(5),
+          'referral.referralRewards': arrayUnion({
+            date: serverTimestamp(),
+            referredUserId: refereeUid,
+            referredUserEmail: refereeEmail,
+            creditsEarned: 5,
+            milestoneTrigger: totalReferrals
+          })
+        });
+
+        // Mark reward as granted in referral doc
+        await updateDoc(referralDocRef, {
+          rewardGranted: true,
+          rewardGrantedAt: serverTimestamp()
+        });
+      }
+
+      console.log('✅ Referral processed successfully');
+      return { success: true, referrerUid };
+
+    } catch (error) {
+      console.error('❌ Error processing referral:', error);
+      return { success: false, error: error.message };
+    }
+  },
+
+  async initializeUserDocument(userId, userData, referralCode = null) {
     if (!userId) {
       console.error('❌ initializeUserDocument called without userId');
       throw new Error('User ID is required to initialize user document');
@@ -212,6 +316,65 @@ const firestoreAdapter = {
 
       // Document doesn't exist - create it with initial values
       console.log('🔧 Firestore: Creating NEW user document with count=0');
+
+      // Generate unique referral code
+      let userReferralCode = generateReferralCode(userData.email || 'user@example.com', userId);
+      let codeCreated = false;
+      let attempts = 0;
+      const maxAttempts = 3;
+
+      // Retry logic for code collision
+      while (!codeCreated && attempts < maxAttempts) {
+        attempts++;
+        try {
+          const codeRef = doc(db, 'referralCodes', userReferralCode);
+          const existingCode = await getDoc(codeRef);
+
+          if (!existingCode.exists()) {
+            // Code is unique, create it
+            await setDoc(codeRef, {
+              code: userReferralCode,
+              userId: userId,
+              createdAt: serverTimestamp()
+            });
+            codeCreated = true;
+            console.log('✅ Firestore: Referral code created:', userReferralCode);
+          } else {
+            // Collision detected, generate new code
+            console.log('⚠️ Firestore: Code collision detected, generating new code...');
+            userReferralCode = generateReferralCode(userData.email || 'user@example.com', userId);
+          }
+        } catch (error) {
+          console.error('❌ Firestore: Error creating referral code:', error);
+          if (attempts >= maxAttempts) {
+            throw new Error('Failed to create unique referral code after multiple attempts');
+          }
+        }
+      }
+
+      // Prepare referral data
+      let referralData = {
+        code: userReferralCode,
+        totalReferrals: 0,
+        bonusCredits: referralCode ? 1 : 0,  // Referred users get 1 bonus credit
+        bonusCreditsUsed: 0,
+        referredBy: null,
+        referredByCode: referralCode || null,
+        referralRewards: []
+      };
+
+      // Process referral if code provided
+      if (referralCode) {
+        console.log('🔗 Firestore: Processing referral with code:', referralCode);
+        const processedReferral = await this.processReferral(userId, userData.email, referralCode);
+        if (processedReferral.success) {
+          referralData.referredBy = processedReferral.referrerUid;
+          console.log('✅ Firestore: Referral processed successfully');
+        } else {
+          console.error('❌ Firestore: Referral processing failed:', processedReferral.error);
+        }
+      }
+
       const newUserData = {
         uid: userId,
         email: userData.email || '',
@@ -222,6 +385,7 @@ const firestoreAdapter = {
           totalTokens: 0,
           lastOptimizedAt: null
         },
+        referral: referralData,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
       };
