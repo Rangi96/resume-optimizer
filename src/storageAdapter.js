@@ -304,12 +304,61 @@ const firestoreAdapter = {
         const existingData = docSnap.data();
         console.log('🔧 Firestore: Existing optimization count:', existingData.optimizations?.count);
 
-        // Only update basic user info, preserve optimizations
-        await updateDoc(userRef, {
+        // Check if user has referral field, if not add it (for existing users)
+        let updateData = {
           email: userData.email || '',
           displayName: userData.displayName || 'User',
           updatedAt: serverTimestamp()
-        });
+        };
+
+        if (!existingData.referral) {
+          console.log('🔗 Firestore: Adding referral field to existing user');
+
+          // Generate unique referral code for existing user
+          let userReferralCode = generateReferralCode(userData.email || 'user@example.com', userId);
+          let codeCreated = false;
+          let attempts = 0;
+          const maxAttempts = 3;
+
+          while (!codeCreated && attempts < maxAttempts) {
+            attempts++;
+            try {
+              const codeRef = doc(db, 'referralCodes', userReferralCode);
+              const existingCode = await getDoc(codeRef);
+
+              if (!existingCode.exists()) {
+                await setDoc(codeRef, {
+                  code: userReferralCode,
+                  userId: userId,
+                  createdAt: serverTimestamp()
+                });
+                codeCreated = true;
+                console.log('✅ Firestore: Referral code created for existing user:', userReferralCode);
+              } else {
+                userReferralCode = generateReferralCode(userData.email || 'user@example.com', userId);
+              }
+            } catch (error) {
+              console.error('❌ Firestore: Error creating referral code for existing user:', error);
+              if (attempts >= maxAttempts) break;
+            }
+          }
+
+          // Add referral field to update data
+          if (codeCreated) {
+            updateData.referral = {
+              code: userReferralCode,
+              totalReferrals: 0,
+              bonusCredits: 0,
+              bonusCreditsUsed: 0,
+              referredBy: null,
+              referredByCode: null,
+              referralRewards: []
+            };
+          }
+        }
+
+        // Update user document
+        await updateDoc(userRef, updateData);
         console.log('✅ Firestore: User document updated successfully');
         return;
       }
