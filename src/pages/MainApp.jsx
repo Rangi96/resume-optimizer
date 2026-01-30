@@ -1043,8 +1043,8 @@ export default function MainApp() {
             <div className="flex items-center gap-3">
               {phase !== 'upload' && (
                 <button
-                  onClick={() => { 
-                    setPhase('upload'); 
+                  onClick={() => {
+                    setPhase('upload');
                     setStructuredResume({
                       contact: { name: '', email: '', phone: '', address: '', linkedin: '' },
                       professionalSummary: '',
@@ -1063,7 +1063,16 @@ export default function MainApp() {
                 </button>
               )}
              <LanguageSwitcher />
-             <UserMenu />
+             {user ? (
+               <UserMenu />
+             ) : (
+               <button
+                 onClick={() => setShowLoginModal(true)}
+                 className="px-4 py-2 bg-white hover:bg-white/90 text-blue-600 font-semibold rounded-lg text-sm transition-colors shadow-lg"
+               >
+                 Sign In
+               </button>
+             )}
             </div>
           </div>
         </div>
