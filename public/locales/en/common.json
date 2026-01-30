@@ -220,5 +220,31 @@
       "privacyPolicy": "Privacy Policy",
       "forDetails": "for details."
     }
+  },
+  "referral": {
+    "title": "Refer Friends & Earn Bonus Credits",
+    "description": "Share your referral link! Every 5 friends who sign up earns you <strong>5 bonus optimizations</strong>. Your friends get <strong>1 bonus optimization</strong> when they join!",
+    "loading": "Loading referral information...",
+    "linkLabel": "Your Referral Link",
+    "copy": "Copy",
+    "copied": "Copied!",
+    "stats": {
+      "totalReferrals": "Total Referrals",
+      "bonusCreditsLeft": "Bonus Credits Left",
+      "totalEarned": "Total Earned",
+      "referrals": "referrals",
+      "bonusCredits": "bonus credits"
+    },
+    "progress": {
+      "title": "Progress to next reward",
+      "remaining": "{{count}} more {{type}} until you earn 5 bonus credits!",
+      "referral": "referral",
+      "referrals": "referrals"
+    },
+    "recentRewards": {
+      "title": "Recent Rewards",
+      "milestone": "Milestone: {{count}} referrals",
+      "credits": "+{{count}} credits"
+    }
   }
 }

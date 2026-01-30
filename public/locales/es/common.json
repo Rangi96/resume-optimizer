@@ -220,5 +220,31 @@
       "privacyPolicy": "Política de Privacidad",
       "forDetails": "para más detalles."
     }
+  },
+  "referral": {
+    "title": "Refiere Amigos y Gana Créditos Bonus",
+    "description": "¡Comparte tu enlace de referido! Cada 5 amigos que se registren te dan <strong>5 optimizaciones bonus</strong>. ¡Tus amigos obtienen <strong>1 optimización bonus</strong> cuando se unen!",
+    "loading": "Cargando información de referidos...",
+    "linkLabel": "Tu Enlace de Referido",
+    "copy": "Copiar",
+    "copied": "¡Copiado!",
+    "stats": {
+      "totalReferrals": "Referidos Totales",
+      "bonusCreditsLeft": "Créditos Bonus Restantes",
+      "totalEarned": "Total Ganado",
+      "referrals": "referidos",
+      "bonusCredits": "créditos bonus"
+    },
+    "progress": {
+      "title": "Progreso para la próxima recompensa",
+      "remaining": "¡{{count}} {{type}} más hasta ganar 5 créditos bonus!",
+      "referral": "referido",
+      "referrals": "referidos"
+    },
+    "recentRewards": {
+      "title": "Recompensas Recientes",
+      "milestone": "Meta: {{count}} referidos",
+      "credits": "+{{count}} créditos"
+    }
   }
 }
