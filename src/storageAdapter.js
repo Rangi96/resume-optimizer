@@ -8,7 +8,7 @@
  */
 
 import { db } from './firebase';
-import { doc, getDoc, setDoc, serverTimestamp, increment, updateDoc, arrayUnion } from 'firebase/firestore';
+import { doc, getDoc, setDoc, serverTimestamp, increment, updateDoc } from 'firebase/firestore';
 
 // Get provider from environment variable
 const STORAGE_PROVIDER = import.meta.env.VITE_STORAGE_PROVIDER || 'localStorage';
@@ -196,83 +196,33 @@ const firestoreAdapter = {
 
   async processReferral(refereeUid, refereeEmail, referralCode) {
     try {
-      console.log('🎁 Processing referral:', { refereeUid, referralCode });
+      console.log('🎁 Processing referral via API:', { refereeUid, referralCode });
 
-      // Step 1: Validate referral code exists
-      const codeRef = doc(db, 'referralCodes', referralCode);
-      const codeSnap = await getDoc(codeRef);
-
-      if (!codeSnap.exists()) {
-        console.error('❌ Invalid referral code:', referralCode);
-        return { success: false, error: 'Invalid referral code' };
-      }
-
-      const referrerUid = codeSnap.data().userId;
-
-      // Step 2: Prevent self-referral
-      if (referrerUid === refereeUid) {
-        console.error('❌ Self-referral attempt');
-        return { success: false, error: 'Cannot refer yourself' };
-      }
-
-      // Step 3: Check if referral already exists (prevent duplicates)
-      const referralDocRef = doc(db, 'referrals', refereeUid);
-      const existingReferral = await getDoc(referralDocRef);
-
-      if (existingReferral.exists()) {
-        console.error('❌ User already referred by:', existingReferral.data().referrerUid);
-        return { success: false, error: 'User already referred' };
-      }
-
-      // Step 4: Create referral tracking document
-      await setDoc(referralDocRef, {
-        refereeUid: refereeUid,
-        refereeEmail: refereeEmail,
-        referrerUid: referrerUid,
-        referrerCode: referralCode,
-        createdAt: serverTimestamp(),
-        rewardGranted: false,
-        rewardGrantedAt: null
+      // Call server-side API to process referral (has admin permissions)
+      const response = await fetch('/api/process-referral', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          refereeUid,
+          refereeEmail,
+          referralCode
+        })
       });
 
-      // Step 5: Increment referrer's total count atomically
-      const referrerRef = doc(db, 'users', referrerUid);
-      await updateDoc(referrerRef, {
-        'referral.totalReferrals': increment(1)
-      });
+      const result = await response.json();
 
-      // Step 6: Check if milestone reached (every 5 referrals)
-      const referrerSnap = await getDoc(referrerRef);
-      const referrerData = referrerSnap.data();
-      const totalReferrals = referrerData.referral.totalReferrals;
-
-      // If total is multiple of 5, grant reward
-      if (totalReferrals % 5 === 0) {
-        console.log('🎉 Milestone reached! Granting 5 bonus credits');
-
-        await updateDoc(referrerRef, {
-          'referral.bonusCredits': increment(5),
-          'referral.referralRewards': arrayUnion({
-            date: serverTimestamp(),
-            referredUserId: refereeUid,
-            referredUserEmail: refereeEmail,
-            creditsEarned: 5,
-            milestoneTrigger: totalReferrals
-          })
-        });
-
-        // Mark reward as granted in referral doc
-        await updateDoc(referralDocRef, {
-          rewardGranted: true,
-          rewardGrantedAt: serverTimestamp()
-        });
+      if (!response.ok) {
+        console.error('❌ Referral API error:', result.error);
+        return { success: false, error: result.error };
       }
 
-      console.log('✅ Referral processed successfully');
-      return { success: true, referrerUid };
+      console.log('✅ Referral processed successfully via API');
+      return { success: true, referrerUid: result.referrerUid };
 
     } catch (error) {
-      console.error('❌ Error processing referral:', error);
+      console.error('❌ Error calling referral API:', error);
       return { success: false, error: error.message };
     }
   },
