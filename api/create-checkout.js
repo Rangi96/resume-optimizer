@@ -91,8 +91,8 @@ export default async function handler(req, res) {
         'line_items[0][price]': plan.priceId,
         'line_items[0][quantity]': '1',
         'mode': 'payment',
-        'success_url': `${process.env.APP_URL || 'https://optimal-resume.com'}/?session_id={CHECKOUT_SESSION_ID}`,
-        'cancel_url': `${process.env.APP_URL || 'https://optimal-resume.com'}/?canceled=true`,
+        'success_url': `${process.env.APP_URL || 'https://optimal-resume.com'}/app?session_id={CHECKOUT_SESSION_ID}`,
+        'cancel_url': `${process.env.APP_URL || 'https://optimal-resume.com'}/app?canceled=true`,
         'client_reference_id': plan.priceId, // Store price ID for webhook
       }),
     });

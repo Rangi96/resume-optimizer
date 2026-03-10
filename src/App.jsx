@@ -1,5 +1,6 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import LandingPage from './pages/LandingPage';
 import MainApp from './pages/MainApp';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
@@ -13,20 +14,21 @@ import CookieConsent from './components/CookieConsent';
 function AppContent() {
   const location = useLocation();
 
-  // Footer should only appear on main app page, not on legal pages
-  const isLegalPage = location.pathname === '/privacy' || location.pathname === '/terms';
+  // Footer should only appear on main app page, not on landing or legal pages
+  const showFooter = location.pathname === '/app';
 
   return (
     <>
       {/* Main Routes */}
       <Routes>
-        <Route path="/" element={<MainApp />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/app" element={<MainApp />} />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
       </Routes>
 
       {/* Footer - Only on main app */}
-      {!isLegalPage && <Footer />}
+      {showFooter && <Footer />}
 
       {/* Cookie Consent - On all pages */}
       <CookieConsent />
