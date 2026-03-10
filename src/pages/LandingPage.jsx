@@ -24,135 +24,110 @@ export default function LandingPage() {
           </h1>
 
           {/* Subtext */}
-          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-8">
             AI tools make things up. This one only uses experience you have actually lived.
           </p>
+
+          {/* CTA Button */}
+          <button
+            onClick={() => navigate('/app')}
+            className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+          >
+            Pay $9 to Tailor my Resume
+          </button>
         </div>
 
         {/* Section 2: Tool Preview */}
-        <div className="mb-20">
-          <div className="grid md:grid-cols-2 gap-6">
+        <div className="mb-16">
+          <div className="grid md:grid-cols-2 gap-4 max-w-4xl mx-auto">
             {/* Job Description Input */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <FileText className="w-5 h-5 text-blue-600" />
-                <label className="text-sm font-medium text-gray-700">Job Description</label>
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <FileText className="w-4 h-4 text-blue-600" />
+                <label className="text-xs font-medium text-gray-700">Job Description</label>
               </div>
-              <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 h-48">
-                <p className="text-sm text-gray-500 leading-relaxed">
+              <div className="bg-gray-50 border border-gray-200 rounded-md p-3 h-24">
+                <p className="text-xs text-gray-500">
                   Paste the full job description here...
                 </p>
-                <div className="mt-3 space-y-2">
-                  <div className="h-2 bg-gray-200 rounded w-full"></div>
-                  <div className="h-2 bg-gray-200 rounded w-5/6"></div>
-                  <div className="h-2 bg-gray-200 rounded w-4/6"></div>
+                <div className="mt-2 space-y-1.5">
+                  <div className="h-1.5 bg-gray-200 rounded w-full"></div>
+                  <div className="h-1.5 bg-gray-200 rounded w-4/5"></div>
+                  <div className="h-1.5 bg-gray-200 rounded w-3/5"></div>
                 </div>
               </div>
             </div>
 
             {/* Resume Upload */}
-            <div className="bg-white rounded-xl shadow-md p-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Upload className="w-5 h-5 text-purple-600" />
-                <label className="text-sm font-medium text-gray-700">Your Resume</label>
+            <div className="bg-white rounded-lg shadow-sm p-4">
+              <div className="flex items-center gap-2 mb-3">
+                <Upload className="w-4 h-4 text-purple-600" />
+                <label className="text-xs font-medium text-gray-700">Your Resume</label>
               </div>
-              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg p-4 h-48 flex flex-col items-center justify-center">
-                <Upload className="w-10 h-10 text-gray-400 mb-3" />
-                <p className="text-sm text-gray-600 font-medium">Click to upload PDF, Word, or Text file</p>
-                <p className="text-xs text-gray-500 mt-2">Supported: .pdf, .doc, .docx, .txt</p>
+              <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-md p-3 h-24 flex flex-col items-center justify-center">
+                <Upload className="w-6 h-6 text-gray-400 mb-2" />
+                <p className="text-xs text-gray-600 font-medium">Click to upload</p>
+                <p className="text-xs text-gray-500 mt-1">.pdf, .doc, .docx, .txt</p>
               </div>
             </div>
           </div>
         </div>
 
         {/* Section 3: Output Mockup */}
-        <div className="mb-20">
-          <div className="bg-white rounded-xl shadow-md p-8 md:p-12 relative overflow-hidden">
-            {/* Mockup container */}
-            <div className="relative">
-              {/* Before/After Resume Mockup */}
-              <div className="grid md:grid-cols-2 gap-8 mb-8">
-                {/* Before */}
-                <div className="relative">
-                  <div className="absolute -top-2 -left-2 bg-gray-500 text-white text-xs px-3 py-1 rounded-full font-medium">Before</div>
-                  <div className="bg-gray-100 rounded-lg p-6 h-64 border border-gray-200">
-                    <div className="space-y-3">
-                      <div className="h-3 bg-gray-300 rounded w-2/3"></div>
-                      <div className="h-2 bg-gray-300 rounded w-1/2"></div>
-                      <div className="mt-4 space-y-2">
-                        <div className="h-2 bg-gray-200 rounded"></div>
-                        <div className="h-2 bg-gray-200 rounded"></div>
-                        <div className="h-2 bg-gray-200 rounded w-4/5"></div>
-                      </div>
-                      <div className="mt-4 space-y-2">
-                        <div className="h-2 bg-gray-200 rounded"></div>
-                        <div className="h-2 bg-gray-200 rounded w-3/4"></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+        <div className="mb-16">
+          <div className="max-w-3xl mx-auto">
+            <h2 className="text-xl md:text-2xl font-medium text-gray-900 text-center mb-8">
+              See the difference
+            </h2>
 
-                {/* After */}
-                <div className="relative">
-                  <div className="absolute -top-2 -left-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-xs px-3 py-1 rounded-full font-medium">After</div>
-                  <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg p-6 h-64 border-2 border-blue-200 relative">
-                    <div className="space-y-3">
-                      <div className="h-3 bg-gradient-to-r from-blue-400 to-purple-400 rounded w-2/3"></div>
-                      <div className="h-2 bg-blue-300 rounded w-1/2"></div>
-                      <div className="mt-4 space-y-2">
-                        <div className="h-2 bg-blue-200 rounded"></div>
-                        <div className="h-2 bg-purple-200 rounded"></div>
-                        <div className="h-2 bg-blue-200 rounded w-4/5"></div>
-                      </div>
-                      <div className="mt-4 space-y-2">
-                        <div className="h-2 bg-purple-200 rounded"></div>
-                        <div className="h-2 bg-blue-200 rounded w-3/4"></div>
-                      </div>
-                    </div>
-
-                    {/* Annotation Labels */}
-                    <div className="absolute -right-4 top-8 hidden md:flex items-center gap-2">
-                      <div className="w-8 h-0.5 bg-blue-400"></div>
-                      <div className="bg-white border border-blue-300 px-3 py-1 rounded-full text-xs font-medium text-blue-700 shadow-sm whitespace-nowrap">
-                        ATS Optimized
-                      </div>
-                    </div>
-                    <div className="absolute -right-4 top-20 hidden md:flex items-center gap-2">
-                      <div className="w-8 h-0.5 bg-purple-400"></div>
-                      <div className="bg-white border border-purple-300 px-3 py-1 rounded-full text-xs font-medium text-purple-700 shadow-sm whitespace-nowrap">
-                        Verified Skills Only
-                      </div>
-                    </div>
-                    <div className="absolute -right-4 top-32 hidden md:flex items-center gap-2">
-                      <div className="w-8 h-0.5 bg-blue-400"></div>
-                      <div className="bg-white border border-blue-300 px-3 py-1 rounded-full text-xs font-medium text-blue-700 shadow-sm whitespace-nowrap">
-                        Job Description Match
-                      </div>
-                    </div>
-                    <div className="absolute -right-4 bottom-8 hidden md:flex items-center gap-2">
-                      <div className="w-8 h-0.5 bg-purple-400"></div>
-                      <div className="bg-white border border-purple-300 px-3 py-1 rounded-full text-xs font-medium text-purple-700 shadow-sm whitespace-nowrap">
-                        Instant Format
-                      </div>
-                    </div>
-                  </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Before */}
+              <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
+                <div className="text-xs font-medium text-gray-500 mb-4 text-center">Before</div>
+                <div className="space-y-3">
+                  <div className="h-2 bg-gray-300 rounded w-3/4"></div>
+                  <div className="h-2 bg-gray-300 rounded w-1/2"></div>
+                  <div className="h-1.5 bg-gray-200 rounded w-full mt-4"></div>
+                  <div className="h-1.5 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-1.5 bg-gray-200 rounded w-4/5"></div>
+                  <div className="h-1.5 bg-gray-200 rounded w-full mt-3"></div>
+                  <div className="h-1.5 bg-gray-200 rounded w-3/4"></div>
+                  <div className="h-1.5 bg-gray-200 rounded w-5/6"></div>
                 </div>
               </div>
 
-              {/* Mobile annotation labels */}
-              <div className="md:hidden grid grid-cols-2 gap-3 mt-6">
-                <div className="bg-blue-50 border border-blue-200 px-3 py-2 rounded-lg text-xs font-medium text-blue-700 text-center">
-                  ATS Optimized
+              {/* After */}
+              <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg shadow-md p-6 border-2 border-blue-200 relative">
+                <div className="text-xs font-medium text-blue-700 mb-4 text-center">After</div>
+                <div className="space-y-3">
+                  <div className="h-2 bg-blue-400 rounded w-3/4"></div>
+                  <div className="h-2 bg-purple-400 rounded w-1/2"></div>
+                  <div className="h-1.5 bg-blue-300 rounded w-full mt-4"></div>
+                  <div className="h-1.5 bg-purple-300 rounded w-5/6"></div>
+                  <div className="h-1.5 bg-blue-300 rounded w-4/5"></div>
+                  <div className="h-1.5 bg-purple-300 rounded w-full mt-3"></div>
+                  <div className="h-1.5 bg-blue-300 rounded w-3/4"></div>
+                  <div className="h-1.5 bg-purple-300 rounded w-5/6"></div>
                 </div>
-                <div className="bg-purple-50 border border-purple-200 px-3 py-2 rounded-lg text-xs font-medium text-purple-700 text-center">
-                  Verified Skills Only
+                <div className="absolute top-2 right-2">
+                  <CheckCircle className="w-5 h-5 text-green-600" />
                 </div>
-                <div className="bg-blue-50 border border-blue-200 px-3 py-2 rounded-lg text-xs font-medium text-blue-700 text-center">
-                  Job Description Match
-                </div>
-                <div className="bg-purple-50 border border-purple-200 px-3 py-2 rounded-lg text-xs font-medium text-purple-700 text-center">
-                  Instant Format
-                </div>
+              </div>
+            </div>
+
+            {/* Key features */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
+              <div className="bg-white border border-blue-200 px-3 py-2 rounded-lg text-xs font-medium text-blue-700 text-center">
+                ATS Optimized
+              </div>
+              <div className="bg-white border border-purple-200 px-3 py-2 rounded-lg text-xs font-medium text-purple-700 text-center">
+                Verified Skills
+              </div>
+              <div className="bg-white border border-blue-200 px-3 py-2 rounded-lg text-xs font-medium text-blue-700 text-center">
+                Job Match
+              </div>
+              <div className="bg-white border border-purple-200 px-3 py-2 rounded-lg text-xs font-medium text-purple-700 text-center">
+                Instant Format
               </div>
             </div>
           </div>
