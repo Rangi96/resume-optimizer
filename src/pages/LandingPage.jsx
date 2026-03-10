@@ -1,12 +1,16 @@
 import React, { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Upload, FileText, CheckCircle, Zap, Target, Shield } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../AuthContext';
 import LoginModal from '../components/LoginModal';
+import UserMenu from '../components/UserMenu';
+import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function LandingPage() {
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
+  const { t } = useTranslation();
   const [showLoginModal, setShowLoginModal] = useState(false);
 
   // Capture referral codes from URL before auth redirect
@@ -29,26 +33,35 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50">
-      <div className="max-w-6xl mx-auto px-4 py-12 md:py-20">
-
-        {/* Header with Sign In Button */}
-        <div className="flex justify-end items-center pb-8">
-          {user ? (
-            <button
-              onClick={() => navigate('/app')}
-              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
-            >
-              Go to App
-            </button>
-          ) : (
-            <button
-              onClick={() => setShowLoginModal(true)}
-              className="px-6 py-2 bg-white hover:bg-gray-50 text-blue-600 font-semibold rounded-lg shadow-md border-2 border-blue-600 transition-all duration-200"
-            >
-              Sign In
-            </button>
-          )}
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+        <div className="max-w-7xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Sparkles className="w-7 h-7" />
+              <div>
+                <h1 className="text-2xl font-bold">{t('app.title')}</h1>
+                <p className="text-sm text-blue-100">{t('app.tagline')}</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <LanguageSwitcher />
+              {user ? (
+                <UserMenu />
+              ) : (
+                <button
+                  onClick={() => setShowLoginModal(true)}
+                  className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors"
+                >
+                  {t('auth:auth.signIn')}
+                </button>
+              )}
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="max-w-6xl mx-auto px-4 py-12 md:py-20">
 
         {/* Section 1: Hero */}
         <div className="text-center mb-20">
