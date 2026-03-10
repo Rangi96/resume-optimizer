@@ -378,7 +378,7 @@ const firestoreAdapter = {
         uid: userId,
         email: userData.email || '',
         displayName: userData.displayName || 'User',
-        paymentStatus: 'free',
+        paymentStatus: 'unpaid',
         optimizations: {
           count: 0,
           totalTokens: 0,

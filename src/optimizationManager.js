@@ -24,11 +24,6 @@ import { db } from './firebase';
 import { doc, getDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore';
 
 const OPTIMIZATION_LIMITS = {
-  free: {
-    maxOptimizations: 1,
-    maxTokens: 20000,
-    price: null
-  },
   premium_10: {
     maxOptimizations: 10,
     maxTokens: 400000,
@@ -61,6 +56,24 @@ export const getOptimizationData = async (userId) => {
 export const canUserOptimize = async (userId, paymentStatus = 'free', estimatedTokens = 0) => {
   console.log('🔍 canUserOptimize called with userId:', userId, 'paymentStatus:', paymentStatus, 'estimatedTokens:', estimatedTokens);
 
+  // Dev mode bypass
+  const devMode = import.meta.env.VITE_DEV_MODE === 'true';
+  if (devMode) {
+    console.log('🚀 Dev mode enabled - unlimited access');
+    return {
+      canOptimize: true,
+      count: 0,
+      remaining: 999,
+      maxCount: 999,
+      bonusRemaining: 0,
+      bonusTotal: 0,
+      tokenUsed: 0,
+      tokenMax: 999999,
+      message: 'Dev mode - unlimited access',
+      usingBonus: false
+    };
+  }
+
   if (!userId) {
     console.log('🔍 No userId provided');
     return {
@@ -75,10 +88,40 @@ export const canUserOptimize = async (userId, paymentStatus = 'free', estimatedT
     };
   }
 
+  // Block unpaid/free users
+  if (!paymentStatus || paymentStatus === 'free' || paymentStatus === 'unpaid') {
+    console.log('❌ User has not paid - blocking optimization');
+    return {
+      canOptimize: false,
+      count: 0,
+      remaining: 0,
+      maxCount: 0,
+      bonusRemaining: 0,
+      tokenUsed: 0,
+      tokenMax: 0,
+      message: 'Please purchase a plan to optimize your resume.'
+    };
+  }
+
   console.log('🔍 Getting optimization data for user...');
   const data = await getOptimizationData(userId);
   console.log('🔍 User optimization data:', data);
-  const limits = OPTIMIZATION_LIMITS[paymentStatus] || OPTIMIZATION_LIMITS.free;
+  const limits = OPTIMIZATION_LIMITS[paymentStatus];
+
+  if (!limits) {
+    console.error('❌ Invalid payment status:', paymentStatus);
+    return {
+      canOptimize: false,
+      count: 0,
+      remaining: 0,
+      maxCount: 0,
+      bonusRemaining: 0,
+      tokenUsed: 0,
+      tokenMax: 0,
+      message: 'Invalid payment plan. Please contact support.'
+    };
+  }
+
   console.log('🔍 Limits for payment status:', limits);
 
   // Get referral bonus data
@@ -106,11 +149,7 @@ export const canUserOptimize = async (userId, paymentStatus = 'free', estimatedT
     if (tokenExceeded) {
       message = `This optimization would exceed your token limit. Upgrade for more tokens.`;
     } else if (tierCountExceeded && bonusRemaining === 0) {
-      if (paymentStatus === 'free') {
-        message = `You've used your 1 free optimization. Upgrade or refer friends for bonus credits.`;
-      } else {
-        message = `You've used all ${limits.maxOptimizations} optimizations. Upgrade or refer friends for bonus credits.`;
-      }
+      message = `You've used all ${limits.maxOptimizations} optimizations. Upgrade or refer friends for bonus credits.`;
     }
   }
 
@@ -142,7 +181,7 @@ export const recordOptimization = async (userId, tokensUsed = 0) => {
   const userRef = doc(db, 'users', userId);
   const userDoc = await getDoc(userRef);
   const userData = userDoc.data();
-  const limits = OPTIMIZATION_LIMITS[userData.paymentStatus || 'free'];
+  const limits = OPTIMIZATION_LIMITS[userData.paymentStatus];
 
   const tierOptimizations = userData.optimizations?.count || 0;
   const bonusCredits = userData.referral?.bonusCredits || 0;
@@ -186,7 +225,7 @@ export const recordOptimization = async (userId, tokensUsed = 0) => {
  */
 export const getOptimizationStats = async (userId, paymentStatus = 'free') => {
   const data = await getOptimizationData(userId);
-  const limits = OPTIMIZATION_LIMITS[paymentStatus] || OPTIMIZATION_LIMITS.free;
+  const limits = OPTIMIZATION_LIMITS[paymentStatus] || { maxOptimizations: 0, maxTokens: 0 };
 
   // Get bonus credits
   const userRef = doc(db, 'users', userId);
@@ -214,7 +253,7 @@ export const getOptimizationStats = async (userId, paymentStatus = 'free') => {
  * @returns {object} Tier information
  */
 export const getTierInfo = (paymentStatus = 'free') => {
-  return OPTIMIZATION_LIMITS[paymentStatus] || OPTIMIZATION_LIMITS.free;
+  return OPTIMIZATION_LIMITS[paymentStatus] || { maxOptimizations: 0, maxTokens: 0, price: null };
 };
 
 /**

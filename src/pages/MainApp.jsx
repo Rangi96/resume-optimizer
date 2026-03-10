@@ -681,9 +681,10 @@ export default function MainApp() {
     console.log('👤 User email:', user?.email);
     console.log('👤 Payment status:', user?.paymentStatus);
 
+    // Defensive check: user should never be null due to ProtectedRoute
     if (!user) {
-      console.log('❌ No user - showing login modal');
-      setShowLoginModal(true);
+      console.error('❌ CRITICAL: User should not be null in protected route');
+      setError('Authentication error. Please refresh the page.');
       return;
     }
 
@@ -1063,16 +1064,7 @@ export default function MainApp() {
                 </button>
               )}
              <LanguageSwitcher />
-             {user ? (
-               <UserMenu />
-             ) : (
-               <button
-                 onClick={() => setShowLoginModal(true)}
-                 className="px-4 py-2 bg-white hover:bg-white/90 text-blue-600 font-semibold rounded-lg text-sm transition-colors shadow-lg"
-               >
-                 Sign In
-               </button>
-             )}
+             {user && <UserMenu />}
             </div>
           </div>
         </div>

@@ -1,13 +1,54 @@
-import React from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Sparkles, Upload, FileText, CheckCircle, Zap, Target, Shield } from 'lucide-react';
+import { AuthContext } from '../AuthContext';
+import LoginModal from '../components/LoginModal';
 
 export default function LandingPage() {
   const navigate = useNavigate();
+  const { user } = useContext(AuthContext);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+
+  // Capture referral codes from URL before auth redirect
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const referralCode = params.get('ref');
+    if (referralCode) {
+      localStorage.setItem('pending_referral', referralCode);
+      console.log('🔗 Referral code stored:', referralCode);
+    }
+  }, []);
+
+  const handleCTAClick = () => {
+    if (!user) {
+      setShowLoginModal(true);
+    } else {
+      navigate('/app');
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50">
       <div className="max-w-6xl mx-auto px-4 py-12 md:py-20">
+
+        {/* Header with Sign In Button */}
+        <div className="flex justify-end items-center pb-8">
+          {user ? (
+            <button
+              onClick={() => navigate('/app')}
+              className="px-6 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200"
+            >
+              Go to App
+            </button>
+          ) : (
+            <button
+              onClick={() => setShowLoginModal(true)}
+              className="px-6 py-2 bg-white hover:bg-gray-50 text-blue-600 font-semibold rounded-lg shadow-md border-2 border-blue-600 transition-all duration-200"
+            >
+              Sign In
+            </button>
+          )}
+        </div>
 
         {/* Section 1: Hero */}
         <div className="text-center mb-20">
@@ -30,7 +71,7 @@ export default function LandingPage() {
 
           {/* CTA Button */}
           <button
-            onClick={() => navigate('/app')}
+            onClick={handleCTAClick}
             className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
             Pay $9 to Tailor my Resume
@@ -155,7 +196,7 @@ export default function LandingPage() {
           </div>
 
           <button
-            onClick={() => navigate('/app')}
+            onClick={handleCTAClick}
             className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
             Pay $9 to Tailor my Resume
@@ -178,6 +219,12 @@ export default function LandingPage() {
           </div>
         </div>
       </div>
+
+      {/* Login Modal */}
+      <LoginModal
+        isOpen={showLoginModal}
+        onClose={() => setShowLoginModal(false)}
+      />
     </div>
   );
 }

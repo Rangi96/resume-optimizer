@@ -6,6 +6,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import TermsOfService from './pages/TermsOfService';
 import Footer from './components/Footer';
 import CookieConsent from './components/CookieConsent';
+import ProtectedRoute from './components/ProtectedRoute';
 
 /**
  * AppContent component handles routing and conditional footer rendering
@@ -22,7 +23,14 @@ function AppContent() {
       {/* Main Routes */}
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/app" element={<MainApp />} />
+        <Route
+          path="/app"
+          element={
+            <ProtectedRoute>
+              <MainApp />
+            </ProtectedRoute>
+          }
+        />
         <Route path="/privacy" element={<PrivacyPolicy />} />
         <Route path="/terms" element={<TermsOfService />} />
       </Routes>
