@@ -53,7 +53,7 @@ export default function LandingPage() {
                   onClick={() => setShowLoginModal(true)}
                   className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors"
                 >
-                  {t('auth:auth.signIn')}
+                  {t('landing.signIn')}
                 </button>
               )}
             </div>
@@ -74,12 +74,12 @@ export default function LandingPage() {
 
           {/* Headline */}
           <h1 className="text-3xl md:text-5xl font-medium text-gray-900 leading-relaxed max-w-4xl mx-auto mb-6">
-            Tailor your resume to any job in minutes, using only skills you actually have.
+            {t('landing.hero.headline')}
           </h1>
 
           {/* Subtext */}
           <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed mb-8">
-            AI tools make things up. This one only uses experience you have actually lived.
+            {t('landing.hero.subtext')}
           </p>
 
           {/* CTA Button */}
@@ -87,7 +87,7 @@ export default function LandingPage() {
             onClick={handleCTAClick}
             className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            Pay $9 to Tailor my Resume
+            {t('landing.hero.cta')}
           </button>
         </div>
 
@@ -98,11 +98,11 @@ export default function LandingPage() {
             <div className="bg-white rounded-lg shadow-sm p-4">
               <div className="flex items-center gap-2 mb-3">
                 <FileText className="w-4 h-4 text-blue-600" />
-                <label className="text-xs font-medium text-gray-700">Job Description</label>
+                <label className="text-xs font-medium text-gray-700">{t('landing.toolPreview.jobDescription.label')}</label>
               </div>
               <div className="bg-gray-50 border border-gray-200 rounded-md p-3 h-24">
                 <p className="text-xs text-gray-500">
-                  Paste the full job description here...
+                  {t('landing.toolPreview.jobDescription.placeholder')}
                 </p>
                 <div className="mt-2 space-y-1.5">
                   <div className="h-1.5 bg-gray-200 rounded w-full"></div>
@@ -116,12 +116,12 @@ export default function LandingPage() {
             <div className="bg-white rounded-lg shadow-sm p-4">
               <div className="flex items-center gap-2 mb-3">
                 <Upload className="w-4 h-4 text-purple-600" />
-                <label className="text-xs font-medium text-gray-700">Your Resume</label>
+                <label className="text-xs font-medium text-gray-700">{t('landing.toolPreview.resume.label')}</label>
               </div>
               <div className="bg-gray-50 border-2 border-dashed border-gray-300 rounded-md p-3 h-24 flex flex-col items-center justify-center">
                 <Upload className="w-6 h-6 text-gray-400 mb-2" />
-                <p className="text-xs text-gray-600 font-medium">Click to upload</p>
-                <p className="text-xs text-gray-500 mt-1">.pdf, .doc, .docx, .txt</p>
+                <p className="text-xs text-gray-600 font-medium">{t('landing.toolPreview.resume.uploadButton')}</p>
+                <p className="text-xs text-gray-500 mt-1">{t('landing.toolPreview.resume.formats')}</p>
               </div>
             </div>
           </div>
@@ -131,13 +131,13 @@ export default function LandingPage() {
         <div className="mb-16">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-xl md:text-2xl font-medium text-gray-900 text-center mb-8">
-              See the difference
+              {t('landing.difference.title')}
             </h2>
 
             <div className="grid md:grid-cols-2 gap-6">
               {/* Before */}
               <div className="bg-white rounded-lg shadow-sm p-6 border border-gray-200">
-                <div className="text-xs font-medium text-gray-500 mb-4 text-center">Before</div>
+                <div className="text-xs font-medium text-gray-500 mb-4 text-center">{t('landing.difference.before')}</div>
                 <div className="space-y-3">
                   <div className="h-2 bg-gray-300 rounded w-3/4"></div>
                   <div className="h-2 bg-gray-300 rounded w-1/2"></div>
@@ -152,7 +152,7 @@ export default function LandingPage() {
 
               {/* After */}
               <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-lg shadow-md p-6 border-2 border-blue-200 relative">
-                <div className="text-xs font-medium text-blue-700 mb-4 text-center">After</div>
+                <div className="text-xs font-medium text-blue-700 mb-4 text-center">{t('landing.difference.after')}</div>
                 <div className="space-y-3">
                   <div className="h-2 bg-blue-400 rounded w-3/4"></div>
                   <div className="h-2 bg-purple-400 rounded w-1/2"></div>
@@ -172,16 +172,16 @@ export default function LandingPage() {
             {/* Key features */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-8">
               <div className="bg-white border border-blue-200 px-3 py-2 rounded-lg text-xs font-medium text-blue-700 text-center">
-                ATS Optimized
+                {t('landing.difference.features.atsOptimized')}
               </div>
               <div className="bg-white border border-purple-200 px-3 py-2 rounded-lg text-xs font-medium text-purple-700 text-center">
-                Verified Skills
+                {t('landing.difference.features.verifiedSkills')}
               </div>
               <div className="bg-white border border-blue-200 px-3 py-2 rounded-lg text-xs font-medium text-blue-700 text-center">
-                Job Match
+                {t('landing.difference.features.jobMatch')}
               </div>
               <div className="bg-white border border-purple-200 px-3 py-2 rounded-lg text-xs font-medium text-purple-700 text-center">
-                Instant Format
+                {t('landing.difference.features.instantFormat')}
               </div>
             </div>
           </div>
@@ -190,21 +190,21 @@ export default function LandingPage() {
         {/* Section 4: CTA Block */}
         <div className="bg-white rounded-xl shadow-md p-8 md:p-12 text-center mb-16">
           <h2 className="text-2xl md:text-3xl font-medium text-gray-900 mb-6">
-            Unlock Your Tailored Resume
+            {t('landing.cta.title')}
           </h2>
 
           <div className="max-w-md mx-auto mb-8 space-y-3">
             <div className="flex items-center gap-3 text-gray-700">
               <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-              <span className="text-left">ATS compatible format</span>
+              <span className="text-left">{t('landing.cta.benefits.atsFormat')}</span>
             </div>
             <div className="flex items-center gap-3 text-gray-700">
               <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-              <span className="text-left">Only your real skills and experience</span>
+              <span className="text-left">{t('landing.cta.benefits.realSkills')}</span>
             </div>
             <div className="flex items-center gap-3 text-gray-700">
               <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
-              <span className="text-left">Ready to download in minutes</span>
+              <span className="text-left">{t('landing.cta.benefits.readyDownload')}</span>
             </div>
           </div>
 
@@ -212,7 +212,7 @@ export default function LandingPage() {
             onClick={handleCTAClick}
             className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            Pay $9 to Tailor my Resume
+            {t('landing.cta.button')}
           </button>
         </div>
 
@@ -220,15 +220,15 @@ export default function LandingPage() {
         <div className="flex flex-wrap justify-center items-center gap-8 text-gray-500 text-sm">
           <div className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
-            <span>Secure Payment</span>
+            <span>{t('landing.trust.securePayment')}</span>
           </div>
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4" />
-            <span>Instant Access</span>
+            <span>{t('landing.trust.instantAccess')}</span>
           </div>
           <div className="flex items-center gap-2">
             <Target className="w-4 h-4" />
-            <span>ATS Optimized</span>
+            <span>{t('landing.trust.atsOptimized')}</span>
           </div>
         </div>
       </div>

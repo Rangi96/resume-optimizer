@@ -246,5 +246,49 @@
       "milestone": "Milestone: {{count}} referrals",
       "credits": "+{{count}} credits"
     }
+  },
+  "landing": {
+    "signIn": "Log In",
+    "hero": {
+      "headline": "Tailor your resume to any job in minutes, using only skills you actually have.",
+      "subtext": "AI tools make things up. This one only uses experience you have actually lived.",
+      "cta": "Pay $9 to Tailor my Resume"
+    },
+    "toolPreview": {
+      "jobDescription": {
+        "label": "Job Description",
+        "placeholder": "Paste the full job description here..."
+      },
+      "resume": {
+        "label": "Your Resume",
+        "uploadButton": "Click to upload",
+        "formats": ".pdf, .doc, .docx, .txt"
+      }
+    },
+    "difference": {
+      "title": "See the difference",
+      "before": "Before",
+      "after": "After",
+      "features": {
+        "atsOptimized": "ATS Optimized",
+        "verifiedSkills": "Verified Skills",
+        "jobMatch": "Job Match",
+        "instantFormat": "Instant Format"
+      }
+    },
+    "cta": {
+      "title": "Unlock Your Tailored Resume",
+      "benefits": {
+        "atsFormat": "ATS compatible format",
+        "realSkills": "Only your real skills and experience",
+        "readyDownload": "Ready to download in minutes"
+      },
+      "button": "Pay $9 to Tailor my Resume"
+    },
+    "trust": {
+      "securePayment": "Secure Payment",
+      "instantAccess": "Instant Access",
+      "atsOptimized": "ATS Optimized"
+    }
   }
 }

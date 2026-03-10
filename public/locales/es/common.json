@@ -246,5 +246,49 @@
       "milestone": "Meta: {{count}} referidos",
       "credits": "+{{count}} créditos"
     }
+  },
+  "landing": {
+    "signIn": "Iniciar Sesión",
+    "hero": {
+      "headline": "Adapta tu currículum a cualquier trabajo en minutos, usando solo habilidades que realmente tienes.",
+      "subtext": "Las herramientas de IA inventan cosas. Esta solo usa experiencia que realmente has vivido.",
+      "cta": "Pagar $9 para Adaptar mi Currículum"
+    },
+    "toolPreview": {
+      "jobDescription": {
+        "label": "Descripción del Trabajo",
+        "placeholder": "Pega la descripción completa del trabajo aquí..."
+      },
+      "resume": {
+        "label": "Tu Currículum",
+        "uploadButton": "Haz clic para subir",
+        "formats": ".pdf, .doc, .docx, .txt"
+      }
+    },
+    "difference": {
+      "title": "Ve la diferencia",
+      "before": "Antes",
+      "after": "Después",
+      "features": {
+        "atsOptimized": "Optimizado para ATS",
+        "verifiedSkills": "Habilidades Verificadas",
+        "jobMatch": "Coincidencia Laboral",
+        "instantFormat": "Formato Instantáneo"
+      }
+    },
+    "cta": {
+      "title": "Desbloquea tu Currículum Personalizado",
+      "benefits": {
+        "atsFormat": "Formato compatible con ATS",
+        "realSkills": "Solo tus habilidades y experiencia reales",
+        "readyDownload": "Listo para descargar en minutos"
+      },
+      "button": "Pagar $9 para Adaptar mi Currículum"
+    },
+    "trust": {
+      "securePayment": "Pago Seguro",
+      "instantAccess": "Acceso Instantáneo",
+      "atsOptimized": "Optimizado para ATS"
+    }
   }
 }
