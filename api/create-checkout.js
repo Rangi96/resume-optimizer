@@ -26,13 +26,13 @@ const PLANS = {
   'plan_10_exports': {
     priceId: process.env.STRIPE_PRICE_ID_10,
     name: '10 Resume Exports',
-    price: 300,
+    price: 900,
     exports: 10
   },
   'plan_20_exports': {
     priceId: process.env.STRIPE_PRICE_ID_20,
     name: '20 Resume Exports',
-    price: 500,
+    price: 1600,
     exports: 20
   }
 };

@@ -9,12 +9,12 @@
  * Free Tier:
  * - 1 optimization (lifetime)
  * - Max 20,000 tokens total
- * 
- * Premium $2.99:
+ *
+ * Premium $9.00:
  * - 10 optimizations
  * - Max 400,000 tokens total
- * 
- * Premium $4.95:
+ *
+ * Premium $16.00:
  * - 20 optimizations
  * - Max 1,000,000 tokens total
  */
@@ -32,12 +32,12 @@ const OPTIMIZATION_LIMITS = {
   premium_10: {
     maxOptimizations: 10,
     maxTokens: 400000,
-    price: 3.00
+    price: 9.00
   },
   premium_20: {
     maxOptimizations: 20,
     maxTokens: 1000000,
-    price: 5.00
+    price: 16.00
   }
 };
 

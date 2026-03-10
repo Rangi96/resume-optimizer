@@ -141,12 +141,12 @@
     "plan10": {
       "name": "10 Resume Exports",
       "description": "Perfect for targeted applications",
-      "price": "$3.00"
+      "price": "$9.00"
     },
     "plan20": {
       "name": "20 Resume Exports",
       "description": "Best value for job searchers",
-      "price": "$5.00"
+      "price": "$16.00"
     },
     "secure": "💳 Secure payment powered by Stripe",
     "processing": "Processing...",

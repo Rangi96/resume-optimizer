@@ -141,12 +141,12 @@
     "plan10": {
       "name": "10 Exportaciones de Currículum",
       "description": "Perfecto para aplicaciones dirigidas",
-      "price": "$3.00"
+      "price": "$9.00"
     },
     "plan20": {
       "name": "20 Exportaciones de Currículum",
       "description": "Mejor valor para buscadores de empleo",
-      "price": "$5.00"
+      "price": "$16.00"
     },
     "secure": "💳 Pago seguro con Stripe",
     "processing": "Procesando...",
