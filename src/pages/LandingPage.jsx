@@ -37,10 +37,19 @@ export default function LandingPage() {
     }
   };
 
-  const handleLoginSuccess = () => {
-    // After successful login, redirect to app with payment requirement
+  const handleLoginSuccess = (user) => {
+    // After successful login, check payment status and redirect accordingly
     setShowLoginModal(false);
-    navigate('/app?payment_required=true');
+
+    // Check if user already has premium access
+    if (user && (user.paymentStatus === 'premium_10' || user.paymentStatus === 'premium_20')) {
+      // User already paid, go straight to app and clear payment intent
+      localStorage.removeItem('payment_intent');
+      navigate('/app');
+    } else {
+      // User needs to pay
+      navigate('/app?payment_required=true');
+    }
   };
 
   return (
