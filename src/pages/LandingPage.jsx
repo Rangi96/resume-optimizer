@@ -26,15 +26,25 @@ export default function LandingPage() {
 
   // Handle navigation after login when user data is fully loaded
   useEffect(() => {
+    console.log('🔍 Landing navigation check:', {
+      justLoggedIn,
+      loading,
+      hasUser: !!user,
+      paymentStatus: user?.paymentStatus
+    });
+
     if (justLoggedIn && !loading && user && user.paymentStatus) {
+      console.log('✅ Navigating after login, payment status:', user.paymentStatus);
       setJustLoggedIn(false);
 
       if (user.paymentStatus === 'premium_10' || user.paymentStatus === 'premium_20') {
         // User already paid, go straight to app
+        console.log('✅ Premium user - navigating to /app');
         localStorage.removeItem('payment_intent');
         navigate('/app');
       } else {
         // User needs to pay
+        console.log('⚠️ Non-premium user - navigating to /app?payment_required=true');
         navigate('/app?payment_required=true');
       }
     }
