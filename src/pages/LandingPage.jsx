@@ -9,7 +9,7 @@ import LanguageSwitcher from '../components/LanguageSwitcher';
 
 export default function LandingPage() {
   const navigate = useNavigate();
-  const { user } = useContext(AuthContext);
+  const { user, loading } = useContext(AuthContext);
   const { t } = useTranslation();
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [justLoggedIn, setJustLoggedIn] = useState(false);
@@ -26,7 +26,7 @@ export default function LandingPage() {
 
   // Handle navigation after login when user data is fully loaded
   useEffect(() => {
-    if (justLoggedIn && user && user.paymentStatus) {
+    if (justLoggedIn && !loading && user && user.paymentStatus) {
       setJustLoggedIn(false);
 
       if (user.paymentStatus === 'premium_10' || user.paymentStatus === 'premium_20') {
@@ -38,7 +38,7 @@ export default function LandingPage() {
         navigate('/app?payment_required=true');
       }
     }
-  }, [user, justLoggedIn, navigate]);
+  }, [user, justLoggedIn, loading, navigate]);
 
   const handleCTAClick = () => {
     if (!user) {
