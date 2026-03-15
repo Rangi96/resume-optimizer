@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../AuthContext';
 import { Loader2 } from 'lucide-react';
 
-const LoginModal = ({ isOpen, onClose }) => {
+const LoginModal = ({ isOpen, onClose, onSuccess }) => {
   const { t } = useTranslation('auth');
   const { loginWithGoogle, loading, error } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
@@ -12,7 +12,11 @@ const LoginModal = ({ isOpen, onClose }) => {
     setIsLoading(true);
     const user = await loginWithGoogle();
     if (user) {
-      onClose();
+      if (onSuccess) {
+        onSuccess(user);
+      } else {
+        onClose();
+      }
     }
     setIsLoading(false);
   };

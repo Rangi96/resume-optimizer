@@ -2,7 +2,7 @@ import React from 'react';
 import { XCircle } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 
-const PaymentCanceled = ({ onClose }) => {
+const PaymentCanceled = ({ onClose, wasRequired = false }) => {
   const { t } = useTranslation('common');
 
   return (
@@ -11,7 +11,10 @@ const PaymentCanceled = ({ onClose }) => {
         <XCircle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-gray-800 mb-2">{t('payment.canceled.title')}</h2>
         <p className="text-gray-600 mb-6">
-          {t('payment.canceled.message')}
+          {wasRequired
+            ? (t('payment.canceled.messageRequired') || 'Payment is required to use the app. Returning to home page...')
+            : t('payment.canceled.message')
+          }
         </p>
         <button
           onClick={onClose}

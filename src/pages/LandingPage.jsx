@@ -25,10 +25,22 @@ export default function LandingPage() {
 
   const handleCTAClick = () => {
     if (!user) {
+      // Set payment intent before login
+      localStorage.setItem('payment_intent', 'true');
       setShowLoginModal(true);
-    } else {
+    } else if (user.paymentStatus === 'premium_10' || user.paymentStatus === 'premium_20') {
+      // User already paid, go straight to app
       navigate('/app');
+    } else {
+      // User logged in but hasn't paid
+      navigate('/app?payment_required=true');
     }
+  };
+
+  const handleLoginSuccess = () => {
+    // After successful login, redirect to app with payment requirement
+    setShowLoginModal(false);
+    navigate('/app?payment_required=true');
   };
 
   return (
@@ -237,6 +249,7 @@ export default function LandingPage() {
       <LoginModal
         isOpen={showLoginModal}
         onClose={() => setShowLoginModal(false)}
+        onSuccess={handleLoginSuccess}
       />
     </div>
   );

@@ -506,6 +506,8 @@ export default function MainApp() {
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
   const [showPaymentCanceled, setShowPaymentCanceled] = useState(false);
   const [paymentSessionId, setPaymentSessionId] = useState('');
+  const [requiresPayment, setRequiresPayment] = useState(false);
+  const [showPaymentRequired, setShowPaymentRequired] = useState(false);
   const { user } = useContext(AuthContext);
   const { t, i18n } = useTranslation(['common', 'templates', 'errors']);
 
@@ -527,14 +529,50 @@ export default function MainApp() {
     if (sessionId) {
       setPaymentSessionId(sessionId);
       setShowPaymentSuccess(true);
+      setRequiresPayment(false);
+      setShowPaymentRequired(false);
+      localStorage.removeItem('payment_intent');
       // Clear URL parameters
-      window.history.replaceState({}, document.title, '/');
+      window.history.replaceState({}, document.title, '/app');
     } else if (canceled) {
       setShowPaymentCanceled(true);
+      // If payment was required and they cancelled, redirect to landing
+      const paymentWasRequired = requiresPayment || localStorage.getItem('payment_intent');
+      localStorage.removeItem('payment_intent');
       // Clear URL parameters
-      window.history.replaceState({}, document.title, '/');
+      window.history.replaceState({}, document.title, '/app');
+
+      if (paymentWasRequired) {
+        setTimeout(() => {
+          window.location.href = '/';
+        }, 2000);
+      }
     }
-  }, []);
+  }, [requiresPayment]);
+
+  // Check if user needs to pay (payment-first flow from landing page)
+  useEffect(() => {
+    if (!user) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const paymentRequired = params.get('payment_required') === 'true';
+    const fromLanding = params.get('from') === 'landing';
+    const paymentIntent = localStorage.getItem('payment_intent');
+
+    // Check if user needs to pay
+    const needsPayment = !user.paymentStatus ||
+                         user.paymentStatus === 'free' ||
+                         user.paymentStatus === 'unpaid';
+
+    if ((paymentRequired || fromLanding || paymentIntent) && needsPayment) {
+      setRequiresPayment(true);
+      setShowStripeCheckout(true);
+      setShowPaymentRequired(true);
+      // Clean up
+      localStorage.removeItem('payment_intent');
+      window.history.replaceState({}, document.title, '/app');
+    }
+  }, [user]);
 
   // Gap filling
   const [addingGap, setAddingGap] = useState(null);
@@ -1027,6 +1065,53 @@ export default function MainApp() {
   };
 
 
+
+  // Render payment required overlay if needed
+  if (showPaymentRequired && requiresPayment) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg">
+          <div className="max-w-7xl mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <Sparkles className="w-7 h-7" />
+                <div>
+                  <h1 className="text-2xl font-bold">{t('app.title')}</h1>
+                  <p className="text-sm text-blue-100">{t('app.tagline')}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <LanguageSwitcher />
+                {user && <UserMenu />}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="max-w-4xl mx-auto px-4 py-20 text-center">
+          <div className="bg-white rounded-xl shadow-lg p-12">
+            <Sparkles className="w-16 h-16 text-blue-600 mx-auto mb-6" />
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+              {t('payment.required.title') || 'Complete Your Purchase'}
+            </h1>
+            <p className="text-lg text-gray-600 mb-8">
+              {t('payment.required.message') || "You're one step away from optimizing your resume with AI"}
+            </p>
+          </div>
+        </div>
+
+        <StripeCheckout
+          isOpen={showStripeCheckout}
+          onClose={() => {
+            setShowStripeCheckout(false);
+            setShowPaymentRequired(false);
+            window.location.href = '/';
+          }}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -1919,6 +2004,7 @@ export default function MainApp() {
         {showPaymentCanceled && (
           <PaymentCanceled
             onClose={() => setShowPaymentCanceled(false)}
+            wasRequired={requiresPayment}
           />
         )}
       </div>
