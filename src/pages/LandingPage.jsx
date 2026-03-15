@@ -12,6 +12,7 @@ export default function LandingPage() {
   const { user } = useContext(AuthContext);
   const { t } = useTranslation();
   const [showLoginModal, setShowLoginModal] = useState(false);
+  const [justLoggedIn, setJustLoggedIn] = useState(false);
 
   // Capture referral codes from URL before auth redirect
   useEffect(() => {
@@ -22,6 +23,22 @@ export default function LandingPage() {
       console.log('🔗 Referral code stored:', referralCode);
     }
   }, []);
+
+  // Handle navigation after login when user data is fully loaded
+  useEffect(() => {
+    if (justLoggedIn && user && user.paymentStatus) {
+      setJustLoggedIn(false);
+
+      if (user.paymentStatus === 'premium_10' || user.paymentStatus === 'premium_20') {
+        // User already paid, go straight to app
+        localStorage.removeItem('payment_intent');
+        navigate('/app');
+      } else {
+        // User needs to pay
+        navigate('/app?payment_required=true');
+      }
+    }
+  }, [user, justLoggedIn, navigate]);
 
   const handleCTAClick = () => {
     if (!user) {
@@ -37,19 +54,10 @@ export default function LandingPage() {
     }
   };
 
-  const handleLoginSuccess = (user) => {
-    // After successful login, check payment status and redirect accordingly
+  const handleLoginSuccess = () => {
+    // Close modal and set flag - navigation will happen in useEffect when user data loads
     setShowLoginModal(false);
-
-    // Check if user already has premium access
-    if (user && (user.paymentStatus === 'premium_10' || user.paymentStatus === 'premium_20')) {
-      // User already paid, go straight to app and clear payment intent
-      localStorage.removeItem('payment_intent');
-      navigate('/app');
-    } else {
-      // User needs to pay
-      navigate('/app?payment_required=true');
-    }
+    setJustLoggedIn(true);
   };
 
   return (
