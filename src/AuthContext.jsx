@@ -43,36 +43,46 @@ export const AuthProvider = ({ children }) => {
 
           if (userDoc.exists()) {
             const userData = userDoc.data();
-            // Add paymentStatus from Firestore to user object
-            currentUser.paymentStatus = userData.paymentStatus || 'free';
-            console.log('✅ User loaded with paymentStatus:', currentUser.paymentStatus);
+            const paymentStatus = userData.paymentStatus || 'free';
+            console.log('✅ User loaded with paymentStatus:', paymentStatus);
             console.log('✅ User document data:', {
               uid: userData.uid,
               email: userData.email,
               paymentStatus: userData.paymentStatus,
               optimizationsCount: userData.optimizations?.count
             });
+
+            // Create a new user object with paymentStatus to trigger React re-renders
+            setUser({
+              ...currentUser,
+              paymentStatus
+            });
           } else {
             // This should NEVER happen after initializeUserDocument completes
             console.error('❌ CRITICAL ERROR: User document does not exist after initialization!');
             console.error('❌ This indicates initializeUserDocument failed silently');
-            // Fallback to free if document doesn't exist
-            currentUser.paymentStatus = 'free';
             console.log('⚠️ User document not found, defaulting to free');
             setError('Account setup incomplete. Please sign out and sign in again.');
-          }
 
-          setUser(currentUser);
+            // Create a new user object with free status
+            setUser({
+              ...currentUser,
+              paymentStatus: 'free'
+            });
+          }
           setLoading(false);
         } catch (error) {
           console.error('❌ ERROR in auth state change handler:', error);
           console.error('❌ Error details:', error.message);
           console.error('❌ Error stack:', error.stack);
-          // Fallback to free on error
-          currentUser.paymentStatus = 'free';
-          setUser(currentUser);
-          setLoading(false);
           setError('Error setting up account. Please try signing in again.');
+
+          // Create a new user object with free status
+          setUser({
+            ...currentUser,
+            paymentStatus: 'free'
+          });
+          setLoading(false);
         }
       } else {
         console.log('🔐 Auth state changed - User signed out');
