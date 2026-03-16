@@ -66,6 +66,7 @@ export default function LandingPage() {
 
   const handleLoginSuccess = () => {
     // Close modal and set flag - navigation will happen in useEffect when user data loads
+    console.log('🔓 handleLoginSuccess called - setting justLoggedIn to true');
     setShowLoginModal(false);
     setJustLoggedIn(true);
   };
