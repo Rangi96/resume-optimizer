@@ -1,5 +1,5 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
-import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle } from 'lucide-react';
+import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle, Gauge } from 'lucide-react';
 import * as mammoth from 'mammoth';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../AuthContext';
@@ -543,9 +543,11 @@ export default function MainApp() {
   });
   const [suggestions, setSuggestions] = useState([]);
   const [gaps, setGaps] = useState([]);
+  const [scoreResult, setScoreResult] = useState(null);
   const [loadingOptimize, setLoadingOptimize] = useState(false);
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [loadingGaps, setLoadingGaps] = useState(false);
+  const [loadingScore, setLoadingScore] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
@@ -943,6 +945,44 @@ export default function MainApp() {
         setLoadingGaps(false);
       }
     };
+
+  const computeCompatibilityScore = async () => {
+    setLoadingScore(true);
+    setError('');
+
+    try {
+      const optimizedText = convertStructuredToText(structuredResume);
+
+      const response = await fetch('/api/score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          originalResume: resumeText,
+          optimizedResume: optimizedText,
+          jobDescription: jobDescription,
+          language: i18n.language
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to compute compatibility score');
+      }
+
+      setScoreResult({
+        originalScore: data.originalScore,
+        optimizedScore: data.optimizedScore,
+        originalReason: data.originalReason,
+        optimizedReason: data.optimizedReason
+      });
+    } catch (error) {
+      console.error('computeCompatibilityScore error:', error);
+      setError('Failed to compute compatibility score: ' + error.message);
+    } finally {
+      setLoadingScore(false);
+    }
+  };
 
   const startEdit = (section, data) => {
     setEditingSection(section);
@@ -1416,10 +1456,10 @@ export default function MainApp() {
             />
             {/* Action Buttons */}
             <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="grid md:grid-cols-3 gap-3">
-                <button 
-                  onClick={getSuggestions} 
-                  disabled={loadingSuggestions} 
+              <div className="grid md:grid-cols-4 gap-3">
+                <button
+                  onClick={getSuggestions}
+                  disabled={loadingSuggestions}
                   className="bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 disabled:bg-gray-300 flex items-center justify-center gap-2"
                 >
                   {loadingSuggestions ? (
@@ -1431,9 +1471,9 @@ export default function MainApp() {
                     </>
                   )}
                 </button>
-                <button 
-                  onClick={findGaps} 
-                  disabled={loadingGaps} 
+                <button
+                  onClick={findGaps}
+                  disabled={loadingGaps}
                   className="bg-amber-500 text-white py-3 rounded-lg font-semibold hover:bg-amber-600 disabled:bg-gray-300 flex items-center justify-center gap-2"
                 >
                   {loadingGaps ? (
@@ -1445,11 +1485,25 @@ export default function MainApp() {
                     </>
                   )}
                 </button>
-                <button 
+                <button
+                  onClick={computeCompatibilityScore}
+                  disabled={loadingScore || !jobDescription || !resumeText}
+                  className="bg-purple-500 text-white py-3 rounded-lg font-semibold hover:bg-purple-600 disabled:bg-gray-300 flex items-center justify-center gap-2"
+                >
+                  {loadingScore ? (
+                    <Loader2 className="animate-spin w-5 h-5" />
+                  ) : (
+                    <>
+                      <Gauge className="w-5 h-5" />
+                      {t('buttons.compatibilityScore')}
+                    </>
+                  )}
+                </button>
+                <button
                   onClick={() => {
                     setIsFormatTriggered(true);
                     setPhase('format');
-                  }} 
+                  }}
                   className="bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 flex items-center justify-center gap-2"
                 >
                   <Sparkles className="w-5 h-5" />
@@ -1457,6 +1511,47 @@ export default function MainApp() {
                 </button>
               </div>
             </div>
+
+            {/* Compatibility Score Panel */}
+            {scoreResult && (
+              <div className="bg-white rounded-xl shadow-lg p-6">
+                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
+                  <Gauge className="w-5 h-5 text-purple-600" />
+                  {t('optimize.compatibilityTitle')}
+                </h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  {[
+                    { label: t('optimize.originalResume'), score: scoreResult.originalScore, reason: scoreResult.originalReason },
+                    { label: t('optimize.optimizedResume'), score: scoreResult.optimizedScore, reason: scoreResult.optimizedReason }
+                  ].map((item, idx) => {
+                    const color = item.score >= 80 ? 'green' : item.score >= 60 ? 'amber' : 'red';
+                    const colorClasses = {
+                      green: { bar: 'bg-green-500', text: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200' },
+                      amber: { bar: 'bg-amber-500', text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
+                      red: { bar: 'bg-red-500', text: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' }
+                    }[color];
+                    return (
+                      <div key={idx} className={`p-4 rounded-lg border ${colorClasses.bg} ${colorClasses.border}`}>
+                        <div className="flex justify-between items-baseline mb-2">
+                          <span className="text-sm font-semibold text-gray-700">{item.label}</span>
+                          <span className={`text-2xl font-bold ${colorClasses.text}`}>{item.score}<span className="text-sm font-medium">/100</span></span>
+                        </div>
+                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2 overflow-hidden">
+                          <div className={`h-2 rounded-full ${colorClasses.bar}`} style={{ width: `${item.score}%` }} />
+                        </div>
+                        {item.reason && <p className="text-xs text-gray-600 leading-relaxed">{item.reason}</p>}
+                      </div>
+                    );
+                  })}
+                </div>
+                {scoreResult.optimizedScore < 80 && (
+                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
+                    <Lightbulb className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                    <p className="text-sm text-blue-800">{t('optimize.lowScoreRecommendation')}</p>
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Suggestions & Gaps */}
             {(suggestions.length > 0 || gaps.length > 0) && (

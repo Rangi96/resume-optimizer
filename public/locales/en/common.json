@@ -16,6 +16,7 @@
     "optimize": "Optimize My Resume",
     "getSuggestions": "Get Suggestions",
     "findGaps": "Find Missing Skills",
+    "compatibilityScore": "Compatibility Score",
     "formatExport": "Format & Export",
     "download": "Download",
     "copy": "Copy",
@@ -59,6 +60,10 @@
     "optimizeButton": "Optimize My Resume",
     "suggestions": "Improvement Suggestions",
     "gaps": "Missing Skills Analysis",
+    "compatibilityTitle": "Job Description Compatibility",
+    "originalResume": "Original Resume",
+    "optimizedResume": "Optimized Resume",
+    "lowScoreRecommendation": "Your match score is on the low side. Try \"Get Suggestions\" to refine wording or \"Find Missing Skills\" to fill gaps from the job description.",
     "optimizedContent": "Optimized Resume Content",
     "statusDisplay": "Optimization status display coming soon...",
     "sections": {

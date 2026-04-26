@@ -16,6 +16,7 @@
     "optimize": "Optimizar Mi Currículum",
     "getSuggestions": "Obtener Sugerencias",
     "findGaps": "Encontrar Habilidades Faltantes",
+    "compatibilityScore": "Puntuación de Compatibilidad",
     "formatExport": "Formatear y Exportar",
     "download": "Descargar",
     "copy": "Copiar",
@@ -59,6 +60,10 @@
     "optimizeButton": "Optimizar Mi Currículum",
     "suggestions": "Sugerencias de Mejora",
     "gaps": "Análisis de Habilidades Faltantes",
+    "compatibilityTitle": "Compatibilidad con la Descripción del Trabajo",
+    "originalResume": "Currículum Original",
+    "optimizedResume": "Currículum Optimizado",
+    "lowScoreRecommendation": "Tu puntuación de compatibilidad es baja. Prueba \"Obtener Sugerencias\" para mejorar la redacción o \"Encontrar Habilidades Faltantes\" para cubrir vacíos de la descripción del trabajo.",
     "optimizedContent": "Contenido del Currículum Optimizado",
     "statusDisplay": "Visualización del estado de optimización próximamente...",
     "sections": {
