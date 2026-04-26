@@ -1,5 +1,5 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
-import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle, Gauge } from 'lucide-react';
+import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle, Gauge, ChevronLeft, ChevronRight } from 'lucide-react';
 import * as mammoth from 'mammoth';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../AuthContext';
@@ -548,6 +548,9 @@ export default function MainApp() {
   const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const [loadingGaps, setLoadingGaps] = useState(false);
   const [loadingScore, setLoadingScore] = useState(false);
+  const [actionRailExpanded, setActionRailExpanded] = useState(false);
+  const [hoverExpanded, setHoverExpanded] = useState(false);
+  const [activeRailTab, setActiveRailTab] = useState(null); // 'suggestions' | 'gaps' | 'score' | null
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
@@ -1451,157 +1454,187 @@ export default function MainApp() {
               phase={phase}
               setPhase={setPhase}
               isUploadComplete={true}
-              t={t} 
-              isFormatTriggered={isFormatTriggered} 
+              t={t}
+              isFormatTriggered={isFormatTriggered}
             />
-            {/* Action Buttons */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="grid md:grid-cols-4 gap-3">
-                <button
-                  onClick={getSuggestions}
-                  disabled={loadingSuggestions}
-                  className="bg-green-500 text-white py-3 rounded-lg font-semibold hover:bg-green-600 disabled:bg-gray-300 flex items-center justify-center gap-2"
+            {/* Action Rail (fixed; hover-to-open menu, click-pinned content) */}
+            {(() => {
+              const railOpen = actionRailExpanded || hoverExpanded;
+              const hasResult = {
+                suggestions: suggestions.length > 0,
+                gaps: gaps.length > 0,
+                score: !!scoreResult,
+              };
+              const tabs = [
+                { key: 'suggestions', run: getSuggestions, loading: loadingSuggestions, disabled: loadingSuggestions, color: 'green', Icon: Lightbulb, label: t('buttons.getSuggestions') },
+                { key: 'gaps', run: findGaps, loading: loadingGaps, disabled: loadingGaps, color: 'amber', Icon: Search, label: t('buttons.findGaps') },
+                { key: 'score', run: computeCompatibilityScore, loading: loadingScore, disabled: loadingScore || !jobDescription || !resumeText, color: 'purple', Icon: Gauge, label: t('buttons.compatibilityScore') },
+                { key: 'format', run: () => { setIsFormatTriggered(true); setPhase('format'); }, loading: false, disabled: false, color: 'blue', Icon: Sparkles, label: t('buttons.formatExport') },
+              ];
+              const colorMap = {
+                green: 'bg-green-500 hover:bg-green-600',
+                amber: 'bg-amber-500 hover:bg-amber-600',
+                purple: 'bg-purple-500 hover:bg-purple-600',
+                blue: 'bg-blue-500 hover:bg-blue-600',
+              };
+              const handleTabClick = (tab) => {
+                if (tab.key === 'format') { tab.run(); return; }
+                setActiveRailTab(tab.key);
+                setActionRailExpanded(true);
+                if (!hasResult[tab.key]) tab.run();
+              };
+              const showContent = actionRailExpanded && activeRailTab && hasResult[activeRailTab];
+              const activeTab = tabs.find(t => t.key === activeRailTab);
+              return (
+                <div
+                  className={`fixed left-4 top-24 z-30 bg-white rounded-xl shadow-lg overflow-hidden flex flex-col transition-all duration-200 ${railOpen ? 'w-96' : 'w-14'}`}
+                  style={{ maxHeight: 'calc(100vh - 7rem)' }}
+                  onMouseEnter={() => setHoverExpanded(true)}
+                  onMouseLeave={() => setHoverExpanded(false)}
                 >
-                  {loadingSuggestions ? (
-                    <Loader2 className="animate-spin w-5 h-5" />
-                  ) : (
-                    <>
-                      <Lightbulb className="w-5 h-5" />
-                      {t('buttons.getSuggestions')}
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={findGaps}
-                  disabled={loadingGaps}
-                  className="bg-amber-500 text-white py-3 rounded-lg font-semibold hover:bg-amber-600 disabled:bg-gray-300 flex items-center justify-center gap-2"
-                >
-                  {loadingGaps ? (
-                    <Loader2 className="animate-spin w-5 h-5" />
-                  ) : (
-                    <>
-                      <Search className="w-5 h-5" />
-                      {t('buttons.findGaps')}
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={computeCompatibilityScore}
-                  disabled={loadingScore || !jobDescription || !resumeText}
-                  className="bg-purple-500 text-white py-3 rounded-lg font-semibold hover:bg-purple-600 disabled:bg-gray-300 flex items-center justify-center gap-2"
-                >
-                  {loadingScore ? (
-                    <Loader2 className="animate-spin w-5 h-5" />
-                  ) : (
-                    <>
-                      <Gauge className="w-5 h-5" />
-                      {t('buttons.compatibilityScore')}
-                    </>
-                  )}
-                </button>
-                <button
-                  onClick={() => {
-                    setIsFormatTriggered(true);
-                    setPhase('format');
-                  }}
-                  className="bg-blue-500 text-white py-3 rounded-lg font-semibold hover:bg-blue-600 flex items-center justify-center gap-2"
-                >
-                  <Sparkles className="w-5 h-5" />
-                  {t('buttons.formatExport')}
-                </button>
-              </div>
-            </div>
-
-            {/* Compatibility Score Panel */}
-            {scoreResult && (
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                  <Gauge className="w-5 h-5 text-purple-600" />
-                  {t('optimize.compatibilityTitle')}
-                </h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  {[
-                    { label: t('optimize.originalResume'), score: scoreResult.originalScore, reason: scoreResult.originalReason },
-                    { label: t('optimize.optimizedResume'), score: scoreResult.optimizedScore, reason: scoreResult.optimizedReason }
-                  ].map((item, idx) => {
-                    const color = item.score >= 80 ? 'green' : item.score >= 60 ? 'amber' : 'red';
-                    const colorClasses = {
-                      green: { bar: 'bg-green-500', text: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200' },
-                      amber: { bar: 'bg-amber-500', text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
-                      red: { bar: 'bg-red-500', text: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' }
-                    }[color];
-                    return (
-                      <div key={idx} className={`p-4 rounded-lg border ${colorClasses.bg} ${colorClasses.border}`}>
-                        <div className="flex justify-between items-baseline mb-2">
-                          <span className="text-sm font-semibold text-gray-700">{item.label}</span>
-                          <span className={`text-2xl font-bold ${colorClasses.text}`}>{item.score}<span className="text-sm font-medium">/100</span></span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2 mb-2 overflow-hidden">
-                          <div className={`h-2 rounded-full ${colorClasses.bar}`} style={{ width: `${item.score}%` }} />
-                        </div>
-                        {item.reason && <p className="text-xs text-gray-600 leading-relaxed">{item.reason}</p>}
-                      </div>
-                    );
-                  })}
-                </div>
-                {scoreResult.optimizedScore < 80 && (
-                  <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
-                    <Lightbulb className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                    <p className="text-sm text-blue-800">{t('optimize.lowScoreRecommendation')}</p>
+                  <button
+                    onClick={() => setActionRailExpanded(v => !v)}
+                    aria-label={actionRailExpanded ? 'Collapse actions' : 'Expand actions'}
+                    className="w-full flex items-center justify-between px-3 py-2 text-gray-500 hover:bg-gray-50 border-b border-gray-100 flex-shrink-0"
+                  >
+                    {railOpen && <span className="text-xs font-semibold uppercase tracking-wide">{t('optimize.actions', { defaultValue: 'Actions' })}</span>}
+                    {actionRailExpanded ? <ChevronLeft className="w-4 h-4 ml-auto" /> : <ChevronRight className="w-4 h-4 mx-auto" />}
+                  </button>
+                  <div className="p-2 flex-shrink-0 flex flex-col gap-2">
+                    {tabs.map((tab) => {
+                      const { key, loading, disabled, color, Icon, label } = tab;
+                      const isActive = actionRailExpanded && activeRailTab === key;
+                      return (
+                        <button
+                          key={key}
+                          onClick={() => handleTabClick(tab)}
+                          disabled={disabled}
+                          aria-label={label}
+                          className={`${colorMap[color]} text-white rounded-lg font-semibold disabled:bg-gray-300 flex items-center ${railOpen ? 'justify-start gap-2 px-3 h-10 w-full' : 'justify-center w-10 h-10 mx-auto'} ${isActive ? 'ring-2 ring-offset-1 ring-gray-400' : ''}`}
+                        >
+                          {loading ? <Loader2 className="animate-spin w-5 h-5 flex-shrink-0" /> : <Icon className="w-5 h-5 flex-shrink-0" />}
+                          {railOpen && <span className="text-sm whitespace-nowrap overflow-hidden text-ellipsis">{label}</span>}
+                        </button>
+                      );
+                    })}
                   </div>
-                )}
-              </div>
-            )}
-
-            {/* Suggestions & Gaps */}
-            {(suggestions.length > 0 || gaps.length > 0) && (
-              <div className="grid md:grid-cols-2 gap-6">
-                {/* Suggestions Panel */}
-                {suggestions.length > 0 && (
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      {t('optimize.suggestions')}
-                    </h3>
-                    <div className="space-y-3">
-                      {suggestions.map((suggestion, i) => (
-                        <div key={i} className="p-4 bg-green-50 border border-green-200 rounded-lg">
-                          <p className="text-sm text-gray-700 leading-relaxed">
-                            {renderTextWithBold(suggestion)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Gap Analysis Panel */}
-                {gaps.length > 0 && (
-                  <div className="bg-white rounded-xl shadow-lg p-6">
-                    <h3 className="text-lg font-bold text-gray-800 mb-4 flex items-center gap-2">
-                      <AlertCircle className="w-5 h-5 text-amber-600" />
-                      {t('optimize.gaps')}
-                    </h3>
-                    <div className="space-y-3">
-                      {gaps.map((gap, i) => (
-                        <div key={i} className="p-4 bg-amber-50 border border-amber-200 rounded-lg">
-                          <p className="text-sm font-semibold text-gray-800 mb-1">{gap.requirement}</p>
-                          <p className="text-xs text-gray-600 mb-3">{gap.prompt}</p>
-                          {structuredResume.experience?.length > 0 && (
-                            <button 
-                              onClick={() => handleAddGap(i)} 
-                              className="text-xs bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+                  {showContent && (
+                    <div className="flex-1 overflow-y-auto p-4 border-t border-gray-100">
+                      {activeRailTab === 'score' && scoreResult && (
+                        <>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                              <Gauge className="w-4 h-4 text-purple-600" />
+                              {t('optimize.compatibilityTitle')}
+                            </h3>
+                            <button
+                              onClick={() => activeTab.run()}
+                              disabled={activeTab.disabled}
+                              className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded disabled:opacity-50 flex items-center gap-1"
                             >
-                              + Add to Resume
+                              {activeTab.loading ? <Loader2 className="animate-spin w-3 h-3" /> : null}
+                              {t('buttons.regenerate')}
                             </button>
+                          </div>
+                          <div className="space-y-3">
+                            {[
+                              { label: t('optimize.originalResume'), score: scoreResult.originalScore, reason: scoreResult.originalReason },
+                              { label: t('optimize.optimizedResume'), score: scoreResult.optimizedScore, reason: scoreResult.optimizedReason }
+                            ].map((item, idx) => {
+                              const c = item.score >= 80 ? 'green' : item.score >= 60 ? 'amber' : 'red';
+                              const cc = {
+                                green: { bar: 'bg-green-500', text: 'text-green-700', bg: 'bg-green-50', border: 'border-green-200' },
+                                amber: { bar: 'bg-amber-500', text: 'text-amber-700', bg: 'bg-amber-50', border: 'border-amber-200' },
+                                red: { bar: 'bg-red-500', text: 'text-red-700', bg: 'bg-red-50', border: 'border-red-200' }
+                              }[c];
+                              return (
+                                <div key={idx} className={`p-3 rounded-lg border ${cc.bg} ${cc.border}`}>
+                                  <div className="flex justify-between items-baseline mb-1.5">
+                                    <span className="text-xs font-semibold text-gray-700">{item.label}</span>
+                                    <span className={`text-xl font-bold ${cc.text}`}>{item.score}<span className="text-xs font-medium">/100</span></span>
+                                  </div>
+                                  <div className="w-full bg-gray-200 rounded-full h-1.5 mb-1.5 overflow-hidden">
+                                    <div className={`h-1.5 rounded-full ${cc.bar}`} style={{ width: `${item.score}%` }} />
+                                  </div>
+                                  {item.reason && <p className="text-xs text-gray-600 leading-relaxed">{item.reason}</p>}
+                                </div>
+                              );
+                            })}
+                          </div>
+                          {scoreResult.optimizedScore < 80 && (
+                            <div className="mt-3 p-2.5 bg-blue-50 border border-blue-200 rounded-lg flex items-start gap-2">
+                              <Lightbulb className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                              <p className="text-xs text-blue-800">{t('optimize.lowScoreRecommendation')}</p>
+                            </div>
                           )}
-                        </div>
-                      ))}
+                        </>
+                      )}
+                      {activeRailTab === 'suggestions' && suggestions.length > 0 && (
+                        <>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                              <CheckCircle className="w-4 h-4 text-green-600" />
+                              {t('optimize.suggestions')}
+                            </h3>
+                            <button
+                              onClick={() => activeTab.run()}
+                              disabled={activeTab.disabled}
+                              className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded disabled:opacity-50 flex items-center gap-1"
+                            >
+                              {activeTab.loading ? <Loader2 className="animate-spin w-3 h-3" /> : null}
+                              {t('buttons.regenerate')}
+                            </button>
+                          </div>
+                          <div className="space-y-2">
+                            {suggestions.map((suggestion, i) => (
+                              <div key={i} className="p-3 bg-green-50 border border-green-200 rounded-lg">
+                                <p className="text-xs text-gray-700 leading-relaxed">
+                                  {renderTextWithBold(suggestion)}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
+                      {activeRailTab === 'gaps' && gaps.length > 0 && (
+                        <>
+                          <div className="flex items-center justify-between mb-3">
+                            <h3 className="text-sm font-bold text-gray-800 flex items-center gap-2">
+                              <AlertCircle className="w-4 h-4 text-amber-600" />
+                              {t('optimize.gaps')}
+                            </h3>
+                            <button
+                              onClick={() => activeTab.run()}
+                              disabled={activeTab.disabled}
+                              className="text-xs px-2 py-1 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded disabled:opacity-50 flex items-center gap-1"
+                            >
+                              {activeTab.loading ? <Loader2 className="animate-spin w-3 h-3" /> : null}
+                              {t('buttons.regenerate')}
+                            </button>
+                          </div>
+                          <div className="space-y-2">
+                            {gaps.map((gap, i) => (
+                              <div key={i} className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+                                <p className="text-xs font-semibold text-gray-800 mb-1">{gap.requirement}</p>
+                                <p className="text-xs text-gray-600 mb-2">{gap.prompt}</p>
+                                {structuredResume.experience?.length > 0 && (
+                                  <button
+                                    onClick={() => handleAddGap(i)}
+                                    className="text-xs bg-blue-500 text-white px-3 py-1.5 rounded-lg hover:bg-blue-600 transition-colors"
+                                  >
+                                    + Add to Resume
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Resume Preview */}
             <div className="bg-white rounded-xl shadow-lg p-6">
