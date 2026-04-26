@@ -249,6 +249,7 @@
   },
   "landing": {
     "signIn": "Iniciar Sesión",
+    "ctaGoToApp": "Ir a mi Currículum",
     "hero": {
       "headline": "Adapta tu currículum a cualquier trabajo en minutos, usando solo habilidades que realmente tienes.",
       "subtext": "Las herramientas de IA inventan cosas. Esta solo usa experiencia que realmente has vivido.",

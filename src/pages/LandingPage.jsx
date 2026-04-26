@@ -72,6 +72,10 @@ export default function LandingPage() {
     setJustLoggedIn(true);
   };
 
+  const isPaid = user?.paymentStatus === 'premium_10' || user?.paymentStatus === 'premium_20';
+  const heroCtaLabel = isPaid ? t('landing.ctaGoToApp') : t('landing.hero.cta');
+  const bottomCtaLabel = isPaid ? t('landing.ctaGoToApp') : t('landing.cta.button');
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-blue-50">
       {/* Header */}
@@ -128,7 +132,7 @@ export default function LandingPage() {
             onClick={handleCTAClick}
             className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            {t('landing.hero.cta')}
+            {heroCtaLabel}
           </button>
         </div>
 
@@ -253,7 +257,7 @@ export default function LandingPage() {
             onClick={handleCTAClick}
             className="px-10 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white text-lg font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
           >
-            {t('landing.cta.button')}
+            {bottomCtaLabel}
           </button>
         </div>
 

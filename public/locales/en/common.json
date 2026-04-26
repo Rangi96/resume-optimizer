@@ -249,6 +249,7 @@
   },
   "landing": {
     "signIn": "Log In",
+    "ctaGoToApp": "Go to my Resume",
     "hero": {
       "headline": "Tailor your resume to any job in minutes, using only skills you actually have.",
       "subtext": "AI tools make things up. This one only uses experience you have actually lived.",
