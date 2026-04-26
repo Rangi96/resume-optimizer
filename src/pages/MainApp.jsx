@@ -180,6 +180,14 @@ const ClassicTemplate = ({ data, style, t }) => (
         ))}
       </div>
     )}
+    {data.customSections?.filter(s => s.title || s.bullets?.some(Boolean)).map((section, i) => (
+      <div key={i} style={{ marginTop: '14px' }}>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{section.title}</h2>
+        <ul style={{ margin: '6px 0', paddingLeft: '18px', fontSize: '0.88em', listStyleType: 'disc' }}>
+          {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '3px' }}>{b}</li>)}
+        </ul>
+      </div>
+    ))}
   </div>
 );
 
@@ -257,6 +265,16 @@ const ModernTemplate = ({ data, style, t }) => (
         </div>
       </div>
     )}
+    {data.customSections?.filter(s => s.title || s.bullets?.some(Boolean)).map((section, i) => (
+      <div key={i} style={{ marginTop: '18px' }}>
+        <h2 style={{ fontSize: '1.1em', fontWeight: '600', color: style.primary, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+          <span style={{ width: '24px', height: '2px', background: style.accent }}></span>{section.title}
+        </h2>
+        <ul style={{ margin: '6px 0', paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc' }}>
+          {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
+        </ul>
+      </div>
+    ))}
   </div>
 );
 
@@ -314,6 +332,14 @@ const ATSTemplate = ({ data, style, t }) => (
         ))}
       </div>
     )}
+    {data.customSections?.filter(s => s.title || s.bullets?.some(Boolean)).map((section, i) => (
+      <div key={i} style={{ marginTop: '14px' }}>
+        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>{section.title}</h2>
+        <ul style={{ margin: '6px 0', paddingLeft: '20px', fontSize: '0.88em', listStyleType: 'disc' }}>
+          {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '3px' }}>{b}</li>)}
+        </ul>
+      </div>
+    ))}
   </div>
 );
 
@@ -351,6 +377,14 @@ const ExecutiveTemplate = ({ data, style, t }) => (
             ))}
           </div>
         )}
+        {data.customSections?.filter(s => s.title || s.bullets?.some(Boolean)).map((section, i) => (
+          <div key={i} style={{ marginTop: '18px' }}>
+            <h2 style={{ fontSize: '1.2em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '6px', marginBottom: '14px' }}>{section.title}</h2>
+            <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc' }}>
+              {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
+            </ul>
+          </div>
+        ))}
       </div>
       <div>
         {data.education?.length > 0 && (
@@ -469,6 +503,16 @@ const CreativeTemplate = ({ data, style, t }) => (
         </div>
       )}
     </div>
+    {data.customSections?.filter(s => s.title || s.bullets?.some(Boolean)).map((section, i) => (
+      <div key={i} style={{ marginTop: '20px', padding: '14px', background: '#f8f9fa', borderRadius: '10px', borderLeft: `4px solid ${style.accent}` }}>
+        <h2 style={{ fontSize: '1.1em', fontWeight: '700', color: style.primary, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ fontSize: '1.2em' }}>✨</span> {section.title}
+        </h2>
+        <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc' }}>
+          {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
+        </ul>
+      </div>
+    ))}
   </div>
 );
 
@@ -494,6 +538,7 @@ export default function MainApp() {
     education: [],
     certifications: [],
     skills: [],
+    customSections: [],
     references: ''
   });
   const [suggestions, setSuggestions] = useState([]);
@@ -704,7 +749,16 @@ export default function MainApp() {
       structured.skills.forEach(sg => text += `${sg.category}: ${sg.items.join(', ')}\n`);
       text += '\n';
     }
-    
+
+    if (structured.customSections && structured.customSections.length > 0) {
+      structured.customSections.forEach(section => {
+        if (!section.title && !(section.bullets && section.bullets.some(Boolean))) return;
+        text += `${(section.title || '').toUpperCase()}\n\n`;
+        (section.bullets || []).forEach(b => { if (b) text += `• ${b}\n`; });
+        text += '\n';
+      });
+    }
+
     if (structured.references) {
       text += `REFERENCES\n${structured.references}\n`;
     }
@@ -909,7 +963,8 @@ export default function MainApp() {
     else if (section.startsWith('education-')) updated.education[parseInt(section.split('-')[1])] = editData;
     else if (section.startsWith('skills-')) updated.skills[parseInt(section.split('-')[1])] = editData;
     else if (section.startsWith('certification-')) updated.certifications[parseInt(section.split('-')[1])] = editData;
-    
+    else if (section.startsWith('customSection-')) updated.customSections[parseInt(section.split('-')[1])] = editData;
+
     setStructuredResume(updated);
     setOptimizedContent(convertStructuredToText(updated));
     setEditingSection(null);
@@ -922,6 +977,7 @@ export default function MainApp() {
     else if (section === 'education') updated.education.splice(index, 1);
     else if (section === 'certifications') updated.certifications.splice(index, 1);
     else if (section === 'skills') updated.skills.splice(index, 1);
+    else if (section === 'customSections') updated.customSections.splice(index, 1);
     setStructuredResume(updated);
     setOptimizedContent(convertStructuredToText(updated));
   };//FALTABA
@@ -932,6 +988,7 @@ export default function MainApp() {
     else if (section === 'education') updated.education.push({degree:'',institution:'',location:'',date:'',details:[]});
     else if (section === 'certifications') updated.certifications.push({name:'',issuer:'',date:''});
     else if (section === 'skills') updated.skills.push({category:'',items:[]});
+    else if (section === 'customSections') updated.customSections = [...(updated.customSections || []), {title:'',bullets:['']}];
     setStructuredResume(updated);
   };//FALTABA
 
@@ -1138,6 +1195,7 @@ export default function MainApp() {
                       education: [],
                       certifications: [],
                       skills: [],
+                      customSections: [],
                       references: ''
                     });
                     setSuggestions([]);
@@ -1572,13 +1630,31 @@ export default function MainApp() {
                       <h3 className="text-xl font-bold mb-4">{t('optimize.sections.education')}</h3>
                       {structuredResume.education.map((edu,idx)=>(
                         <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
-                          <div className="flex justify-between">
-                            <div>
-                              <h4 className="text-lg font-semibold">{edu.degree} | {edu.institution}</h4>
-                              <p className="text-sm text-gray-600">{edu.location} | {edu.date}</p>
+                          {editingSection === `education-${idx}` ? (
+                            <div className="space-y-3">
+                              <div className="grid grid-cols-2 gap-3">
+                                <input type="text" value={editData.degree} onChange={(e)=>setEditData({...editData,degree:e.target.value})} placeholder={t('optimize.labels.degree')} className="p-2 border rounded font-semibold" />
+                                <input type="text" value={editData.institution} onChange={(e)=>setEditData({...editData,institution:e.target.value})} placeholder={t('optimize.labels.institution')} className="p-2 border rounded" />
+                                <input type="text" value={editData.location} onChange={(e)=>setEditData({...editData,location:e.target.value})} placeholder={t('optimize.labels.location')} className="p-2 border rounded text-sm" />
+                                <input type="text" value={editData.date} onChange={(e)=>setEditData({...editData,date:e.target.value})} placeholder={t('optimize.labels.date')} className="p-2 border rounded text-sm" />
+                              </div>
+                              <div className="flex gap-2">
+                                <button onClick={()=>saveEdit(`education-${idx}`)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">{t('buttons.save')}</button>
+                                <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">{t('buttons.cancel')}</button>
+                              </div>
                             </div>
-                            <button onClick={()=>deleteItem('education',idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">{t('buttons.delete')}</button>
-                          </div>
+                          ) : (
+                            <div className="flex justify-between">
+                              <div>
+                                <h4 className="text-lg font-semibold">{edu.degree} | {edu.institution}</h4>
+                                <p className="text-sm text-gray-600">{edu.location} | {edu.date}</p>
+                              </div>
+                              <div className="flex gap-2">
+                                <button onClick={()=>startEdit(`education-${idx}`,edu)} className="px-3 py-1 border rounded text-sm">{t('buttons.edit')}</button>
+                                <button onClick={()=>deleteItem('education',idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">{t('buttons.delete')}</button>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                       <button onClick={()=>addNewItem('education')} className="px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addEducation')}</button>
@@ -1591,12 +1667,31 @@ export default function MainApp() {
                       <h3 className="text-xl font-bold mb-4">{t('optimize.sections.certifications')}</h3>
                       <div className="bg-white rounded-lg shadow-sm p-6">
                         {structuredResume.certifications.map((cert,idx)=>(
-                          <div key={idx} className="pb-3 mb-3 border-b last:border-0 flex justify-between">
-                            <div>
-                              <p className="font-semibold">{cert.name}</p>
-                              <p className="text-sm text-gray-600">{cert.issuer} | {cert.date}</p>
-                            </div>
-                            <button onClick={()=>deleteItem('certifications',idx)} className="px-2 py-1 border border-red-300 text-red-600 rounded text-xs">{t('buttons.delete')}</button>
+                          <div key={idx} className="pb-3 mb-3 border-b last:border-0">
+                            {editingSection === `certification-${idx}` ? (
+                              <div className="space-y-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                  <input type="text" value={editData.name} onChange={(e)=>setEditData({...editData,name:e.target.value})} placeholder={t('optimize.labels.certName')} className="p-2 border rounded font-semibold" />
+                                  <input type="text" value={editData.issuer} onChange={(e)=>setEditData({...editData,issuer:e.target.value})} placeholder={t('optimize.labels.issuer')} className="p-2 border rounded" />
+                                  <input type="text" value={editData.date} onChange={(e)=>setEditData({...editData,date:e.target.value})} placeholder={t('optimize.labels.date')} className="p-2 border rounded text-sm" />
+                                </div>
+                                <div className="flex gap-2">
+                                  <button onClick={()=>saveEdit(`certification-${idx}`)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">{t('buttons.save')}</button>
+                                  <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">{t('buttons.cancel')}</button>
+                                </div>
+                              </div>
+                            ) : (
+                              <div className="flex justify-between">
+                                <div>
+                                  <p className="font-semibold">{cert.name}</p>
+                                  <p className="text-sm text-gray-600">{cert.issuer} | {cert.date}</p>
+                                </div>
+                                <div className="flex gap-2">
+                                  <button onClick={()=>startEdit(`certification-${idx}`,cert)} className="px-2 py-1 border rounded text-xs">{t('buttons.edit')}</button>
+                                  <button onClick={()=>deleteItem('certifications',idx)} className="px-2 py-1 border border-red-300 text-red-600 rounded text-xs">{t('buttons.delete')}</button>
+                                </div>
+                              </div>
+                            )}
                           </div>
                         ))}
                       </div>
@@ -1674,6 +1769,80 @@ export default function MainApp() {
                       <button onClick={() => addNewItem('skills')} className="px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addSkillCategory')}</button>
                     </div>
                   )}
+
+                  {/* Custom Sections */}
+                  <div>
+                    <h3 className="text-xl font-bold mb-4">{t('optimize.sections.customSections')}</h3>
+                    {(structuredResume.customSections || []).map((section, idx) => (
+                      <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
+                        {editingSection === `customSection-${idx}` ? (
+                          <div className="space-y-3">
+                            <input
+                              type="text"
+                              value={editData.title}
+                              onChange={(e) => setEditData({...editData, title: e.target.value})}
+                              placeholder={t('optimize.labels.sectionTitle')}
+                              className="w-full p-2 border rounded font-semibold"
+                            />
+                            <div className="space-y-2">
+                              <label className="text-sm font-medium">{t('optimize.labels.bullets')}</label>
+                              {editData.bullets.map((bullet, bIdx) => (
+                                <div key={bIdx} className="flex gap-2">
+                                  <input
+                                    type="text"
+                                    value={bullet}
+                                    onChange={(e) => {
+                                      const nb = [...editData.bullets];
+                                      nb[bIdx] = e.target.value;
+                                      setEditData({...editData, bullets: nb});
+                                    }}
+                                    className="flex-1 p-2 border rounded text-sm"
+                                  />
+                                  <button
+                                    onClick={() => {
+                                      const nb = editData.bullets.filter((_, i) => i !== bIdx);
+                                      setEditData({...editData, bullets: nb});
+                                    }}
+                                    className="px-3 py-2 bg-red-100 text-red-600 rounded text-sm"
+                                  >
+                                    ✕
+                                  </button>
+                                </div>
+                              ))}
+                              <button
+                                onClick={() => setEditData({...editData, bullets: [...editData.bullets, '']})}
+                                className="px-3 py-1 bg-gray-100 rounded text-sm"
+                              >
+                                {t('buttons.addBullet')}
+                              </button>
+                            </div>
+                            <div className="flex gap-2">
+                              <button onClick={() => saveEdit(`customSection-${idx}`)} className="px-4 py-2 bg-blue-500 text-white rounded text-sm">{t('buttons.save')}</button>
+                              <button onClick={cancelEdit} className="px-4 py-2 bg-gray-200 rounded text-sm">{t('buttons.cancel')}</button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="flex justify-between">
+                              <h4 className="text-lg font-semibold">{section.title || t('optimize.labels.untitledSection')}</h4>
+                              <div className="flex gap-2">
+                                <button onClick={() => startEdit(`customSection-${idx}`, section)} className="px-3 py-1 border rounded text-sm">{t('buttons.edit')}</button>
+                                <button onClick={() => deleteItem('customSections', idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">{t('buttons.delete')}</button>
+                              </div>
+                            </div>
+                            {section.bullets && section.bullets.length > 0 && (
+                              <div className="mt-3">
+                                {section.bullets.map((bullet, bIdx) => (
+                                  bullet ? <p key={bIdx} className="text-sm text-gray-700">• {bullet}</p> : null
+                                ))}
+                              </div>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    ))}
+                    <button onClick={() => addNewItem('customSections')} className="px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addCustomSection')}</button>
+                  </div>
                 </div>
               </div>
             </div>

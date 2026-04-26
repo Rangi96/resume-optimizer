@@ -29,6 +29,7 @@
     "addExperience": "+ Añadir Experiencia",
     "addEducation": "+ Añadir Educación",
     "addCertification": "+ Añadir Certificación",
+    "addCustomSection": "+ Añadir Sección Personalizada",
     "addSkillCategory": "+ Añadir Categoría de Habilidad",
     "addSkill": "+ Añadir Habilidad",
     "regenerate": "🔄 Regenerar",
@@ -65,7 +66,8 @@
       "experience": "Experiencia",
       "education": "Educación",
       "certifications": "Certificaciones",
-      "skills": "Habilidades"
+      "skills": "Habilidades",
+      "customSections": "Secciones Personalizadas"
     },
     "labels": {
       "jobTitle": "Título del Trabajo",
@@ -76,7 +78,14 @@
       "bullets": "Viñetas:",
       "category": "Categoría (ej., Lenguajes de Programación)",
       "skillsLabel": "Habilidades:",
-      "jobDescription": "Descripción del trabajo"
+      "jobDescription": "Descripción del trabajo",
+      "degree": "Título",
+      "institution": "Institución",
+      "date": "Fecha",
+      "certName": "Nombre de Certificación",
+      "issuer": "Emisor",
+      "sectionTitle": "Título de Sección (ej., Proyectos, Premios)",
+      "untitledSection": "Sección Sin Título"
     }
   },
   "format": {

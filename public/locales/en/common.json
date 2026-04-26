@@ -29,6 +29,7 @@
     "addExperience": "+ Add Experience",
     "addEducation": "+ Add Education",
     "addCertification": "+ Add Certification",
+    "addCustomSection": "+ Add Custom Section",
     "addSkillCategory": "+ Add Skill Category",
     "addSkill": "+ Add Skill",
     "regenerate": "🔄 Regenerate",
@@ -65,7 +66,8 @@
       "experience": "Experience",
       "education": "Education",
       "certifications": "Certifications",
-      "skills": "Skills"
+      "skills": "Skills",
+      "customSections": "Custom Sections"
     },
     "labels": {
       "jobTitle": "Job Title",
@@ -76,7 +78,14 @@
       "bullets": "Bullets:",
       "category": "Category (e.g., Programming Languages)",
       "skillsLabel": "Skills:",
-      "jobDescription": "Job description"
+      "jobDescription": "Job description",
+      "degree": "Degree",
+      "institution": "Institution",
+      "date": "Date",
+      "certName": "Certification Name",
+      "issuer": "Issuer",
+      "sectionTitle": "Section Title (e.g., Projects, Awards)",
+      "untitledSection": "Untitled Section"
     }
   },
   "format": {
