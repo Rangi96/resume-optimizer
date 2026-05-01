@@ -98,10 +98,88 @@ export default async function handler(req, res) {
 
     // Language instruction for AI response
     const languageInstructions = {
-      'en': '\n\nIMPORTANT: Respond ONLY in English. All output must be in English.',
-      'es': '\n\nIMPORTANTE: Responde SOLO en español. Toda la salida debe estar en español.'
+      'en': 'Respond ONLY in English. All output must be in English.',
+      'es': 'Responde SOLO en español. Toda la salida debe estar en español.'
     };
     const languageInstruction = languageInstructions[language] || languageInstructions['en'];
+
+    const systemPrompt = `You are an expert resume optimizer who helps candidates present their real experience in the strongest possible light for a specific job.
+
+YOUR TASK (do this in order):
+1. First, mentally extract the 8–12 most important keywords, skills, and competencies from the job description.
+2. Then rewrite the candidate's resume so those keywords and competencies surface naturally — but ONLY using facts grounded in the original resume.
+
+CRITICAL RULES — NEVER VIOLATE:
+- DO NOT invent job titles, companies, employers, dates, or accomplishments that are not in the original resume.
+- DO NOT fabricate metrics, percentages, dollar amounts, team sizes, or any quantitative result. If a number is not in the original, do not invent one.
+- Keep all job titles, company names, employment dates, degree names, and graduation dates EXACTLY as written in the original.
+- Maintain the candidate's authentic voice and only describe work they actually did.
+
+WHAT YOU CAN DO:
+- Rewrite weak or vague bullets into strong impact statements using STAR-style structure (action verb → what was done → outcome/scope), as long as every claim is supported by the original text.
+- Merge redundant bullets, or split a bulky bullet into clearer separate ones.
+- Reorder bullets within each role to put the most job-relevant work first.
+- Use action verbs and terminology from the job description where they accurately describe what the candidate already did.
+- Surface skills as a separate Skills section when they are clearly demonstrated by the existing bullets (e.g., a bullet about "migrated infrastructure to AWS" supports listing "AWS" as a skill, even if it wasn't in a Skills list before).
+- Tighten the professional summary to a 2–3 sentence pitch that aligns the candidate's actual background with this specific role.
+
+EXAMPLE — bullet rewrite:
+Original: "Worked on the customer database and helped with reporting."
+Job description emphasizes: SQL, data pipelines, stakeholder reporting.
+Rewritten: "Maintained customer database in SQL and built recurring reports to support stakeholder decision-making."
+(No fabricated metrics, no new technologies — only re-framed using JD vocabulary that the original work supports.)
+
+OUTPUT FORMAT:
+Return ONLY a valid JSON object — no markdown fences, no commentary, no preamble. Use this exact structure:
+{
+  "contact": {
+    "name": "Full Name",
+    "email": "email@example.com",
+    "phone": "phone number",
+    "linkedin": "LinkedIn URL (omit field if not in original)",
+    "address": "address (omit field if not in original)"
+  },
+  "professionalSummary": "2-3 sentence summary tailored to this role",
+  "experience": [
+    {
+      "title": "Job Title (verbatim from original)",
+      "company": "Company Name (verbatim)",
+      "location": "City, State",
+      "startDate": "MMM YYYY",
+      "endDate": "MMM YYYY or Present",
+      "bullets": ["Optimized achievement 1", "Optimized achievement 2"]
+    }
+  ],
+  "education": [
+    {
+      "degree": "Degree Name (verbatim)",
+      "institution": "Institution Name (verbatim)",
+      "location": "City, State (optional)",
+      "date": "Graduation Date (verbatim)"
+    }
+  ],
+  "certifications": [
+    {
+      "name": "Certification Name",
+      "issuer": "Issuing Organization",
+      "date": "Date"
+    }
+  ],
+  "skills": [
+    {
+      "category": "Category Name (e.g., Languages, Tools, Frameworks, Domain)",
+      "items": ["Skill 1", "Skill 2"]
+    }
+  ]
+}`;
+
+    const userMessage = `${languageInstruction}
+
+Resume (THIS IS THE ONLY SOURCE OF TRUTH — preserve all actual experiences):
+${cleanResume}
+
+Job Description (analyze for keywords and requirements):
+${cleanJobDesc}`;
 
     // Timeout for API call
     const controller = new AbortController();
@@ -114,80 +192,20 @@ export default async function handler(req, res) {
         "x-api-key": process.env.ANTHROPIC_API_KEY,
         "anthropic-version": "2023-06-01"
       },
+      signal: controller.signal,
       body: JSON.stringify({
-        model: "claude-sonnet-4-20250514",
-        max_tokens: 8000,
+        model: "claude-sonnet-4-6",
+        max_tokens: 16000,
+        system: [
+          {
+            type: "text",
+            text: systemPrompt,
+            cache_control: { type: "ephemeral" }
+          }
+        ],
         messages: [{
           role: "user",
-          content: `You are an expert resume optimizer. Your task is to analyze the job description and strategically reword the candidate's EXISTING resume to make them appear as a better fit for this specific role.${languageInstruction}
-
-CRITICAL RULES - NEVER VIOLATE:
-1. DO NOT invent, fabricate, or add ANY job titles, companies, experiences, or accomplishments that aren't in the original resume
-2. DO NOT add skills or technologies the candidate hasn't mentioned
-3. ONLY reword and rephrase EXISTING bullet points to:
-   - Emphasize skills and keywords from the job description
-   - Highlight relevant accomplishments that match job requirements
-   - Use terminology and language from the job posting
-   - Reorder bullet points to put most relevant experience first
-4. Keep ALL job titles, company names, dates, and education EXACTLY as written in the original
-5. Maintain the candidate's authentic voice and real experience
-
-YOUR OPTIMIZATION STRATEGY:
-- Analyze the job description to identify key requirements, skills, and keywords
-- For each bullet point in the resume, reword it to emphasize aspects that align with the job requirements
-- Use action verbs and terminology from the job description where appropriate
-- Quantify achievements when possible (but only with numbers already in the resume)
-- Reorder bullets within each job to showcase most relevant experience first
-- Keep the same overall structure and all sections
-
-Resume Information:(THIS IS THE ONLY SOURCE OF TRUTH - preserve all actual experiences):
-${resumeInput}
-
-Job Description: (analyze for keywords and requirements)
-${jobDescription}
-
-Return ONLY a valid JSON object (no markdown, no explanation) with this exact structure:
-{
-  "contact": {
-    "name": "Full Name",
-    "email": "email@example.com",
-    "phone": "phone number",
-    "linkedin": "LinkedIn URL (optional)",
-    "address": "address (optional)"
-  },
-  "professionalSummary": "2-3 sentence summary optimized for this role",
-  "experience": [
-    {
-      "title": "Job Title",
-      "company": "Company Name",
-      "location": "City, State",
-      "startDate": "MMM YYYY",
-      "endDate": "MMM YYYY or Present",
-      "bullets": ["Optimized achievement 1", "Optimized achievement 2", "..."]
-    }
-  ],
-  "education": [
-    {
-      "degree": "Degree Name",
-      "institution": "Institution Name",
-      "location": "City, State (optional)",
-      "date": "Graduation Date"
-    }
-  ],
-  "certifications": [
-    {
-      "name": "Certification Name",
-      "issuer": "Issuing Organization",
-      "date": "Date"
-    }
-  ],
-  "skills": [
-    {
-      "category": "Category Name",
-      "items": ["Skill 1", "Skill 2", "..."]
-    }
-  ]
-}`
+          content: userMessage
         }]
       })
     });
