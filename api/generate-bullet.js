@@ -91,6 +91,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 300,
+        thinking: { type: "disabled" },
         messages: [{
           role: "user",
           content: `Generate ONE professional resume bullet point for the role "${cleanRole}" at "${cleanCompany}" that demonstrates this skill/requirement: "${cleanRequirement}".

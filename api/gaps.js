@@ -106,6 +106,7 @@ export default async function handler(req, res) {
       body: JSON.stringify({
         model: "claude-sonnet-4-6",
         max_tokens: 2000,
+        thinking: { type: "disabled" },
         messages: [{
           role: "user",
           content: `${languageInstruction}
