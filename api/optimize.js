@@ -133,6 +133,7 @@ CRITICAL RULES - NEVER VIOLATE:
 4. Keep ALL job titles, company names, dates, and education EXACTLY as written in the original
 5. Maintain the candidate's authentic voice and real experience
 6. NEVER use the em dash character "—" anywhere in your output. Use a comma, colon, period, or the word "and" instead
+7. NEVER decrease the candidate's stated years of experience. If the original resume says "8+ years", the output must say "8+ years" or higher, NEVER a smaller number. Stating MORE years is only allowed when the resume's actual work history dates support it; stating FEWER is never allowed under any circumstances
 
 YOUR OPTIMIZATION STRATEGY:
 - Analyze the job description to identify key requirements, skills, and keywords
