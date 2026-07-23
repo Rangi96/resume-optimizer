@@ -139,7 +139,9 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
   "optimizedScore": <integer 0-100>,
   "originalReason": "Short one-sentence justification for the original score",
   "optimizedReason": "Short one-sentence justification for the optimized score"
-}`
+}
+
+NEVER use the em dash character "—" anywhere in your output. Use a comma, colon, or period instead.`
         }]
       }),
       signal: controller.signal

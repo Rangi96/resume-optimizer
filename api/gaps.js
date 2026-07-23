@@ -129,7 +129,9 @@ Return ONLY valid JSON in this exact format (no markdown, no explanation):
   ]
 }
 
-Identify 3-6 gaps maximum. Focus on the most important missing qualifications.`
+Identify 3-6 gaps maximum. Focus on the most important missing qualifications.
+
+NEVER use the em dash character "—" anywhere in your output. Use a comma, colon, or period instead.`
         }]
       }),
       signal: controller.signal

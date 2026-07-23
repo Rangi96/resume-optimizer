@@ -101,6 +101,7 @@ The bullet point should:
 - Be specific and quantifiable if possible
 - Sound authentic to someone who actually worked in this role
 - Be 1-2 sentences maximum
+- NEVER contain the em dash character "—". Use a comma, colon, or period instead
 
 ${cleanContext ? `Context about the candidate's background:\n${cleanContext}\n\n` : ''}
 

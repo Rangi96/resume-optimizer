@@ -117,6 +117,8 @@ Focus on high-impact improvements like:
 
 Return only the numbered list, with each item on its own line.
 
+NEVER use the em dash character "—" anywhere in your output. Use a comma, colon, period, or a hyphen "-" instead.
+
 Resume:
 ${cleanResume}`
         }]

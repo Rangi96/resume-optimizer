@@ -132,6 +132,7 @@ CRITICAL RULES - NEVER VIOLATE:
    - Reorder bullet points to put most relevant experience first
 4. Keep ALL job titles, company names, dates, and education EXACTLY as written in the original
 5. Maintain the candidate's authentic voice and real experience
+6. NEVER use the em dash character "—" anywhere in your output. Use a comma, colon, period, or the word "and" instead
 
 YOUR OPTIMIZATION STRATEGY:
 - Analyze the job description to identify key requirements, skills, and keywords
