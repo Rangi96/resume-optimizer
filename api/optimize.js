@@ -122,35 +122,36 @@ export default async function handler(req, res) {
         messages: [{
           role: "user",
           content: `You are an expert resume optimizer. ${profileMode
-            ? "The candidate has provided their FULL career profile: an intentionally exhaustive record of every job, project, decision, course, and skill they have. Your task is to analyze the job description and BUILD a targeted resume by SELECTING and rewording the most relevant content from this profile."
-            : "Your task is to analyze the job description and strategically reword the candidate's EXISTING resume to make them appear as a better fit for this specific role."}${languageInstruction}
+            ? "The candidate has provided their FULL career profile: an intentionally exhaustive record of every job, project, decision, course, and skill they have. Your task is to analyze the job description and SELECT the most relevant REAL content from this profile, then reword it for this role. You may only choose and reword what already exists; you may not create anything new."
+            : "Your task is to analyze the job description and strategically reword the candidate's EXISTING resume so their REAL experience is presented in the most relevant way for this specific role."}${languageInstruction}
+
+THE CANDIDATE WILL BE INTERVIEWED ON THIS RESUME. Every line must be something they can truthfully explain and discuss in depth. A single invented claim can cost them the job and their credibility. A shorter, fully truthful resume is ALWAYS better than a longer one containing anything unverifiable.
 
 CRITICAL RULES - NEVER VIOLATE:
-1. DO NOT invent, fabricate, or add ANY job titles, companies, experiences, or accomplishments that aren't in the original resume
-2. DO NOT add skills or technologies the candidate hasn't mentioned
-3. ONLY reword and rephrase EXISTING bullet points to:
-   - Emphasize skills and keywords from the job description
-   - Highlight relevant accomplishments that match job requirements
-   - Use terminology and language from the job posting
-   - Reorder bullet points to put most relevant experience first
-4. Keep ALL job titles, company names, dates, and education EXACTLY as written in the original
-5. Maintain the candidate's authentic voice and real experience
-6. NEVER use the em dash character "—" anywhere in your output. Use a comma, colon, period, or the word "and" instead
-7. NEVER decrease the candidate's stated years of experience. If the original resume says "8+ years", the output must say "8+ years" or higher, NEVER a smaller number. Stating MORE years is only allowed when the resume's actual work history dates support it; stating FEWER is never allowed under any circumstances
+1. DO NOT invent, fabricate, or add ANY job titles, companies, experiences, projects, responsibilities, or accomplishments that aren't in the source
+2. DO NOT add skills, technologies, tools, methodologies, or certifications the candidate hasn't explicitly mentioned
+3. Job description terminology may ONLY be used to rename something the candidate ALREADY described (e.g. their "made monthly sales reports" can become the job's "sales reporting"). NEVER copy a skill, tool, duty, or requirement from the job description into the resume just because the job asks for it. If the candidate never mentioned it, it does not appear, PERIOD
+4. DO NOT add numbers, percentages, team sizes, budgets, or any metric that is not in the source
+5. ONLY reword, rephrase, reorder, and select from EXISTING content
+6. Keep ALL job titles, company names, dates, and education EXACTLY as written in the source
+7. Maintain the candidate's authentic voice and real experience
+8. NEVER use the em dash character "—" anywhere in your output. Use a comma, colon, period, or the word "and" instead
+9. NEVER decrease the candidate's stated years of experience. If the source says "8+ years", the output must say "8+ years" or higher, NEVER a smaller number. Stating MORE years is only allowed when the source's actual work history dates support it; stating FEWER is never allowed under any circumstances
 
 YOUR OPTIMIZATION STRATEGY:
 ${profileMode ? `- The profile is exhaustive ON PURPOSE. Do NOT include everything: select only the content most relevant to this job
-- Keep the employment history complete (every job with its title, company, and dates), but choose which achievements and details to feature for each role: typically the 3-5 most relevant per role
-- Include only the skills, certifications, and courses that strengthen THIS specific application; leave the rest out
-- Reword the selected content to emphasize keywords and requirements from the job description
-- Use action verbs and terminology from the job description where appropriate
+- Keep the employment history complete (every job with its title, company, and dates), but choose which of the candidate's REAL achievements to feature for each role: typically the 3-5 most relevant per role
+- Include only the skills, certifications, and courses FROM THE PROFILE that strengthen this specific application; leave the rest out
+- Reword the selected content so its genuine overlap with the job requirements is easy to see
 - Quantify achievements when possible (but only with numbers already in the profile)
-- Aim for a focused resume that would fit on roughly one page` : `- Analyze the job description to identify key requirements, skills, and keywords
-- For each bullet point in the resume, reword it to emphasize aspects that align with the job requirements
-- Use action verbs and terminology from the job description where appropriate
+- If the profile contains little relevant content, return a SHORT resume. NEVER pad it with generic or invented material to fill a page` : `- Analyze the job description to identify key requirements, skills, and keywords
+- For each bullet point in the resume, reword it to emphasize the aspects of the candidate's REAL work that align with the job requirements
+- Use strong action verbs; borrow the job posting's terminology only where rule 3 allows it
 - Quantify achievements when possible (but only with numbers already in the resume)
 - Reorder bullets within each job to showcase most relevant experience first
 - Keep the same overall structure and all sections`}
+
+FINAL VERIFICATION - MANDATORY: Before returning your answer, check EVERY bullet point, skill, and claim in your output against the source material. If you cannot point to where the source states it, REMOVE it or reword it so it only claims what the source supports.
 
 Resume Information:(THIS IS THE ONLY SOURCE OF TRUTH - preserve all actual experiences):
 ${resumeInput}
@@ -167,7 +168,7 @@ Return ONLY a valid JSON object (no markdown, no explanation) with this exact st
     "linkedin": "LinkedIn URL (optional)",
     "address": "address (optional)"
   },
-  "professionalSummary": "2-3 sentence summary optimized for this role",
+  "professionalSummary": "2-3 sentence summary optimized for this role, built ONLY from facts stated in the source",
   "experience": [
     {
       "title": "Job Title",
