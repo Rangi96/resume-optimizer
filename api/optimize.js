@@ -81,7 +81,8 @@ export default async function handler(req, res) {
       return res.status(429).json({ error: 'Too many requests. Please try again later.' });
     }
 
-    const { resumeInput, jobDescription, language = 'en' } = req.body;
+    const { resumeInput, jobDescription, language = 'en', sourceType = 'upload' } = req.body;
+    const profileMode = sourceType === 'profile';
 
     // Input validation
     const validationErrors = validateInputs(resumeInput, jobDescription);
@@ -120,7 +121,9 @@ export default async function handler(req, res) {
         thinking: { type: "disabled" },
         messages: [{
           role: "user",
-          content: `You are an expert resume optimizer. Your task is to analyze the job description and strategically reword the candidate's EXISTING resume to make them appear as a better fit for this specific role.${languageInstruction}
+          content: `You are an expert resume optimizer. ${profileMode
+            ? "The candidate has provided their FULL career profile: an intentionally exhaustive record of every job, project, decision, course, and skill they have. Your task is to analyze the job description and BUILD a targeted resume by SELECTING and rewording the most relevant content from this profile."
+            : "Your task is to analyze the job description and strategically reword the candidate's EXISTING resume to make them appear as a better fit for this specific role."}${languageInstruction}
 
 CRITICAL RULES - NEVER VIOLATE:
 1. DO NOT invent, fabricate, or add ANY job titles, companies, experiences, or accomplishments that aren't in the original resume
@@ -136,12 +139,18 @@ CRITICAL RULES - NEVER VIOLATE:
 7. NEVER decrease the candidate's stated years of experience. If the original resume says "8+ years", the output must say "8+ years" or higher, NEVER a smaller number. Stating MORE years is only allowed when the resume's actual work history dates support it; stating FEWER is never allowed under any circumstances
 
 YOUR OPTIMIZATION STRATEGY:
-- Analyze the job description to identify key requirements, skills, and keywords
+${profileMode ? `- The profile is exhaustive ON PURPOSE. Do NOT include everything: select only the content most relevant to this job
+- Keep the employment history complete (every job with its title, company, and dates), but choose which achievements and details to feature for each role: typically the 3-5 most relevant per role
+- Include only the skills, certifications, and courses that strengthen THIS specific application; leave the rest out
+- Reword the selected content to emphasize keywords and requirements from the job description
+- Use action verbs and terminology from the job description where appropriate
+- Quantify achievements when possible (but only with numbers already in the profile)
+- Aim for a focused resume that would fit on roughly one page` : `- Analyze the job description to identify key requirements, skills, and keywords
 - For each bullet point in the resume, reword it to emphasize aspects that align with the job requirements
 - Use action verbs and terminology from the job description where appropriate
 - Quantify achievements when possible (but only with numbers already in the resume)
 - Reorder bullets within each job to showcase most relevant experience first
-- Keep the same overall structure and all sections
+- Keep the same overall structure and all sections`}
 
 Resume Information:(THIS IS THE ONLY SOURCE OF TRUTH - preserve all actual experiences):
 ${resumeInput}

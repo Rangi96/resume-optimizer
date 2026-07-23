@@ -1,5 +1,5 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
-import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle, Gauge, ChevronLeft, ChevronRight } from 'lucide-react';
+import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle, Gauge, ChevronLeft, ChevronRight, Briefcase, Trash2, X } from 'lucide-react';
 import * as mammoth from 'mammoth';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../AuthContext';
@@ -11,6 +11,8 @@ import UserMenu from '../components/UserMenu';
 import LanguageSwitcher from '../components/LanguageSwitcher';
 import ReferralDashboard from '../components/ReferralDashboard';
 import { canUserOptimize, recordOptimization, getOptimizationStats } from '../optimizationManager';
+import storageAdapter from '../storageAdapter';
+import CareerProfileEditor, { profileToText } from '../components/CareerProfileEditor';
 
 // Helper function to render text with markdown-style bold
 const renderTextWithBold = (text) => {
@@ -118,23 +120,26 @@ const colorSchemes = [
   { id: 'purple', name: 'Royal Purple', primary: '#4c1d95', accent: '#7c3aed' }
 ];
 
-const ClassicTemplate = ({ data, style, t }) => (
-  <div style={{ fontFamily: style.fontFamily, fontSize: style.fontSize, lineHeight: style.lineHeight, color: '#000' }}>
-    <div style={{ textAlign: 'center', borderBottom: `2px solid ${style.primary}`, paddingBottom: '12px', marginBottom: '16px' }}>
-      <h1 style={{ fontSize: '1.8em', fontWeight: 'bold', color: style.primary, margin: 0 }}>{data.contact?.name}</h1>
-      <p style={{ fontSize: '0.9em', color: '#444', marginTop: '6px' }}>
-        {[data.contact?.email, data.contact?.phone, data.contact?.linkedin].filter(Boolean).join(' | ')}
-      </p>
-    </div>
-    {data.professionalSummary && (
-      <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{t ? t('templates:sections.professionalSummary') : 'Professional Summary'}</h2>
-        <p style={{ textAlign: 'justify', fontSize: '0.9em' }}>{data.professionalSummary}</p>
-      </div>
-    )}
-    {data.experience?.length > 0 && (
-      <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{t ? t('templates:sections.experience') : 'Professional Experience'}</h2>
+// Section ordering: resumes carry an optional sectionOrder array of keys —
+// 'experience' | 'education' | 'certifications' | 'skills' | 'custom-N'.
+// Keys for sections that no longer exist are dropped; new sections are appended.
+const CORE_SECTION_KEYS = ['experience', 'education', 'certifications', 'skills'];
+const orderedSectionKeys = (data) => {
+  const customKeys = (data.customSections || []).map((_, i) => `custom-${i}`);
+  const valid = new Set([...CORE_SECTION_KEYS, ...customKeys]);
+  const stored = Array.isArray(data.sectionOrder) ? data.sectionOrder.filter(k => valid.has(k)) : [];
+  const missing = [...CORE_SECTION_KEYS, ...customKeys].filter(k => !stored.includes(k));
+  return [...stored, ...missing];
+};
+const customIndexFromKey = (key) => parseInt(key.split('-')[1], 10);
+const isVisibleCustomSection = (s) => s && (s.title || s.bullets?.some(Boolean));
+
+const ClassicTemplate = ({ data, style, t }) => {
+  const h2Style = { fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' };
+  const renderers = {
+    experience: () => data.experience?.length > 0 && (
+      <div key="experience" style={{ marginBottom: '14px' }}>
+        <h2 style={h2Style}>{t ? t('templates:sections.experience') : 'Professional Experience'}</h2>
         {data.experience.map((exp, i) => (
           <div key={i} style={{ marginBottom: '12px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
@@ -148,10 +153,10 @@ const ClassicTemplate = ({ data, style, t }) => (
           </div>
         ))}
       </div>
-    )}
-    {data.education?.length > 0 && (
-      <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{t ? t('templates:sections.education') : 'Education'}</h2>
+    ),
+    education: () => data.education?.length > 0 && (
+      <div key="education" style={{ marginBottom: '14px' }}>
+        <h2 style={h2Style}>{t ? t('templates:sections.education') : 'Education'}</h2>
         {data.education.map((edu, i) => (
           <div key={i} style={{ marginBottom: '6px', display: 'flex', justifyContent: 'space-between' }}>
             <div><strong>{edu.degree}</strong> — {edu.institution}{edu.location ? `, ${edu.location}` : ''}</div>
@@ -159,58 +164,69 @@ const ClassicTemplate = ({ data, style, t }) => (
           </div>
         ))}
       </div>
-    )}
-    {data.certifications?.length > 0 && (
-      <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{t ? t('templates:sections.certifications') : 'Certifications'}</h2>
+    ),
+    certifications: () => data.certifications?.length > 0 && (
+      <div key="certifications" style={{ marginBottom: '14px' }}>
+        <h2 style={h2Style}>{t ? t('templates:sections.certifications') : 'Certifications'}</h2>
         {data.certifications.map((cert, i) => (
           <div key={i} style={{ marginBottom: '4px', fontSize: '0.9em' }}>
             <strong>{cert.name}</strong> — {cert.issuer} ({cert.date})
           </div>
         ))}
       </div>
-    )}
-    {data.skills?.length > 0 && (
-      <div>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{t ? t('templates:sections.skills') : 'Skills'}</h2>
+    ),
+    skills: () => data.skills?.length > 0 && (
+      <div key="skills" style={{ marginBottom: '14px' }}>
+        <h2 style={h2Style}>{t ? t('templates:sections.skills') : 'Skills'}</h2>
         {data.skills.map((skill, i) => (
           <div key={i} style={{ marginBottom: '4px', fontSize: '0.9em' }}>
             <strong>{skill.category}:</strong> {skill.items?.join(', ')}
           </div>
         ))}
       </div>
-    )}
-    {data.customSections?.filter(s => s.title || s.bullets?.some(Boolean)).map((section, i) => (
-      <div key={i} style={{ marginTop: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', color: style.primary, borderBottom: `1px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '8px' }}>{section.title}</h2>
+    ),
+  };
+  const renderCustom = (key) => {
+    const section = data.customSections?.[customIndexFromKey(key)];
+    if (!isVisibleCustomSection(section)) return null;
+    return (
+      <div key={key} style={{ marginBottom: '14px' }}>
+        <h2 style={h2Style}>{section.title}</h2>
         <ul style={{ margin: '6px 0', paddingLeft: '18px', fontSize: '0.88em', listStyleType: 'disc' }}>
           {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '3px' }}>{b}</li>)}
         </ul>
       </div>
-    ))}
-  </div>
-);
-
-const ModernTemplate = ({ data, style, t }) => (
-  <div style={{ fontFamily: style.fontFamily, fontSize: style.fontSize, lineHeight: style.lineHeight }}>
-    <div style={{ background: `linear-gradient(135deg, ${style.primary}, ${style.accent})`, color: 'white', padding: '20px', margin: '-20px -20px 20px -20px' }}>
-      <h1 style={{ fontSize: '1.8em', fontWeight: '700', margin: 0 }}>{data.contact?.name}</h1>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '10px', fontSize: '0.85em', opacity: 0.95 }}>
-        {data.contact?.email && <span>📧 {data.contact.email}</span>}
-        {data.contact?.phone && <span>📱 {data.contact.phone}</span>}
-        {data.contact?.linkedin && <span>💼 {data.contact.linkedin}</span>}
+    );
+  };
+  return (
+    <div style={{ fontFamily: style.fontFamily, fontSize: style.fontSize, lineHeight: style.lineHeight, color: '#000' }}>
+      <div style={{ textAlign: 'center', borderBottom: `2px solid ${style.primary}`, paddingBottom: '12px', marginBottom: '16px' }}>
+        <h1 style={{ fontSize: '1.8em', fontWeight: 'bold', color: style.primary, margin: 0 }}>{data.contact?.name}</h1>
+        <p style={{ fontSize: '0.9em', color: '#444', marginTop: '6px' }}>
+          {[data.contact?.email, data.contact?.phone, data.contact?.linkedin].filter(Boolean).join(' | ')}
+        </p>
       </div>
+      {data.professionalSummary && (
+        <div style={{ marginBottom: '14px' }}>
+          <h2 style={h2Style}>{t ? t('templates:sections.professionalSummary') : 'Professional Summary'}</h2>
+          <p style={{ textAlign: 'justify', fontSize: '0.9em' }}>{data.professionalSummary}</p>
+        </div>
+      )}
+      {orderedSectionKeys(data).map(key => key.startsWith('custom-') ? renderCustom(key) : renderers[key]?.())}
     </div>
-    {data.professionalSummary && (
-      <div style={{ marginBottom: '18px', padding: '12px', background: '#f8f9fa', borderLeft: `3px solid ${style.accent}`, borderRadius: '0 4px 4px 0' }}>
-        <p style={{ margin: 0, fontSize: '0.9em', color: '#444' }}>{data.professionalSummary}</p>
-      </div>
-    )}
-    {data.experience?.length > 0 && (
-      <div style={{ marginBottom: '18px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: '600', color: style.primary, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-          <span style={{ width: '24px', height: '2px', background: style.accent }}></span>{t ? t('templates:sections.experience') : 'Experience'}
-        </h2>
+  );
+};
+
+const ModernTemplate = ({ data, style, t }) => {
+  const h2 = (label) => (
+    <h2 style={{ fontSize: '1.1em', fontWeight: '600', color: style.primary, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+      <span style={{ width: '24px', height: '2px', background: style.accent }}></span>{label}
+    </h2>
+  );
+  const renderers = {
+    experience: () => data.experience?.length > 0 && (
+      <div key="experience" style={{ marginBottom: '18px' }}>
+        {h2(t ? t('templates:sections.experience') : 'Experience')}
         {data.experience.map((exp, i) => (
           <div key={i} style={{ marginBottom: '14px', paddingLeft: '12px', borderLeft: '2px solid #e5e7eb' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap' }}>
@@ -224,77 +240,78 @@ const ModernTemplate = ({ data, style, t }) => (
           </div>
         ))}
       </div>
-    )}
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-      {data.education?.length > 0 && (
-        <div>
-          <h2 style={{ fontSize: '1.1em', fontWeight: '600', color: style.primary, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ width: '24px', height: '2px', background: style.accent }}></span>{t ? t('templates:sections.education') : 'Education'}
-          </h2>
-          {data.education.map((edu, i) => (
-            <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
-              <strong>{edu.degree}</strong><br/>
-              <span style={{ color: '#666' }}>{edu.institution} • {edu.date}</span>
-            </div>
-          ))}
-        </div>
-      )}
-      {data.certifications?.length > 0 && (
-        <div>
-          <h2 style={{ fontSize: '1.1em', fontWeight: '600', color: style.primary, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-            <span style={{ width: '24px', height: '2px', background: style.accent }}></span>{t ? t('templates:sections.certifications') : 'Certifications'}
-          </h2>
-          {data.certifications.map((cert, i) => (
-            <div key={i} style={{ marginBottom: '6px', fontSize: '0.85em' }}>
-              <strong>{cert.name}</strong><br/>
-              <span style={{ color: '#666' }}>{cert.issuer} • {cert.date}</span>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-    {data.skills?.length > 0 && (
-      <div style={{ marginTop: '18px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: '600', color: style.primary, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-          <span style={{ width: '24px', height: '2px', background: style.accent }}></span>{t ? t('templates:sections.skills') : 'Skills'}
-        </h2>
+    ),
+    education: () => data.education?.length > 0 && (
+      <div key="education" style={{ marginBottom: '18px' }}>
+        {h2(t ? t('templates:sections.education') : 'Education')}
+        {data.education.map((edu, i) => (
+          <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
+            <strong>{edu.degree}</strong><br/>
+            <span style={{ color: '#666' }}>{edu.institution} • {edu.date}</span>
+          </div>
+        ))}
+      </div>
+    ),
+    certifications: () => data.certifications?.length > 0 && (
+      <div key="certifications" style={{ marginBottom: '18px' }}>
+        {h2(t ? t('templates:sections.certifications') : 'Certifications')}
+        {data.certifications.map((cert, i) => (
+          <div key={i} style={{ marginBottom: '6px', fontSize: '0.85em' }}>
+            <strong>{cert.name}</strong><br/>
+            <span style={{ color: '#666' }}>{cert.issuer} • {cert.date}</span>
+          </div>
+        ))}
+      </div>
+    ),
+    skills: () => data.skills?.length > 0 && (
+      <div key="skills" style={{ marginBottom: '18px' }}>
+        {h2(t ? t('templates:sections.skills') : 'Skills')}
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
           {data.skills.flatMap(s => s.items || []).map((item, i) => (
             <span key={i} style={{ padding: '4px 10px', background: '#f1f5f9', borderRadius: '12px', fontSize: '0.8em', color: style.primary }}>{item}</span>
           ))}
         </div>
       </div>
-    )}
-    {data.customSections?.filter(s => s.title || s.bullets?.some(Boolean)).map((section, i) => (
-      <div key={i} style={{ marginTop: '18px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: '600', color: style.primary, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-          <span style={{ width: '24px', height: '2px', background: style.accent }}></span>{section.title}
-        </h2>
+    ),
+  };
+  const renderCustom = (key) => {
+    const section = data.customSections?.[customIndexFromKey(key)];
+    if (!isVisibleCustomSection(section)) return null;
+    return (
+      <div key={key} style={{ marginBottom: '18px' }}>
+        {h2(section.title)}
         <ul style={{ margin: '6px 0', paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc' }}>
           {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
         </ul>
       </div>
-    ))}
-  </div>
-);
-
-const ATSTemplate = ({ data, style, t }) => (
-  <div style={{ fontFamily: 'Arial, sans-serif', fontSize: style.fontSize, lineHeight: '1.5', color: '#000' }}>
-    <div style={{ marginBottom: '12px' }}>
-      <h1 style={{ fontSize: '1.6em', fontWeight: 'bold', margin: '0 0 4px 0' }}>{data.contact?.name}</h1>
-      <p style={{ margin: 0, fontSize: '0.9em' }}>
-        {[data.contact?.email, data.contact?.phone, data.contact?.address, data.contact?.linkedin].filter(Boolean).join(' • ')}
-      </p>
-    </div>
-    {data.professionalSummary && (
-      <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 6px 0', textTransform: 'uppercase' }}>{t ? t('templates:sections.summary') : 'Summary'}</h2>
-        <p style={{ margin: 0, fontSize: '0.9em' }}>{data.professionalSummary}</p>
+    );
+  };
+  return (
+    <div style={{ fontFamily: style.fontFamily, fontSize: style.fontSize, lineHeight: style.lineHeight }}>
+      <div style={{ background: `linear-gradient(135deg, ${style.primary}, ${style.accent})`, color: 'white', padding: '20px', margin: '-20px -20px 20px -20px' }}>
+        <h1 style={{ fontSize: '1.8em', fontWeight: '700', margin: 0 }}>{data.contact?.name}</h1>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', marginTop: '10px', fontSize: '0.85em', opacity: 0.95 }}>
+          {data.contact?.email && <span>📧 {data.contact.email}</span>}
+          {data.contact?.phone && <span>📱 {data.contact.phone}</span>}
+          {data.contact?.linkedin && <span>💼 {data.contact.linkedin}</span>}
+        </div>
       </div>
-    )}
-    {data.experience?.length > 0 && (
-      <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>{t ? t('templates:sections.experience') : 'Professional Experience'}</h2>
+      {data.professionalSummary && (
+        <div style={{ marginBottom: '18px', padding: '12px', background: '#f8f9fa', borderLeft: `3px solid ${style.accent}`, borderRadius: '0 4px 4px 0' }}>
+          <p style={{ margin: 0, fontSize: '0.9em', color: '#444' }}>{data.professionalSummary}</p>
+        </div>
+      )}
+      {orderedSectionKeys(data).map(key => key.startsWith('custom-') ? renderCustom(key) : renderers[key]?.())}
+    </div>
+  );
+};
+
+const ATSTemplate = ({ data, style, t }) => {
+  const h2Style = { fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' };
+  const renderers = {
+    experience: () => data.experience?.length > 0 && (
+      <div key="experience" style={{ marginBottom: '14px' }}>
+        <h2 style={h2Style}>{t ? t('templates:sections.experience') : 'Professional Experience'}</h2>
         {data.experience.map((exp, i) => (
           <div key={i} style={{ marginBottom: '12px' }}>
             <p style={{ margin: 0, fontWeight: 'bold' }}>{exp.title}</p>
@@ -305,43 +322,64 @@ const ATSTemplate = ({ data, style, t }) => (
           </div>
         ))}
       </div>
-    )}
-    {data.education?.length > 0 && (
-      <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>{t ? t('templates:sections.education') : 'Education'}</h2>
+    ),
+    education: () => data.education?.length > 0 && (
+      <div key="education" style={{ marginBottom: '14px' }}>
+        <h2 style={h2Style}>{t ? t('templates:sections.education') : 'Education'}</h2>
         {data.education.map((edu, i) => (
           <p key={i} style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}>
             <strong>{edu.degree}</strong>, {edu.institution}{edu.location ? `, ${edu.location}` : ''} - {edu.date}
           </p>
         ))}
       </div>
-    )}
-    {data.certifications?.length > 0 && (
-      <div style={{ marginBottom: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>{t ? t('templates:sections.certifications') : 'Certifications'}</h2>
+    ),
+    certifications: () => data.certifications?.length > 0 && (
+      <div key="certifications" style={{ marginBottom: '14px' }}>
+        <h2 style={h2Style}>{t ? t('templates:sections.certifications') : 'Certifications'}</h2>
         {data.certifications.map((cert, i) => (
           <p key={i} style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}>{cert.name}, {cert.issuer}, {cert.date}</p>
         ))}
       </div>
-    )}
-    {data.skills?.length > 0 && (
-      <div>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>{t ? t('templates:sections.skills') : 'Skills'}</h2>
+    ),
+    skills: () => data.skills?.length > 0 && (
+      <div key="skills" style={{ marginBottom: '14px' }}>
+        <h2 style={h2Style}>{t ? t('templates:sections.skills') : 'Skills'}</h2>
         {data.skills.map((skill, i) => (
           <p key={i} style={{ margin: '0 0 4px 0', fontSize: '0.9em' }}><strong>{skill.category}:</strong> {skill.items?.join(', ')}</p>
         ))}
       </div>
-    )}
-    {data.customSections?.filter(s => s.title || s.bullets?.some(Boolean)).map((section, i) => (
-      <div key={i} style={{ marginTop: '14px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: 'bold', margin: '0 0 8px 0', textTransform: 'uppercase' }}>{section.title}</h2>
+    ),
+  };
+  const renderCustom = (key) => {
+    const section = data.customSections?.[customIndexFromKey(key)];
+    if (!isVisibleCustomSection(section)) return null;
+    return (
+      <div key={key} style={{ marginBottom: '14px' }}>
+        <h2 style={h2Style}>{section.title}</h2>
         <ul style={{ margin: '6px 0', paddingLeft: '20px', fontSize: '0.88em', listStyleType: 'disc' }}>
           {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '3px' }}>{b}</li>)}
         </ul>
       </div>
-    ))}
-  </div>
-);
+    );
+  };
+  return (
+    <div style={{ fontFamily: 'Arial, sans-serif', fontSize: style.fontSize, lineHeight: '1.5', color: '#000' }}>
+      <div style={{ marginBottom: '12px' }}>
+        <h1 style={{ fontSize: '1.6em', fontWeight: 'bold', margin: '0 0 4px 0' }}>{data.contact?.name}</h1>
+        <p style={{ margin: 0, fontSize: '0.9em' }}>
+          {[data.contact?.email, data.contact?.phone, data.contact?.address, data.contact?.linkedin].filter(Boolean).join(' • ')}
+        </p>
+      </div>
+      {data.professionalSummary && (
+        <div style={{ marginBottom: '14px' }}>
+          <h2 style={{ ...h2Style, margin: '0 0 6px 0' }}>{t ? t('templates:sections.summary') : 'Summary'}</h2>
+          <p style={{ margin: 0, fontSize: '0.9em' }}>{data.professionalSummary}</p>
+        </div>
+      )}
+      {orderedSectionKeys(data).map(key => key.startsWith('custom-') ? renderCustom(key) : renderers[key]?.())}
+    </div>
+  );
+};
 
 const ExecutiveTemplate = ({ data, style, t }) => (
   <div style={{ fontFamily: style.fontFamily, fontSize: style.fontSize, lineHeight: style.lineHeight }}>
@@ -360,67 +398,81 @@ const ExecutiveTemplate = ({ data, style, t }) => (
     )}
     <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: '24px' }}>
       <div>
-        {data.experience?.length > 0 && (
-          <div>
-            <h2 style={{ fontSize: '1.2em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '6px', marginBottom: '14px' }}>{t ? t('templates:sections.experience') : 'Experience'}</h2>
-            {data.experience.map((exp, i) => (
-              <div key={i} style={{ marginBottom: '16px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
-                  <h3 style={{ margin: 0, fontSize: '1.05em', fontWeight: '700', color: style.primary }}>{exp.title}</h3>
-                  <span style={{ fontSize: '0.8em', color: '#666', fontWeight: '600' }}>{exp.startDate} - {exp.endDate}</span>
-                </div>
-                <p style={{ margin: '2px 0 8px 0', fontSize: '0.9em', color: '#555', fontWeight: '500' }}>{exp.company} | {exp.location}</p>
-                <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc'  }}>
-                  {exp.bullets?.map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
-                </ul>
+        {/* Main column: experience + custom sections, in the user's chosen relative order */}
+        {orderedSectionKeys(data).filter(k => k === 'experience' || k.startsWith('custom-')).map(key => {
+          if (key === 'experience') {
+            return data.experience?.length > 0 && (
+              <div key="experience" style={{ marginBottom: '18px' }}>
+                <h2 style={{ fontSize: '1.2em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '6px', marginBottom: '14px' }}>{t ? t('templates:sections.experience') : 'Experience'}</h2>
+                {data.experience.map((exp, i) => (
+                  <div key={i} style={{ marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+                      <h3 style={{ margin: 0, fontSize: '1.05em', fontWeight: '700', color: style.primary }}>{exp.title}</h3>
+                      <span style={{ fontSize: '0.8em', color: '#666', fontWeight: '600' }}>{exp.startDate} - {exp.endDate}</span>
+                    </div>
+                    <p style={{ margin: '2px 0 8px 0', fontSize: '0.9em', color: '#555', fontWeight: '500' }}>{exp.company} | {exp.location}</p>
+                    <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc'  }}>
+                      {exp.bullets?.map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
+                    </ul>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-        {data.customSections?.filter(s => s.title || s.bullets?.some(Boolean)).map((section, i) => (
-          <div key={i} style={{ marginTop: '18px' }}>
-            <h2 style={{ fontSize: '1.2em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '6px', marginBottom: '14px' }}>{section.title}</h2>
-            <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc' }}>
-              {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
-            </ul>
-          </div>
-        ))}
+            );
+          }
+          const section = data.customSections?.[customIndexFromKey(key)];
+          if (!isVisibleCustomSection(section)) return null;
+          return (
+            <div key={key} style={{ marginBottom: '18px' }}>
+              <h2 style={{ fontSize: '1.2em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '6px', marginBottom: '14px' }}>{section.title}</h2>
+              <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc' }}>
+                {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
+              </ul>
+            </div>
+          );
+        })}
       </div>
       <div>
-        {data.education?.length > 0 && (
-          <div style={{ marginBottom: '18px' }}>
-            <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>{t ? t('templates:sections.education') : 'Education'}</h2>
-            {data.education.map((edu, i) => (
-              <div key={i} style={{ marginBottom: '10px', fontSize: '0.85em' }}>
-                <strong style={{ color: style.primary }}>{edu.degree}</strong>
-                <p style={{ margin: '2px 0', color: '#555' }}>{edu.institution}</p>
-                <p style={{ margin: 0, color: '#777', fontSize: '0.9em' }}>{edu.date}</p>
+        {/* Sidebar: education, certifications, skills, in the user's chosen relative order */}
+        {orderedSectionKeys(data).filter(k => ['education', 'certifications', 'skills'].includes(k)).map(key => {
+          if (key === 'education') {
+            return data.education?.length > 0 && (
+              <div key="education" style={{ marginBottom: '18px' }}>
+                <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>{t ? t('templates:sections.education') : 'Education'}</h2>
+                {data.education.map((edu, i) => (
+                  <div key={i} style={{ marginBottom: '10px', fontSize: '0.85em' }}>
+                    <strong style={{ color: style.primary }}>{edu.degree}</strong>
+                    <p style={{ margin: '2px 0', color: '#555' }}>{edu.institution}</p>
+                    <p style={{ margin: 0, color: '#777', fontSize: '0.9em' }}>{edu.date}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-        {data.certifications?.length > 0 && (
-          <div style={{ marginBottom: '18px' }}>
-            <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>{t ? t('templates:sections.certifications') : 'Certifications'}</h2>
-            {data.certifications.map((cert, i) => (
-              <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
-                <strong>{cert.name}</strong>
-                <p style={{ margin: '2px 0', color: '#666' }}>{cert.issuer} • {cert.date}</p>
+            );
+          }
+          if (key === 'certifications') {
+            return data.certifications?.length > 0 && (
+              <div key="certifications" style={{ marginBottom: '18px' }}>
+                <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>{t ? t('templates:sections.certifications') : 'Certifications'}</h2>
+                {data.certifications.map((cert, i) => (
+                  <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
+                    <strong>{cert.name}</strong>
+                    <p style={{ margin: '2px 0', color: '#666' }}>{cert.issuer} • {cert.date}</p>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
-        )}
-        {data.skills?.length > 0 && (
-          <div>
-            <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>{t ? t('templates:sections.expertise') : 'Expertise'}</h2>
-            {data.skills.map((skill, i) => (
-              <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
-                <strong style={{ color: style.primary }}>{skill.category}</strong>
-                <p style={{ margin: '2px 0', color: '#555' }}>{skill.items?.join(' • ')}</p>
-              </div>
-            ))}
-          </div>
-        )}
+            );
+          }
+          return data.skills?.length > 0 && (
+            <div key="skills" style={{ marginBottom: '18px' }}>
+              <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, textTransform: 'uppercase', letterSpacing: '1px', borderBottom: `2px solid ${style.accent}`, paddingBottom: '4px', marginBottom: '10px' }}>{t ? t('templates:sections.expertise') : 'Expertise'}</h2>
+              {data.skills.map((skill, i) => (
+                <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
+                  <strong style={{ color: style.primary }}>{skill.category}</strong>
+                  <p style={{ margin: '2px 0', color: '#555' }}>{skill.items?.join(' • ')}</p>
+                </div>
+              ))}
+            </div>
+          );
+        })}
       </div>
     </div>
   </div>
@@ -444,75 +496,82 @@ const CreativeTemplate = ({ data, style, t }) => (
         <p style={{ margin: 0, fontSize: '0.9em', color: '#444', paddingLeft: '20px' }}>{data.professionalSummary}</p>
       </div>
     )}
-    {data.skills?.length > 0 && (
-      <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: '700', color: style.primary, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '1.2em' }}>⚡</span> {t ? t('templates:sections.skills') : 'Skills'} & {t ? t('templates:sections.expertise') : 'Expertise'}
-        </h2>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-          {data.skills.flatMap(s => s.items || []).map((item, i) => (
-            <span key={i} style={{ padding: '6px 14px', background: `linear-gradient(135deg, ${style.primary}, ${style.accent})`, color: 'white', borderRadius: '20px', fontSize: '0.8em', fontWeight: '500' }}>{item}</span>
-          ))}
-        </div>
-      </div>
-    )}
-    {data.experience?.length > 0 && (
-      <div style={{ marginBottom: '20px' }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: '700', color: style.primary, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '1.2em' }}>💼</span> {t ? t('templates:sections.experience') : 'Experience'}
-        </h2>
-        {data.experience.map((exp, i) => (
-          <div key={i} style={{ marginBottom: '16px', padding: '14px', background: '#f8f9fa', borderRadius: '10px', borderLeft: `4px solid ${style.accent}` }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: '4px' }}>
-              <strong style={{ color: style.primary, fontSize: '1em' }}>{exp.title}</strong>
-              <span style={{ fontSize: '0.8em', color: 'white', background: style.accent, padding: '2px 10px', borderRadius: '12px' }}>{exp.startDate} - {exp.endDate}</span>
+    {(() => {
+      const renderers = {
+        skills: () => data.skills?.length > 0 && (
+          <div key="skills" style={{ marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '1.1em', fontWeight: '700', color: style.primary, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '1.2em' }}>⚡</span> {t ? t('templates:sections.skills') : 'Skills'} & {t ? t('templates:sections.expertise') : 'Expertise'}
+            </h2>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+              {data.skills.flatMap(s => s.items || []).map((item, i) => (
+                <span key={i} style={{ padding: '6px 14px', background: `linear-gradient(135deg, ${style.primary}, ${style.accent})`, color: 'white', borderRadius: '20px', fontSize: '0.8em', fontWeight: '500' }}>{item}</span>
+              ))}
             </div>
-            <p style={{ margin: '0 0 8px 0', fontSize: '0.9em', color: '#666' }}>{exp.company} • {exp.location}</p>
+          </div>
+        ),
+        experience: () => data.experience?.length > 0 && (
+          <div key="experience" style={{ marginBottom: '20px' }}>
+            <h2 style={{ fontSize: '1.1em', fontWeight: '700', color: style.primary, marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '1.2em' }}>💼</span> {t ? t('templates:sections.experience') : 'Experience'}
+            </h2>
+            {data.experience.map((exp, i) => (
+              <div key={i} style={{ marginBottom: '16px', padding: '14px', background: '#f8f9fa', borderRadius: '10px', borderLeft: `4px solid ${style.accent}` }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', marginBottom: '4px' }}>
+                  <strong style={{ color: style.primary, fontSize: '1em' }}>{exp.title}</strong>
+                  <span style={{ fontSize: '0.8em', color: 'white', background: style.accent, padding: '2px 10px', borderRadius: '12px' }}>{exp.startDate} - {exp.endDate}</span>
+                </div>
+                <p style={{ margin: '0 0 8px 0', fontSize: '0.9em', color: '#666' }}>{exp.company} • {exp.location}</p>
+                <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc' }}>
+                  {exp.bullets?.map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
+                </ul>
+              </div>
+            ))}
+          </div>
+        ),
+        education: () => data.education?.length > 0 && (
+          <div key="education" style={{ marginBottom: '16px', padding: '14px', background: `${style.primary}08`, borderRadius: '10px' }}>
+            <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>🎓</span> {t ? t('templates:sections.education') : 'Education'}
+            </h2>
+            {data.education.map((edu, i) => (
+              <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
+                <strong>{edu.degree}</strong>
+                <p style={{ margin: '2px 0', color: '#666' }}>{edu.institution} • {edu.date}</p>
+              </div>
+            ))}
+          </div>
+        ),
+        certifications: () => data.certifications?.length > 0 && (
+          <div key="certifications" style={{ marginBottom: '16px', padding: '14px', background: `${style.accent}08`, borderRadius: '10px' }}>
+            <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span>🏆</span> {t ? t('templates:sections.certifications') : 'Certifications'}
+            </h2>
+            {data.certifications.map((cert, i) => (
+              <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
+                <strong>{cert.name}</strong>
+                <p style={{ margin: '2px 0', color: '#666' }}>{cert.issuer} • {cert.date}</p>
+              </div>
+            ))}
+          </div>
+        ),
+      };
+      const renderCustom = (key) => {
+        const section = data.customSections?.[customIndexFromKey(key)];
+        if (!isVisibleCustomSection(section)) return null;
+        return (
+          <div key={key} style={{ marginBottom: '16px', padding: '14px', background: '#f8f9fa', borderRadius: '10px', borderLeft: `4px solid ${style.accent}` }}>
+            <h2 style={{ fontSize: '1.1em', fontWeight: '700', color: style.primary, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <span style={{ fontSize: '1.2em' }}>✨</span> {section.title}
+            </h2>
             <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc' }}>
-              {exp.bullets?.map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
+              {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
             </ul>
           </div>
-        ))}
-      </div>
-    )}
-    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-      {data.education?.length > 0 && (
-        <div style={{ padding: '14px', background: `${style.primary}08`, borderRadius: '10px' }}>
-          <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>🎓</span> {t ? t('templates:sections.education') : 'Education'}
-          </h2>
-          {data.education.map((edu, i) => (
-            <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
-              <strong>{edu.degree}</strong>
-              <p style={{ margin: '2px 0', color: '#666' }}>{edu.institution} • {edu.date}</p>
-            </div>
-          ))}
-        </div>
-      )}
-      {data.certifications?.length > 0 && (
-        <div style={{ padding: '14px', background: `${style.accent}08`, borderRadius: '10px' }}>
-          <h2 style={{ fontSize: '1em', fontWeight: '700', color: style.primary, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <span>🏆</span> {t ? t('templates:sections.certifications') : 'Certifications'}
-          </h2>
-          {data.certifications.map((cert, i) => (
-            <div key={i} style={{ marginBottom: '8px', fontSize: '0.85em' }}>
-              <strong>{cert.name}</strong>
-              <p style={{ margin: '2px 0', color: '#666' }}>{cert.issuer} • {cert.date}</p>
-            </div>
-          ))}
-        </div>
-      )}
-    </div>
-    {data.customSections?.filter(s => s.title || s.bullets?.some(Boolean)).map((section, i) => (
-      <div key={i} style={{ marginTop: '20px', padding: '14px', background: '#f8f9fa', borderRadius: '10px', borderLeft: `4px solid ${style.accent}` }}>
-        <h2 style={{ fontSize: '1.1em', fontWeight: '700', color: style.primary, marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <span style={{ fontSize: '1.2em' }}>✨</span> {section.title}
-        </h2>
-        <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.85em', color: '#444', listStyleType: 'disc' }}>
-          {section.bullets?.filter(Boolean).map((b, j) => <li key={j} style={{ marginBottom: '4px' }}>{b}</li>)}
-        </ul>
-      </div>
-    ))}
+        );
+      };
+      return orderedSectionKeys(data).map(key => key.startsWith('custom-') ? renderCustom(key) : renderers[key]?.());
+    })()}
   </div>
 );
 
@@ -539,6 +598,7 @@ export default function MainApp() {
     certifications: [],
     skills: [],
     customSections: [],
+    sectionOrder: [],
     references: ''
   });
   const [suggestions, setSuggestions] = useState([]);
@@ -551,6 +611,23 @@ export default function MainApp() {
   const [actionRailExpanded, setActionRailExpanded] = useState(false);
   const [hoverExpanded, setHoverExpanded] = useState(false);
   const [activeRailTab, setActiveRailTab] = useState(null); // 'suggestions' | 'gaps' | 'score' | null
+
+  // Application tracker
+  const [showApplications, setShowApplications] = useState(false);
+  const [applications, setApplications] = useState([]);
+  const [loadingApplications, setLoadingApplications] = useState(false);
+  const [showSaveApplication, setShowSaveApplication] = useState(false);
+  const [saveCompany, setSaveCompany] = useState('');
+  const [saveJobTitle, setSaveJobTitle] = useState('');
+  const [savingApplication, setSavingApplication] = useState(false);
+  const [applicationSaved, setApplicationSaved] = useState(false);
+  const [confirmDeleteAppId, setConfirmDeleteAppId] = useState(null);
+  const [applicationSearch, setApplicationSearch] = useState('');
+
+  // Master career profile
+  const [showProfileEditor, setShowProfileEditor] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
+  const [resumeSource, setResumeSource] = useState('upload'); // 'upload' | 'profile'
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
@@ -725,44 +802,50 @@ export default function MainApp() {
       text += `PROFESSIONAL SUMMARY\n${structured.professionalSummary}\n\n`;
     }
     
-    if (structured.experience && structured.experience.length > 0) {
-      text += `EXPERIENCE\n\n`;
-      structured.experience.forEach(exp => {
-        text += `${exp.title} | ${exp.company}\n${exp.location} | ${exp.startDate} - ${exp.endDate}\n`;
-        exp.bullets.forEach(bullet => text += `• ${bullet}\n`);
+    const sectionEmitters = {
+      experience: () => {
+        if (!structured.experience || structured.experience.length === 0) return;
+        text += `EXPERIENCE\n\n`;
+        structured.experience.forEach(exp => {
+          text += `${exp.title} | ${exp.company}\n${exp.location} | ${exp.startDate} - ${exp.endDate}\n`;
+          exp.bullets.forEach(bullet => text += `• ${bullet}\n`);
+          text += '\n';
+        });
+      },
+      education: () => {
+        if (!structured.education || structured.education.length === 0) return;
+        text += `EDUCATION\n\n`;
+        structured.education.forEach(edu => {
+          text += `${edu.degree} | ${edu.institution}\n${edu.location} | ${edu.date}\n`;
+          if (edu.details) edu.details.forEach(d => text += `• ${d}\n`);
+          text += '\n';
+        });
+      },
+      certifications: () => {
+        if (!structured.certifications || structured.certifications.length === 0) return;
+        text += `CERTIFICATIONS\n\n`;
+        structured.certifications.forEach(cert => text += `${cert.name} | ${cert.issuer} | ${cert.date}\n`);
         text += '\n';
-      });
-    }
-    
-    if (structured.education && structured.education.length > 0) {
-      text += `EDUCATION\n\n`;
-      structured.education.forEach(edu => {
-        text += `${edu.degree} | ${edu.institution}\n${edu.location} | ${edu.date}\n`;
-        if (edu.details) edu.details.forEach(d => text += `• ${d}\n`);
+      },
+      skills: () => {
+        if (!structured.skills || structured.skills.length === 0) return;
+        text += `SKILLS\n\n`;
+        structured.skills.forEach(sg => text += `${sg.category}: ${sg.items.join(', ')}\n`);
         text += '\n';
-      });
-    }
-    
-    if (structured.certifications && structured.certifications.length > 0) {
-      text += `CERTIFICATIONS\n\n`;
-      structured.certifications.forEach(cert => text += `${cert.name} | ${cert.issuer} | ${cert.date}\n`);
-      text += '\n';
-    }
-    
-    if (structured.skills && structured.skills.length > 0) {
-      text += `SKILLS\n\n`;
-      structured.skills.forEach(sg => text += `${sg.category}: ${sg.items.join(', ')}\n`);
-      text += '\n';
-    }
+      },
+    };
 
-    if (structured.customSections && structured.customSections.length > 0) {
-      structured.customSections.forEach(section => {
-        if (!section.title && !(section.bullets && section.bullets.some(Boolean))) return;
+    orderedSectionKeys(structured).forEach(key => {
+      if (key.startsWith('custom-')) {
+        const section = structured.customSections?.[customIndexFromKey(key)];
+        if (!isVisibleCustomSection(section)) return;
         text += `${(section.title || '').toUpperCase()}\n\n`;
         (section.bullets || []).forEach(b => { if (b) text += `• ${b}\n`; });
         text += '\n';
-      });
-    }
+      } else {
+        sectionEmitters[key]?.();
+      }
+    });
 
     if (structured.references) {
       text += `REFERENCES\n${structured.references}\n`;
@@ -834,7 +917,8 @@ export default function MainApp() {
         body: JSON.stringify({
           resumeInput: resumeText,
           jobDescription: jobDescription,
-          language: i18n.language
+          language: i18n.language,
+          sourceType: resumeSource
         })
       });
 
@@ -1020,10 +1104,131 @@ export default function MainApp() {
     else if (section === 'education') updated.education.splice(index, 1);
     else if (section === 'certifications') updated.certifications.splice(index, 1);
     else if (section === 'skills') updated.skills.splice(index, 1);
-    else if (section === 'customSections') updated.customSections.splice(index, 1);
+    else if (section === 'customSections') {
+      updated.customSections.splice(index, 1);
+      // Renumber custom-N keys in sectionOrder so later sections keep their positions
+      if (Array.isArray(updated.sectionOrder)) {
+        updated.sectionOrder = updated.sectionOrder
+          .filter(k => k !== `custom-${index}`)
+          .map(k => {
+            if (k.startsWith('custom-')) {
+              const n = customIndexFromKey(k);
+              if (n > index) return `custom-${n - 1}`;
+            }
+            return k;
+          });
+      }
+    }
     setStructuredResume(updated);
     setOptimizedContent(convertStructuredToText(updated));
   };//FALTABA
+
+  const moveSection = (key, dir) => {
+    const order = orderedSectionKeys(structuredResume);
+    const i = order.indexOf(key);
+    const j = i + dir;
+    if (i < 0 || j < 0 || j >= order.length) return;
+    [order[i], order[j]] = [order[j], order[i]];
+    const updated = { ...structuredResume, sectionOrder: order };
+    setStructuredResume(updated);
+    setOptimizedContent(convertStructuredToText(updated));
+  };
+
+  // --- Application tracker ---
+  const openApplications = async () => {
+    setShowApplications(true);
+    setConfirmDeleteAppId(null);
+    setApplicationSearch('');
+    setLoadingApplications(true);
+    try {
+      const apps = await storageAdapter.getApplications(user?.uid);
+      setApplications(apps);
+    } catch (error) {
+      console.error('Failed to load applications:', error);
+      setApplications([]);
+    } finally {
+      setLoadingApplications(false);
+    }
+  };
+
+  const handleSaveApplication = async () => {
+    if (!saveCompany.trim() || !user?.uid) return;
+    setSavingApplication(true);
+    try {
+      const application = {
+        id: `app_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`,
+        company: saveCompany.trim(),
+        jobTitle: saveJobTitle.trim(),
+        jobDescription,
+        resume: JSON.parse(JSON.stringify(structuredResume)),
+        createdAt: new Date().toISOString()
+      };
+      await storageAdapter.saveApplication(user.uid, application);
+      setApplicationSaved(true);
+      setTimeout(() => {
+        setShowSaveApplication(false);
+        setApplicationSaved(false);
+        setSaveCompany('');
+        setSaveJobTitle('');
+      }, 1200);
+    } catch (error) {
+      console.error('Failed to save application:', error);
+      setError(t('applications.saveError', { defaultValue: 'Could not save the application. Please try again.' }));
+      setShowSaveApplication(false);
+    } finally {
+      setSavingApplication(false);
+    }
+  };
+
+  const handleDeleteApplication = async (applicationId) => {
+    try {
+      await storageAdapter.deleteApplication(user?.uid, applicationId);
+      setApplications(prev => prev.filter(a => a.id !== applicationId));
+    } catch (error) {
+      console.error('Failed to delete application:', error);
+    } finally {
+      setConfirmDeleteAppId(null);
+    }
+  };
+
+  const handleLoadApplication = (app) => {
+    setStructuredResume(app.resume);
+    setJobDescription(app.jobDescription || '');
+    setResumeText(convertStructuredToText(app.resume));
+    setOptimizedContent(convertStructuredToText(app.resume));
+    setSuggestions([]);
+    setGaps([]);
+    setScoreResult(null);
+    setIsUploadComplete(true);
+    setPhase('optimize');
+    setShowApplications(false);
+  };
+
+  // --- Master career profile ---
+  const openProfileEditor = () => setShowProfileEditor(true);
+
+  const useMyProfile = async () => {
+    setLoadingProfile(true);
+    try {
+      const profile = await storageAdapter.getMasterProfile(user?.uid);
+      const profileText = profileToText(profile);
+      if (profileText.trim().length < 50) {
+        // Nothing usable stored yet — send the user to the editor first
+        setLoadingProfile(false);
+        openProfileEditor();
+        return;
+      }
+      setResumeText(profileText);
+      setResumeFile(null);
+      setResumeSource('profile');
+      setError('');
+    } catch (error) {
+      console.error('Failed to load master profile:', error);
+      setError(t('profile.loadError', { defaultValue: 'Could not load your career profile. Please try again.' }));
+    } finally {
+      setLoadingProfile(false);
+    }
+  };
 
   const addNewItem = (section) => {
     const updated = {...structuredResume};
@@ -1249,6 +1454,24 @@ export default function MainApp() {
                   {t('navigation.startOver')}
                 </button>
               )}
+             {user && (
+               <button
+                 onClick={openProfileEditor}
+                 className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+               >
+                 <FileText className="w-4 h-4" />
+                 {t('profile.title', { defaultValue: 'Career Profile' })}
+               </button>
+             )}
+             {user && (
+               <button
+                 onClick={openApplications}
+                 className="px-4 py-2 bg-white/20 hover:bg-white/30 rounded-lg text-sm font-medium transition-colors flex items-center gap-2"
+               >
+                 <Briefcase className="w-4 h-4" />
+                 {t('applications.myApplications', { defaultValue: 'My Applications' })}
+               </button>
+             )}
              <LanguageSwitcher />
              {user && <UserMenu />}
             </div>
@@ -1314,7 +1537,7 @@ export default function MainApp() {
                     ref={fileInputRef}
                     type="file"
                     accept=".pdf,.doc,.docx,.txt"
-                    onChange={handleResumeUpload}
+                    onChange={(e) => { setResumeSource('upload'); handleResumeUpload(e); }}
                     disabled={isExtractingFile}
                     className="hidden"
                     id="resume-upload"
@@ -1354,6 +1577,46 @@ export default function MainApp() {
                     </div>
                   </label>
                 </div>
+
+                {/* Career Profile as resume source */}
+                {user && (
+                  <div className="mt-4">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="flex-1 border-t border-gray-200"></div>
+                      <span className="text-xs text-gray-400 uppercase">{t('profile.or', { defaultValue: 'or' })}</span>
+                      <div className="flex-1 border-t border-gray-200"></div>
+                    </div>
+                    {resumeSource === 'profile' ? (
+                      <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <CheckCircle className="w-5 h-5 text-blue-600 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-blue-800">{t('profile.usingProfile', { defaultValue: 'Using your Career Profile as the resume source' })}</p>
+                            <p className="text-xs text-blue-600">{t('profile.usingProfileHint', { defaultValue: 'The AI will select the most relevant content for this job.' })}</p>
+                          </div>
+                        </div>
+                        <button
+                          onClick={openProfileEditor}
+                          className="px-3 py-1.5 border border-blue-300 text-blue-700 rounded text-sm hover:bg-blue-100 flex-shrink-0"
+                        >
+                          {t('buttons.edit')}
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={useMyProfile}
+                        disabled={loadingProfile}
+                        className="w-full p-4 border-2 border-blue-200 bg-blue-50 hover:bg-blue-100 rounded-lg flex items-center justify-center gap-3 transition-colors disabled:opacity-50"
+                      >
+                        {loadingProfile ? <Loader2 className="w-5 h-5 text-blue-600 animate-spin" /> : <FileText className="w-5 h-5 text-blue-600" />}
+                        <div className="text-left">
+                          <p className="text-sm font-semibold text-blue-800">{t('profile.useProfile', { defaultValue: 'Use my Career Profile' })}</p>
+                          <p className="text-xs text-blue-600">{t('profile.useProfileHint', { defaultValue: 'Your full career record; the AI picks what fits this job best.' })}</p>
+                        </div>
+                      </button>
+                    )}
+                  </div>
+                )}
 
                 {isExtractingFile && (
                   <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
@@ -1470,15 +1733,17 @@ export default function MainApp() {
                 { key: 'gaps', run: findGaps, loading: loadingGaps, disabled: loadingGaps, color: 'amber', Icon: Search, label: t('buttons.findGaps') },
                 { key: 'score', run: computeCompatibilityScore, loading: loadingScore, disabled: loadingScore || !jobDescription || !resumeText, color: 'purple', Icon: Gauge, label: t('buttons.compatibilityScore') },
                 { key: 'format', run: () => { setIsFormatTriggered(true); setPhase('format'); }, loading: false, disabled: false, color: 'blue', Icon: Sparkles, label: t('buttons.formatExport') },
+                { key: 'save', run: () => { setSaveCompany(''); setSaveJobTitle(''); setApplicationSaved(false); setShowSaveApplication(true); }, loading: false, disabled: !user, color: 'indigo', Icon: Briefcase, label: t('applications.save', { defaultValue: 'Save Application' }) },
               ];
               const colorMap = {
                 green: 'bg-green-500 hover:bg-green-600',
                 amber: 'bg-amber-500 hover:bg-amber-600',
                 purple: 'bg-purple-500 hover:bg-purple-600',
                 blue: 'bg-blue-500 hover:bg-blue-600',
+                indigo: 'bg-indigo-500 hover:bg-indigo-600',
               };
               const handleTabClick = (tab) => {
-                if (tab.key === 'format') { tab.run(); return; }
+                if (tab.key === 'format' || tab.key === 'save') { tab.run(); return; }
                 setActiveRailTab(tab.key);
                 setActionRailExpanded(true);
                 if (!hasResult[tab.key]) tab.run();
@@ -1689,10 +1954,22 @@ export default function MainApp() {
                     </div>
                   )}
 
-                  {/* Experience */}
-                  {structuredResume.experience && structuredResume.experience.length > 0 && (
-                    <div>
-                      <h3 className="text-xl font-bold mb-4">{t('optimize.sections.experience')}</h3>
+                  {/* Sections render in user-controlled order (structuredResume.sectionOrder); ↑/↓ buttons reorder */}
+                  {(() => {
+                  const order = orderedSectionKeys(structuredResume);
+                  const moveButtons = (key) => (
+                    <span className="inline-flex gap-1">
+                      <button onClick={() => moveSection(key, -1)} disabled={order.indexOf(key) === 0} title={t('buttons.moveUp', { defaultValue: 'Move section up' })} className="px-2 py-0.5 border rounded text-sm disabled:opacity-30 hover:bg-gray-50">↑</button>
+                      <button onClick={() => moveSection(key, 1)} disabled={order.indexOf(key) === order.length - 1} title={t('buttons.moveDown', { defaultValue: 'Move section down' })} className="px-2 py-0.5 border rounded text-sm disabled:opacity-30 hover:bg-gray-50">↓</button>
+                    </span>
+                  );
+                  const sectionBlocks = {};
+                  sectionBlocks.experience = structuredResume.experience && structuredResume.experience.length > 0 && (
+                    <div key="experience">
+                      <div className="flex items-center gap-3 mb-4">
+                        <h3 className="text-xl font-bold">{t('optimize.sections.experience')}</h3>
+                        {moveButtons('experience')}
+                      </div>
                       {structuredResume.experience.map((exp,idx)=>(
                         <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
                           <div className="flex gap-4">
@@ -1750,12 +2027,14 @@ export default function MainApp() {
                       ))}
                       <button onClick={()=>addNewItem('experience')} className="px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addExperience')}</button>
                     </div>
-                  )}
+                  );
 
-                  {/* Education */}
-                  {structuredResume.education && structuredResume.education.length>0 && (
-                    <div>
-                      <h3 className="text-xl font-bold mb-4">{t('optimize.sections.education')}</h3>
+                  sectionBlocks.education = structuredResume.education && structuredResume.education.length>0 && (
+                    <div key="education">
+                      <div className="flex items-center gap-3 mb-4">
+                        <h3 className="text-xl font-bold">{t('optimize.sections.education')}</h3>
+                        {moveButtons('education')}
+                      </div>
                       {structuredResume.education.map((edu,idx)=>(
                         <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
                           {editingSection === `education-${idx}` ? (
@@ -1787,12 +2066,14 @@ export default function MainApp() {
                       ))}
                       <button onClick={()=>addNewItem('education')} className="px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addEducation')}</button>
                     </div>
-                  )}
+                  );
 
-                  {/* Certifications */}
-                  {structuredResume.certifications && structuredResume.certifications.length>0 && (
-                    <div>
-                      <h3 className="text-xl font-bold mb-4">{t('optimize.sections.certifications')}</h3>
+                  sectionBlocks.certifications = structuredResume.certifications && structuredResume.certifications.length>0 && (
+                    <div key="certifications">
+                      <div className="flex items-center gap-3 mb-4">
+                        <h3 className="text-xl font-bold">{t('optimize.sections.certifications')}</h3>
+                        {moveButtons('certifications')}
+                      </div>
                       <div className="bg-white rounded-lg shadow-sm p-6">
                         {structuredResume.certifications.map((cert,idx)=>(
                           <div key={idx} className="pb-3 mb-3 border-b last:border-0">
@@ -1825,12 +2106,14 @@ export default function MainApp() {
                       </div>
                       <button onClick={()=>addNewItem('certifications')} className="mt-4 px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addCertification')}</button>
                     </div>
-                  )}
+                  );
 
-                  {/* Skills */}
-                  {structuredResume.skills && structuredResume.skills.length > 0 && (
-                    <div>
-                      <h3 className="text-xl font-bold mb-4">{t('optimize.sections.skills')}</h3>
+                  sectionBlocks.skills = structuredResume.skills && structuredResume.skills.length > 0 && (
+                    <div key="skills">
+                      <div className="flex items-center gap-3 mb-4">
+                        <h3 className="text-xl font-bold">{t('optimize.sections.skills')}</h3>
+                        {moveButtons('skills')}
+                      </div>
                       {structuredResume.skills.map((sg, idx) => (
                         <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
                           {editingSection === `skills-${idx}` ? (
@@ -1896,13 +2179,19 @@ export default function MainApp() {
                       ))}
                       <button onClick={() => addNewItem('skills')} className="px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addSkillCategory')}</button>
                     </div>
-                  )}
+                  );
 
-                  {/* Custom Sections */}
-                  <div>
-                    <h3 className="text-xl font-bold mb-4">{t('optimize.sections.customSections')}</h3>
-                    {(structuredResume.customSections || []).map((section, idx) => (
-                      <div key={idx} className="bg-white rounded-lg shadow-sm p-6 mb-4">
+                  const customBlock = (key) => {
+                    const idx = customIndexFromKey(key);
+                    const section = structuredResume.customSections?.[idx];
+                    if (!section) return null;
+                    return (
+                      <div key={key}>
+                        <div className="flex items-center gap-3 mb-4">
+                          <h3 className="text-xl font-bold">{section.title || t('optimize.labels.untitledSection')}</h3>
+                          {moveButtons(key)}
+                        </div>
+                        <div className="bg-white rounded-lg shadow-sm p-6 mb-4">
                         {editingSection === `customSection-${idx}` ? (
                           <div className="space-y-3">
                             <input
@@ -1951,12 +2240,9 @@ export default function MainApp() {
                           </div>
                         ) : (
                           <>
-                            <div className="flex justify-between">
-                              <h4 className="text-lg font-semibold">{section.title || t('optimize.labels.untitledSection')}</h4>
-                              <div className="flex gap-2">
-                                <button onClick={() => startEdit(`customSection-${idx}`, section)} className="px-3 py-1 border rounded text-sm">{t('buttons.edit')}</button>
-                                <button onClick={() => deleteItem('customSections', idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">{t('buttons.delete')}</button>
-                              </div>
+                            <div className="flex justify-end gap-2">
+                              <button onClick={() => startEdit(`customSection-${idx}`, section)} className="px-3 py-1 border rounded text-sm">{t('buttons.edit')}</button>
+                              <button onClick={() => deleteItem('customSections', idx)} className="px-3 py-1 border border-red-300 text-red-600 rounded text-sm">{t('buttons.delete')}</button>
                             </div>
                             {section.bullets && section.bullets.length > 0 && (
                               <div className="mt-3">
@@ -1967,10 +2253,20 @@ export default function MainApp() {
                             )}
                           </>
                         )}
+                        </div>
                       </div>
-                    ))}
-                    <button onClick={() => addNewItem('customSections')} className="px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addCustomSection')}</button>
-                  </div>
+                    );
+                  };
+
+                  return (
+                    <>
+                      {order.map(key => key.startsWith('custom-') ? customBlock(key) : sectionBlocks[key])}
+                      <div>
+                        <button onClick={() => addNewItem('customSections')} className="px-4 py-2 bg-blue-500 text-white rounded">{t('buttons.addCustomSection')}</button>
+                      </div>
+                    </>
+                  );
+                  })()}
                 </div>
               </div>
             </div>
@@ -2177,6 +2473,169 @@ export default function MainApp() {
                 </div>
               </div>
             </div> 
+          </div>
+        )}
+
+        {/* Career Profile Editor Modal */}
+        {showProfileEditor && (
+          <CareerProfileEditor
+            userId={user?.uid}
+            onClose={() => setShowProfileEditor(false)}
+            onSaved={(profile) => {
+              // Keep the active resume text in sync when the profile is the current source
+              if (resumeSource === 'profile') setResumeText(profileToText(profile));
+            }}
+          />
+        )}
+
+        {/* Save Application Modal */}
+        {showSaveApplication && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-md w-full">
+              {applicationSaved ? (
+                <div className="py-8 text-center">
+                  <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+                  <p className="text-lg font-semibold text-gray-800">{t('applications.saved', { defaultValue: 'Application saved!' })}</p>
+                </div>
+              ) : (
+                <>
+                  <div className="flex justify-between items-start mb-2">
+                    <h3 className="text-xl font-semibold flex items-center gap-2">
+                      <Briefcase className="w-5 h-5 text-blue-600" />
+                      {t('applications.save', { defaultValue: 'Save Application' })}
+                    </h3>
+                    <button onClick={() => setShowSaveApplication(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+                  </div>
+                  <p className="text-sm text-gray-600 mb-4">{t('applications.saveDescription', { defaultValue: 'Store this resume and job description so you can look up exactly what you sent to each company.' })}</p>
+                  <div className="mb-3">
+                    <label className="block text-sm font-medium mb-1">{t('applications.companyLabel', { defaultValue: 'Company' })} *</label>
+                    <input
+                      type="text"
+                      value={saveCompany}
+                      onChange={(e) => setSaveCompany(e.target.value)}
+                      placeholder={t('applications.companyPlaceholder', { defaultValue: 'e.g. Acme Corp' })}
+                      className="w-full p-3 border rounded-lg"
+                      autoFocus
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1">{t('applications.jobTitleLabel', { defaultValue: 'Job title (optional)' })}</label>
+                    <input
+                      type="text"
+                      value={saveJobTitle}
+                      onChange={(e) => setSaveJobTitle(e.target.value)}
+                      placeholder={t('applications.jobTitlePlaceholder', { defaultValue: 'e.g. Senior Data Analyst' })}
+                      className="w-full p-3 border rounded-lg"
+                    />
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveApplication}
+                      disabled={!saveCompany.trim() || savingApplication}
+                      className="flex-1 py-3 bg-blue-500 text-white rounded-lg font-medium disabled:bg-gray-300 flex items-center justify-center gap-2 hover:bg-blue-600"
+                    >
+                      {savingApplication ? <Loader2 className="animate-spin w-5 h-5" /> : t('buttons.save')}
+                    </button>
+                    <button onClick={() => setShowSaveApplication(false)} className="px-6 py-3 bg-gray-200 rounded-lg font-medium hover:bg-gray-300">{t('buttons.cancel')}</button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* My Applications Modal */}
+        {showApplications && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[85vh] flex flex-col">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-blue-600" />
+                  {t('applications.myApplications', { defaultValue: 'My Applications' })}
+                </h3>
+                <button onClick={() => setShowApplications(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+              </div>
+              {!loadingApplications && applications.length > 0 && (
+                <div className="relative mb-4">
+                  <Search className="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={applicationSearch}
+                    onChange={(e) => setApplicationSearch(e.target.value)}
+                    placeholder={t('applications.searchPlaceholder', { defaultValue: 'Search by company or position...' })}
+                    className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    autoFocus
+                  />
+                </div>
+              )}
+              <div className="flex-1 overflow-y-auto">
+                {loadingApplications ? (
+                  <div className="py-12 text-center"><Loader2 className="animate-spin w-8 h-8 text-blue-500 mx-auto" /></div>
+                ) : applications.length === 0 ? (
+                  <div className="py-12 text-center text-gray-500 text-sm px-6">
+                    {t('applications.empty', { defaultValue: 'No saved applications yet. After optimizing a resume, use "Save Application" to keep a record of what you sent to each company.' })}
+                  </div>
+                ) : (() => {
+                  const q = applicationSearch.trim().toLowerCase();
+                  const filtered = q
+                    ? applications.filter(a =>
+                        (a.company || '').toLowerCase().includes(q) ||
+                        (a.jobTitle || '').toLowerCase().includes(q))
+                    : applications;
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="py-12 text-center text-gray-500 text-sm px-6">
+                        {t('applications.noResults', { defaultValue: 'No applications match your search.' })}
+                      </div>
+                    );
+                  }
+                  return (
+                  <div className="space-y-3">
+                    {filtered.map((app) => (
+                      <div key={app.id} className="border rounded-lg p-4 flex items-center justify-between gap-4 hover:bg-gray-50">
+                        <div className="min-w-0">
+                          <p className="font-semibold text-gray-800 truncate">{app.company}</p>
+                          {app.jobTitle && <p className="text-sm text-gray-600 truncate">{app.jobTitle}</p>}
+                          <p className="text-xs text-gray-400 mt-1">
+                            {app.createdAt ? new Date(app.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 flex-shrink-0">
+                          {confirmDeleteAppId === app.id ? (
+                            <>
+                              <button
+                                onClick={() => handleDeleteApplication(app.id)}
+                                className="px-3 py-1.5 bg-red-500 text-white rounded text-sm hover:bg-red-600"
+                              >
+                                {t('applications.confirmDelete', { defaultValue: 'Delete?' })}
+                              </button>
+                              <button onClick={() => setConfirmDeleteAppId(null)} className="px-3 py-1.5 bg-gray-200 rounded text-sm hover:bg-gray-300">{t('buttons.cancel')}</button>
+                            </>
+                          ) : (
+                            <>
+                              <button
+                                onClick={() => handleLoadApplication(app)}
+                                className="px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+                              >
+                                {t('applications.open', { defaultValue: 'Open' })}
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteAppId(app.id)}
+                                title={t('buttons.delete')}
+                                className="px-2.5 py-1.5 border border-red-300 text-red-600 rounded text-sm hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  );
+                })()}
+              </div>
+            </div>
           </div>
         )}
 

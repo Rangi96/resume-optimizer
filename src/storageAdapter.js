@@ -81,6 +81,46 @@ const localStorageAdapter = {
         }
       }));
     }
+  },
+
+  async getApplications(userId) {
+    if (!userId) return [];
+    const stored = localStorage.getItem(`applications_${userId}`);
+    return stored ? JSON.parse(stored) : [];
+  },
+
+  async saveApplication(userId, application) {
+    if (!userId) return null;
+    const key = `applications_${userId}`;
+    const applications = await this.getApplications(userId);
+    applications.unshift(application); // newest first
+    localStorage.setItem(key, JSON.stringify(applications));
+    return application;
+  },
+
+  async deleteApplication(userId, applicationId) {
+    if (!userId) return false;
+    const key = `applications_${userId}`;
+    const applications = await this.getApplications(userId);
+    localStorage.setItem(key, JSON.stringify(applications.filter(a => a.id !== applicationId)));
+    return true;
+  },
+
+  async getMasterProfile(userId) {
+    if (!userId) return null;
+    const stored = localStorage.getItem(`masterProfile_${userId}`);
+    if (!stored) return null;
+    try {
+      return JSON.parse(stored); // structured profile object
+    } catch {
+      return stored; // legacy free-text profile
+    }
+  },
+
+  async saveMasterProfile(userId, profile) {
+    if (!userId) return false;
+    localStorage.setItem(`masterProfile_${userId}`, JSON.stringify(profile));
+    return true;
   }
 };
 
@@ -408,6 +448,81 @@ const firestoreAdapter = {
       console.error('❌ Firestore: Error message:', error.message);
       console.error('❌ Firestore: Full error:', error);
       // RE-THROW the error so AuthContext knows it failed
+      throw error;
+    }
+  },
+
+  // Applications are stored as an array field on the user document — the same
+  // document the client already has write access to (no extra security rules needed).
+  // At ~15KB per application, Firestore's 1MB doc limit allows roughly 50 entries.
+  async getApplications(userId) {
+    if (!userId) return [];
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      if (!userDoc.exists()) return [];
+      return userDoc.data().applications || [];
+    } catch (error) {
+      console.error('❌ Firestore: Error getting applications:', error);
+      return [];
+    }
+  },
+
+  async saveApplication(userId, application) {
+    if (!userId) return null;
+    try {
+      const userRef = doc(db, 'users', userId);
+      const applications = await this.getApplications(userId);
+      applications.unshift(application); // newest first
+      await updateDoc(userRef, { applications, updatedAt: serverTimestamp() });
+      console.log('✅ Firestore: Application saved:', application.id);
+      return application;
+    } catch (error) {
+      console.error('❌ Firestore: Error saving application:', error);
+      throw error;
+    }
+  },
+
+  async deleteApplication(userId, applicationId) {
+    if (!userId) return false;
+    try {
+      const userRef = doc(db, 'users', userId);
+      const applications = await this.getApplications(userId);
+      await updateDoc(userRef, {
+        applications: applications.filter(a => a.id !== applicationId),
+        updatedAt: serverTimestamp()
+      });
+      console.log('✅ Firestore: Application deleted:', applicationId);
+      return true;
+    } catch (error) {
+      console.error('❌ Firestore: Error deleting application:', error);
+      throw error;
+    }
+  },
+
+  // Master career profile — a structured object (or legacy string) on the user document.
+  async getMasterProfile(userId) {
+    if (!userId) return null;
+    try {
+      const userRef = doc(db, 'users', userId);
+      const userDoc = await getDoc(userRef);
+      if (!userDoc.exists()) return null;
+      return userDoc.data().masterProfile || null;
+    } catch (error) {
+      console.error('❌ Firestore: Error getting master profile:', error);
+      return null;
+    }
+  },
+
+  async saveMasterProfile(userId, profile) {
+    if (!userId) return false;
+    try {
+      const userRef = doc(db, 'users', userId);
+      await updateDoc(userRef, { masterProfile: profile, updatedAt: serverTimestamp() });
+      console.log('✅ Firestore: Master profile saved');
+      return true;
+    } catch (error) {
+      console.error('❌ Firestore: Error saving master profile:', error);
       throw error;
     }
   }
