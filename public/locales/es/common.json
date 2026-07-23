@@ -136,6 +136,42 @@
     "end": "Fin",
     "category": "Categoría (ej., Lenguajes de Programación)"
   },
+  "coverLetter": {
+    "title": "Carta de Presentación",
+    "description": "Creada a partir de tu currículum optimizado y esta descripción del puesto. Elige un tono, añade instrucciones y genera.",
+    "companyLabel": "Nombre de la empresa (opcional)",
+    "toneLabel": "Tono",
+    "instructionsLabel": "Instrucciones (opcional)",
+    "instructionsPlaceholder": "ej. Que no pase de 250 palabras. Menciona que tengo disponibilidad inmediata. Explica que me estoy mudando a Miami. No menciones a mi empleador actual por nombre.",
+    "generate": "Generar Carta de Presentación",
+    "generating": "Escribiendo tu carta...",
+    "resultHint": "Revisa y edita con libertad; asegúrate de que cada afirmación sea realmente tuya antes de enviarla.",
+    "copied": "¡Copiado!",
+    "back": "Opciones",
+    "error": "No se pudo generar la carta. Inténtalo de nuevo.",
+    "tones": {
+      "professional": {
+        "name": "Profesional",
+        "desc": "Directo, seguro, competente. La opción segura.",
+        "example": "Mi experiencia liderando implementaciones de BI encaja de lleno con los requisitos de este puesto."
+      },
+      "enthusiastic": {
+        "name": "Entusiasta",
+        "desc": "Enérgico y cercano, muestra emoción genuina.",
+        "example": "Esta vacante me llamó la atención de inmediato: combina exactamente el trabajo que más disfruto."
+      },
+      "conversational": {
+        "name": "Conversacional",
+        "desc": "Natural y cercano, como escrito por una persona.",
+        "example": "He pasado los últimos seis años convirtiendo datos desordenados en decisiones accionables."
+      },
+      "formal": {
+        "name": "Formal",
+        "desc": "Carta de negocios tradicional, para sectores conservadores.",
+        "example": "Me dirijo a ustedes para expresar mi interés en el puesto de Analista Senior."
+      }
+    }
+  },
   "profile": {
     "title": "Perfil Profesional",
     "description": "Tu historial profesional completo. Describe cada trabajo, proyecto, decisión y curso con todo detalle, incluso lo que nunca cabría en un currículum de una página. Al optimizar para un puesto, la IA selecciona solo lo relevante.",

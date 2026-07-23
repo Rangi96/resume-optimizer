@@ -136,6 +136,42 @@
     "end": "End",
     "category": "Category (e.g., Programming Languages)"
   },
+  "coverLetter": {
+    "title": "Cover Letter",
+    "description": "Built from your optimized resume and this job description. Pick a tone, add any instructions, and generate.",
+    "companyLabel": "Company name (optional)",
+    "toneLabel": "Tone",
+    "instructionsLabel": "Instructions (optional)",
+    "instructionsPlaceholder": "e.g. Keep it under 250 words. Mention I am available immediately. Explain that I am relocating to Miami. Do not mention my current employer by name.",
+    "generate": "Generate Cover Letter",
+    "generating": "Writing your cover letter...",
+    "resultHint": "Review and edit freely; make sure every claim is truly yours before sending.",
+    "copied": "Copied!",
+    "back": "Options",
+    "error": "Could not generate the cover letter. Please try again.",
+    "tones": {
+      "professional": {
+        "name": "Professional",
+        "desc": "Direct, confident, competent. The safe default.",
+        "example": "My experience leading BI implementations aligns closely with the requirements of this role."
+      },
+      "enthusiastic": {
+        "name": "Enthusiastic",
+        "desc": "Energetic and warm, shows genuine excitement.",
+        "example": "This opening caught my attention immediately: it combines exactly the work I enjoy most."
+      },
+      "conversational": {
+        "name": "Conversational",
+        "desc": "Natural and personable, like a smart human wrote it.",
+        "example": "I have spent the last six years turning messy data into decisions people can act on."
+      },
+      "formal": {
+        "name": "Formal",
+        "desc": "Traditional business letter, for conservative industries.",
+        "example": "I am writing to express my interest in the position of Senior Analyst."
+      }
+    }
+  },
   "profile": {
     "title": "Career Profile",
     "description": "Your complete career record. Describe every job, project, decision, and course in full detail, even things that would never fit on a one-page resume. When you optimize for a job, the AI selects only what is relevant.",

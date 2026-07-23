@@ -1,5 +1,5 @@
 import React, { useState, useRef, useContext, useEffect } from 'react';
-import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle, Gauge, ChevronLeft, ChevronRight, Briefcase, Trash2, X } from 'lucide-react';
+import { FileText, Download, Palette, Type, Layout, Printer, Code, Copy, Check, Wand2, Upload, Sparkles, ArrowRight, Loader2, Search, Lightbulb, AlertCircle, CheckCircle, Gauge, ChevronLeft, ChevronRight, Briefcase, Trash2, X, Mail } from 'lucide-react';
 import * as mammoth from 'mammoth';
 import { useTranslation } from 'react-i18next';
 import { AuthContext } from '../AuthContext';
@@ -628,6 +628,16 @@ export default function MainApp() {
   const [showProfileEditor, setShowProfileEditor] = useState(false);
   const [loadingProfile, setLoadingProfile] = useState(false);
   const [resumeSource, setResumeSource] = useState('upload'); // 'upload' | 'profile'
+
+  // Cover letter
+  const [showCoverLetter, setShowCoverLetter] = useState(false);
+  const [coverTone, setCoverTone] = useState('professional');
+  const [coverCompany, setCoverCompany] = useState('');
+  const [coverInstructions, setCoverInstructions] = useState('');
+  const [coverLetterText, setCoverLetterText] = useState('');
+  const [generatingCover, setGeneratingCover] = useState(false);
+  const [coverError, setCoverError] = useState('');
+  const [coverCopied, setCoverCopied] = useState(false);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showStripeCheckout, setShowStripeCheckout] = useState(false);
   const [showPaymentSuccess, setShowPaymentSuccess] = useState(false);
@@ -1204,6 +1214,46 @@ export default function MainApp() {
     setShowApplications(false);
   };
 
+  // --- Cover letter ---
+  const generateCoverLetter = async () => {
+    setGeneratingCover(true);
+    setCoverError('');
+    try {
+      const response = await fetch('/api/cover-letter', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeText: convertStructuredToText(structuredResume),
+          jobDescription,
+          company: coverCompany,
+          tone: coverTone,
+          instructions: coverInstructions,
+          language: i18n.language
+        })
+      });
+      const data = await response.json();
+      if (!response.ok || !data.coverLetter) {
+        throw new Error(data.error || 'Failed to generate cover letter');
+      }
+      setCoverLetterText(data.coverLetter);
+    } catch (err) {
+      console.error('Cover letter generation failed:', err);
+      setCoverError(t('coverLetter.error', { defaultValue: 'Could not generate the cover letter. Please try again.' }));
+    } finally {
+      setGeneratingCover(false);
+    }
+  };
+
+  const copyCoverLetter = async () => {
+    try {
+      await navigator.clipboard.writeText(coverLetterText);
+      setCoverCopied(true);
+      setTimeout(() => setCoverCopied(false), 1500);
+    } catch (err) {
+      console.error('Copy failed:', err);
+    }
+  };
+
   // --- Master career profile ---
   const openProfileEditor = () => setShowProfileEditor(true);
 
@@ -1733,6 +1783,7 @@ export default function MainApp() {
                 { key: 'gaps', run: findGaps, loading: loadingGaps, disabled: loadingGaps, color: 'amber', Icon: Search, label: t('buttons.findGaps') },
                 { key: 'score', run: computeCompatibilityScore, loading: loadingScore, disabled: loadingScore || !jobDescription || !resumeText, color: 'purple', Icon: Gauge, label: t('buttons.compatibilityScore') },
                 { key: 'format', run: () => { setIsFormatTriggered(true); setPhase('format'); }, loading: false, disabled: false, color: 'blue', Icon: Sparkles, label: t('buttons.formatExport') },
+                { key: 'cover', run: () => { setCoverError(''); setShowCoverLetter(true); }, loading: false, disabled: !jobDescription, color: 'rose', Icon: Mail, label: t('coverLetter.title', { defaultValue: 'Cover Letter' }) },
                 { key: 'save', run: () => { setSaveCompany(''); setSaveJobTitle(''); setApplicationSaved(false); setShowSaveApplication(true); }, loading: false, disabled: !user, color: 'indigo', Icon: Briefcase, label: t('applications.save', { defaultValue: 'Save Application' }) },
               ];
               const colorMap = {
@@ -1741,9 +1792,10 @@ export default function MainApp() {
                 purple: 'bg-purple-500 hover:bg-purple-600',
                 blue: 'bg-blue-500 hover:bg-blue-600',
                 indigo: 'bg-indigo-500 hover:bg-indigo-600',
+                rose: 'bg-rose-500 hover:bg-rose-600',
               };
               const handleTabClick = (tab) => {
-                if (tab.key === 'format' || tab.key === 'save') { tab.run(); return; }
+                if (tab.key === 'format' || tab.key === 'save' || tab.key === 'cover') { tab.run(); return; }
                 setActiveRailTab(tab.key);
                 setActionRailExpanded(true);
                 if (!hasResult[tab.key]) tab.run();
@@ -2486,6 +2538,113 @@ export default function MainApp() {
               if (resumeSource === 'profile') setResumeText(profileToText(profile));
             }}
           />
+        )}
+
+        {/* Cover Letter Modal */}
+        {showCoverLetter && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] flex flex-col">
+              <div className="flex justify-between items-start mb-2">
+                <h3 className="text-xl font-semibold flex items-center gap-2">
+                  <Mail className="w-5 h-5 text-blue-600" />
+                  {t('coverLetter.title', { defaultValue: 'Cover Letter' })}
+                </h3>
+                <button onClick={() => setShowCoverLetter(false)} className="text-gray-400 hover:text-gray-600"><X className="w-5 h-5" /></button>
+              </div>
+              {coverLetterText ? (
+                <>
+                  <p className="text-sm text-gray-600 mb-3">{t('coverLetter.resultHint', { defaultValue: 'Review and edit freely; make sure every claim is truly yours before sending.' })}</p>
+                  <textarea
+                    value={coverLetterText}
+                    onChange={(e) => setCoverLetterText(e.target.value)}
+                    className="flex-1 w-full p-4 border rounded-lg text-sm resize-none min-h-[45vh] leading-relaxed"
+                  />
+                  {coverError && <p className="text-xs text-red-600 mt-2">{coverError}</p>}
+                  <div className="flex gap-2 mt-3">
+                    <button
+                      onClick={copyCoverLetter}
+                      className="px-5 py-2.5 bg-blue-500 text-white rounded-lg font-medium flex items-center gap-2 hover:bg-blue-600"
+                    >
+                      {coverCopied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                      {coverCopied ? t('coverLetter.copied', { defaultValue: 'Copied!' }) : t('buttons.copy')}
+                    </button>
+                    <button
+                      onClick={generateCoverLetter}
+                      disabled={generatingCover}
+                      className="px-5 py-2.5 border border-blue-500 text-blue-600 rounded-lg font-medium hover:bg-blue-50 disabled:opacity-50 flex items-center gap-2"
+                    >
+                      {generatingCover ? <Loader2 className="animate-spin w-4 h-4" /> : null}
+                      {t('buttons.regenerate')}
+                    </button>
+                    <button
+                      onClick={() => setCoverLetterText('')}
+                      className="px-5 py-2.5 bg-gray-200 rounded-lg font-medium hover:bg-gray-300 ml-auto"
+                    >
+                      {t('coverLetter.back', { defaultValue: 'Options' })}
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <div className="flex-1 overflow-y-auto">
+                  <p className="text-sm text-gray-600 mb-4">{t('coverLetter.description', { defaultValue: 'Built from your optimized resume and this job description. Pick a tone, add any instructions, and generate.' })}</p>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1">{t('coverLetter.companyLabel', { defaultValue: 'Company name (optional)' })}</label>
+                    <input
+                      type="text"
+                      value={coverCompany}
+                      onChange={(e) => setCoverCompany(e.target.value)}
+                      placeholder={t('applications.companyPlaceholder', { defaultValue: 'e.g. Acme Corp' })}
+                      className="w-full p-3 border rounded-lg"
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-2">{t('coverLetter.toneLabel', { defaultValue: 'Tone' })}</label>
+                    <div className="grid grid-cols-2 gap-2">
+                      {['professional', 'enthusiastic', 'conversational', 'formal'].map((tone) => (
+                        <button
+                          key={tone}
+                          onClick={() => setCoverTone(tone)}
+                          className={`p-3 border rounded-lg text-left transition-colors ${coverTone === tone ? 'border-blue-500 ring-2 ring-blue-200 bg-blue-50' : 'border-gray-200 hover:border-blue-300'}`}
+                        >
+                          <p className="text-sm font-semibold text-gray-800">{t(`coverLetter.tones.${tone}.name`)}</p>
+                          <p className="text-xs text-gray-500 mt-0.5">{t(`coverLetter.tones.${tone}.desc`)}</p>
+                          <p className="text-xs text-gray-400 italic mt-1">"{t(`coverLetter.tones.${tone}.example`)}"</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="mb-4">
+                    <label className="block text-sm font-medium mb-1">{t('coverLetter.instructionsLabel', { defaultValue: 'Instructions (optional)' })}</label>
+                    <textarea
+                      value={coverInstructions}
+                      onChange={(e) => setCoverInstructions(e.target.value)}
+                      placeholder={t('coverLetter.instructionsPlaceholder', { defaultValue: 'e.g. Keep it under 250 words. Mention I am available immediately. Explain that I am relocating to Miami. Do not mention my current employer by name.' })}
+                      className="w-full p-3 border rounded-lg text-sm resize-y"
+                      rows="3"
+                    />
+                  </div>
+                  {coverError && <p className="text-xs text-red-600 mb-3">{coverError}</p>}
+                  <button
+                    onClick={generateCoverLetter}
+                    disabled={generatingCover}
+                    className="w-full py-3 bg-blue-500 text-white rounded-lg font-medium disabled:bg-gray-300 flex items-center justify-center gap-2 hover:bg-blue-600"
+                  >
+                    {generatingCover ? (
+                      <>
+                        <Loader2 className="animate-spin w-5 h-5" />
+                        {t('coverLetter.generating', { defaultValue: 'Writing your cover letter...' })}
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        {t('coverLetter.generate', { defaultValue: 'Generate Cover Letter' })}
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
         )}
 
         {/* Save Application Modal */}
