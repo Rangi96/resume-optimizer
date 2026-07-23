@@ -105,7 +105,7 @@ export default async function handler(req, res) {
 
     // Timeout for API call
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+    const timeout = setTimeout(() => controller.abort(), 50000); // stay under Vercel's 60s maxDuration so we return JSON, not Vercel's HTML error page
 
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
