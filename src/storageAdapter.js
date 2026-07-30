@@ -106,6 +106,16 @@ const localStorageAdapter = {
     return true;
   },
 
+  async updateApplication(userId, applicationId, patch) {
+    if (!userId) return false;
+    const key = `applications_${userId}`;
+    const applications = await this.getApplications(userId);
+    localStorage.setItem(key, JSON.stringify(
+      applications.map(a => a.id === applicationId ? { ...a, ...patch } : a)
+    ));
+    return true;
+  },
+
   async getMasterProfile(userId) {
     if (!userId) return null;
     const stored = localStorage.getItem(`masterProfile_${userId}`);
@@ -496,6 +506,22 @@ const firestoreAdapter = {
       return true;
     } catch (error) {
       console.error('❌ Firestore: Error deleting application:', error);
+      throw error;
+    }
+  },
+
+  async updateApplication(userId, applicationId, patch) {
+    if (!userId) return false;
+    try {
+      const userRef = doc(db, 'users', userId);
+      const applications = await this.getApplications(userId);
+      await updateDoc(userRef, {
+        applications: applications.map(a => a.id === applicationId ? { ...a, ...patch } : a),
+        updatedAt: serverTimestamp()
+      });
+      return true;
+    } catch (error) {
+      console.error('❌ Firestore: Error updating application:', error);
       throw error;
     }
   },

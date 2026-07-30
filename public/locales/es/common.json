@@ -247,7 +247,12 @@
     "open": "Abrir",
     "confirmDelete": "¿Eliminar?",
     "searchPlaceholder": "Buscar por empresa o puesto...",
-    "noResults": "Ninguna postulación coincide con tu búsqueda."
+    "noResults": "Ninguna postulación coincide con tu búsqueda.",
+    "columns": {
+      "company": "Empresa",
+      "position": "Puesto",
+      "contacted": "Contacté RRHH"
+    }
   },
   "modals": {
     "addSkill": {

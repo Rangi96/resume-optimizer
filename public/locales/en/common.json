@@ -247,7 +247,12 @@
     "open": "Open",
     "confirmDelete": "Delete?",
     "searchPlaceholder": "Search by company or position...",
-    "noResults": "No applications match your search."
+    "noResults": "No applications match your search.",
+    "columns": {
+      "company": "Company",
+      "position": "Position",
+      "contacted": "Contacted HM"
+    }
   },
   "modals": {
     "addSkill": {

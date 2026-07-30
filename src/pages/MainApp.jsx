@@ -1190,6 +1190,18 @@ export default function MainApp() {
     }
   };
 
+  const toggleContactedHM = async (app) => {
+    const newValue = !app.contactedHM;
+    // Optimistic update; revert on failure
+    setApplications(prev => prev.map(a => a.id === app.id ? { ...a, contactedHM: newValue } : a));
+    try {
+      await storageAdapter.updateApplication(user?.uid, app.id, { contactedHM: newValue });
+    } catch (error) {
+      console.error('Failed to update application:', error);
+      setApplications(prev => prev.map(a => a.id === app.id ? { ...a, contactedHM: !newValue } : a));
+    }
+  };
+
   const handleDeleteApplication = async (applicationId) => {
     try {
       await storageAdapter.deleteApplication(user?.uid, applicationId);
@@ -2749,48 +2761,59 @@ export default function MainApp() {
                     );
                   }
                   return (
-                  <div className="space-y-3">
-                    {filtered.map((app) => (
-                      <div key={app.id} className="border rounded-lg p-4 flex items-center justify-between gap-4 hover:bg-gray-50">
-                        <div className="min-w-0">
-                          <p className="font-semibold text-gray-800 truncate">{app.company}</p>
-                          {app.jobTitle && <p className="text-sm text-gray-600 truncate">{app.jobTitle}</p>}
-                          <p className="text-xs text-gray-400 mt-1">
-                            {app.createdAt ? new Date(app.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : ''}
-                          </p>
-                        </div>
-                        <div className="flex gap-2 flex-shrink-0">
-                          {confirmDeleteAppId === app.id ? (
-                            <>
-                              <button
-                                onClick={() => handleDeleteApplication(app.id)}
-                                className="px-3 py-1.5 bg-red-500 text-white rounded text-sm hover:bg-red-600"
-                              >
-                                {t('applications.confirmDelete', { defaultValue: 'Delete?' })}
-                              </button>
-                              <button onClick={() => setConfirmDeleteAppId(null)} className="px-3 py-1.5 bg-gray-200 rounded text-sm hover:bg-gray-300">{t('buttons.cancel')}</button>
-                            </>
-                          ) : (
-                            <>
-                              <button
-                                onClick={() => handleLoadApplication(app)}
-                                className="px-3 py-1.5 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
-                              >
-                                {t('applications.open', { defaultValue: 'Open' })}
-                              </button>
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs text-gray-500 uppercase tracking-wide border-b">
+                        <th className="py-2 pr-3 font-semibold">{t('applications.columns.company', { defaultValue: 'Company' })}</th>
+                        <th className="py-2 pr-3 font-semibold">{t('applications.columns.position', { defaultValue: 'Position' })}</th>
+                        <th className="py-2 font-semibold text-center whitespace-nowrap">{t('applications.columns.contacted', { defaultValue: 'Contacted HM' })}</th>
+                        <th className="py-2 w-10"></th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {filtered.map((app) => (
+                        <tr
+                          key={app.id}
+                          onClick={() => handleLoadApplication(app)}
+                          title={t('applications.open', { defaultValue: 'Open' })}
+                          className="border-b last:border-0 hover:bg-blue-50 cursor-pointer"
+                        >
+                          <td className="py-3 pr-3 font-semibold text-gray-800">{app.company}</td>
+                          <td className="py-3 pr-3 text-gray-600">{app.jobTitle || '-'}</td>
+                          <td className="py-3 text-center" onClick={(e) => e.stopPropagation()}>
+                            <input
+                              type="checkbox"
+                              checked={!!app.contactedHM}
+                              onChange={() => toggleContactedHM(app)}
+                              title={t('applications.columns.contacted', { defaultValue: 'Contacted HM' })}
+                              className="w-4 h-4 accent-blue-600 cursor-pointer"
+                            />
+                          </td>
+                          <td className="py-3 text-right" onClick={(e) => e.stopPropagation()}>
+                            {confirmDeleteAppId === app.id ? (
+                              <div className="flex gap-1 justify-end">
+                                <button
+                                  onClick={() => handleDeleteApplication(app.id)}
+                                  className="px-2 py-1 bg-red-500 text-white rounded text-xs hover:bg-red-600 whitespace-nowrap"
+                                >
+                                  {t('applications.confirmDelete', { defaultValue: 'Delete?' })}
+                                </button>
+                                <button onClick={() => setConfirmDeleteAppId(null)} className="px-2 py-1 bg-gray-200 rounded text-xs hover:bg-gray-300"><X className="w-3 h-3" /></button>
+                              </div>
+                            ) : (
                               <button
                                 onClick={() => setConfirmDeleteAppId(app.id)}
                                 title={t('buttons.delete')}
-                                className="px-2.5 py-1.5 border border-red-300 text-red-600 rounded text-sm hover:bg-red-50"
+                                className="p-1.5 text-gray-400 hover:text-red-600 rounded hover:bg-red-50"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </button>
-                            </>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                   );
                 })()}
               </div>
