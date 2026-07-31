@@ -251,6 +251,7 @@
     "columns": {
       "company": "Empresa",
       "position": "Puesto",
+      "date": "Fecha",
       "contacted": "Contacté RRHH"
     }
   },

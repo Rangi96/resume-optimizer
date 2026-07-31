@@ -2766,6 +2766,7 @@ export default function MainApp() {
                       <tr className="text-left text-xs text-gray-500 uppercase tracking-wide border-b">
                         <th className="py-2 pr-3 font-semibold">{t('applications.columns.company', { defaultValue: 'Company' })}</th>
                         <th className="py-2 pr-3 font-semibold">{t('applications.columns.position', { defaultValue: 'Position' })}</th>
+                        <th className="py-2 pr-3 font-semibold whitespace-nowrap">{t('applications.columns.date', { defaultValue: 'Date' })}</th>
                         <th className="py-2 font-semibold text-center whitespace-nowrap">{t('applications.columns.contacted', { defaultValue: 'Contacted HM' })}</th>
                         <th className="py-2 w-10"></th>
                       </tr>
@@ -2780,6 +2781,9 @@ export default function MainApp() {
                         >
                           <td className="py-3 pr-3 font-semibold text-gray-800">{app.company}</td>
                           <td className="py-3 pr-3 text-gray-600">{app.jobTitle || '-'}</td>
+                          <td className="py-3 pr-3 text-gray-500 whitespace-nowrap">
+                            {app.createdAt ? new Date(app.createdAt).toLocaleDateString(i18n.language === 'es' ? 'es' : 'en', { year: 'numeric', month: 'short', day: 'numeric' }) : '-'}
+                          </td>
                           <td className="py-3 text-center" onClick={(e) => e.stopPropagation()}>
                             <input
                               type="checkbox"

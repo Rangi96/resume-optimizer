@@ -251,6 +251,7 @@
     "columns": {
       "company": "Company",
       "position": "Position",
+      "date": "Date",
       "contacted": "Contacted HM"
     }
   },
